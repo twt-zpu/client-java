@@ -4,10 +4,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>eu.arrowhead</groupId>
-    <artifactId>ArrowheadProvider</artifactId>
-    <packaging>war</packaging>
+    <artifactId>ArrowheadConsumerClient</artifactId>
+    <packaging>jar</packaging>
     <version>0.0.1-SNAPSHOT</version>
-    <name>ArrowheadProvider</name>
+    <name>ArrowheadConsumerClient</name>
 
     <dependencyManagement>
         <dependencies>
@@ -32,10 +32,6 @@
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-moxy</artifactId>
         </dependency>
-        <dependency>
-			<groupId>org.glassfish.jersey.containers</groupId>
-			<artifactId>jersey-container-grizzly2-http</artifactId>
-		</dependency>
     </dependencies>
     <properties>
         <jersey.version>2.23.1</jersey.version>
@@ -78,7 +74,7 @@
 			            </manifestEntries>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<mainClass>eu.arrowhead.ArrowheadProvider.Main</mainClass>
+							<mainClass>eu.arrowhead.ArrowheadConsumerClient.Main</mainClass>
 							<classpathPrefix>lib/</classpathPrefix>
 						</manifest>
 					</archive>
