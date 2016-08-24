@@ -19,8 +19,9 @@ import eu.arrowhead.ArrowheadConsumerClient.model.ServiceRequestForm;
 public class Main {
 	
 	private static Properties prop;
-	public static final String ORCH_URI = getProp().getProperty("orch_uri", "http://localhost:8444/orchestrator/orchestration");
-
+	//public static final String ORCH_URI = getProp().getProperty("orch_uri", "http://localhost:8444/orchestrator/orchestration");
+	public static final String ORCH_URI = "https://0.0.0.0:8445/orchestrator/orchestration";
+	
 	public static void main(String[] args) throws Exception {
 		//Payload compiling
 		System.out.println("Orchestrator URL: " + ORCH_URI + "\n");

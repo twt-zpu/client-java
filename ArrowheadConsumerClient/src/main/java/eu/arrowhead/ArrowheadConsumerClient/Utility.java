@@ -38,38 +38,57 @@ public final class Utility {
 	}
 
 	public static <T> Response sendRequest(String URI, String method, T payload) {
+		
+		Client client = null;
 		Response response = null;
-
-		SslConfigurator sslConfig = SslConfigurator.newInstance()
-				.trustStoreFile(getProp().getProperty("ssl.truststore"))
-				.trustStorePassword(getProp().getProperty("ssl.truststorepass"))
-				.keyStoreFile(getProp().getProperty("ssl.keystore"))
-				.keyStorePassword(getProp().getProperty("ssl.keystorepass"))
-				.keyPassword(getProp().getProperty("ssl.keypass"));
-		SSLContext sslContext = sslConfig.createSSLContext();
-
-		X509Certificate clientCert = null;
-		try {
-			KeyStore keyStore = loadKeyStore(
-					getProp().getProperty("ssl.keystore"),
-					getProp().getProperty("ssl.keystorepass"));
-			clientCert = getFirstCertFromKeyStore(keyStore);
-		} catch (Exception ex) {
-			ex.printStackTrace();
+		boolean isSecure = false;
+		if(URI.startsWith("https")){
+			isSecure = true;
 		}
-		String clientCN = getCertCNFromSubject(clientCert.getSubjectDN().getName());
-		System.out.println("Sending request with the common name: " + clientCN);
+		
+		if(isSecure){
+			/*SslConfigurator sslConfig = SslConfigurator.newInstance()
+					.trustStoreFile(getProp().getProperty("ssl.truststore"))
+					.trustStorePassword(getProp().getProperty("ssl.truststorepass"))
+					.keyStoreFile(getProp().getProperty("ssl.keystore"))
+					.keyStorePassword(getProp().getProperty("ssl.keystorepass"))
+					.keyPassword(getProp().getProperty("ssl.keypass"));*/
+			
+			SslConfigurator sslConfig = SslConfigurator.newInstance()
+					.trustStoreFile("testcloud1_cert.jks") //TODO add full path
+					.trustStorePassword("12345")
+					.keyStoreFile("client1.testcloud1.jks") //TODO add full path
+					.keyStorePassword("12345")
+					.keyPassword("12345");
+			SSLContext sslContext = sslConfig.createSSLContext();
 
-		// building hostname verifier to avoid exception
-		HostnameVerifier allHostsValid = new HostnameVerifier() {
-			public boolean verify(String hostname, SSLSession session) {
-				// Decide whether to allow the connection...
-				return true;
+			X509Certificate clientCert = null;
+			try {
+				KeyStore keyStore = loadKeyStore(
+						getProp().getProperty("ssl.keystore"),
+						getProp().getProperty("ssl.keystorepass"));
+				clientCert = getFirstCertFromKeyStore(keyStore);
+			} catch (Exception ex) {
+				ex.printStackTrace();
 			}
-		};
+			String clientCN = getCertCNFromSubject(clientCert.getSubjectDN().getName());
+			System.out.println("Sending request with the common name: " + clientCN);
 
+			// building hostname verifier to avoid exception
+			HostnameVerifier allHostsValid = new HostnameVerifier() {
+				public boolean verify(String hostname, SSLSession session) {
+					// Decide whether to allow the connection...
+					return true;
+				}
+			};
+			
+			client = ClientBuilder.newBuilder().sslContext(sslContext).hostnameVerifier(allHostsValid).build();
+		}
+		else{
+			client = ClientBuilder.newClient();
+		}
+		
 		try {
-			Client client = ClientBuilder.newBuilder().sslContext(sslContext).hostnameVerifier(allHostsValid).build();
 			WebTarget target = client.target(UriBuilder.fromUri(URI).build());
 			switch (method) {
 			case "GET":
