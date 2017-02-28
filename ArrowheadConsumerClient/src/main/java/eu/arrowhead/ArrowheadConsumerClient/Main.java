@@ -20,7 +20,7 @@ public class Main {
 	
 	private static Properties prop;
 	//public static final String ORCH_URI = getProp().getProperty("orch_uri", "http://localhost:8444/orchestrator/orchestration");
-	public static final String ORCH_URI = "https://0.0.0.0:8445/orchestrator/orchestration";
+	public static final String ORCH_URI = "http://arrowhead.tmit.bme.hu:8084/orchestrator/orchestration";
 	
 	public static void main(String[] args) throws Exception {
 		//Payload compiling
@@ -34,6 +34,7 @@ public class Main {
 			throw new Exception(error.getErrorMessage());
 		}
 		OrchestrationResponse orchResponse = postResponse.readEntity(OrchestrationResponse.class);
+		
 		ArrowheadSystem provider = orchResponse.getResponse().get(0).getProvider();
 		String serviceURI = orchResponse.getResponse().get(0).getServiceURI();
 		String providerURI = "http://" + provider.getAddress() + ":" + provider.getPort() + serviceURI;

@@ -24,7 +24,7 @@ import eu.arrowhead.ArrowheadConsumer.model.OrchestrationResponse;
 public class Main {
 	
 	private static Properties prop;
-	public static final String ORCH_URI = getProp().getProperty("orch_uri", "http://localhost:8444/orchestrator/orchestration");
+	public static final String ORCH_URI = getProp().getProperty("orch_uri", "http://arrowhead.tmit.bme.hu:8084/orchestrator/orchestration");
 
 	public static void main(String[] args) throws Exception {
 		System.out.println("Orchestrator URL: " + ORCH_URI + "\n");

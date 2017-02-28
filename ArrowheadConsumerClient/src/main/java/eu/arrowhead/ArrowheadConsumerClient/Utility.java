@@ -47,19 +47,19 @@ public final class Utility {
 		}
 		
 		if(isSecure){
-			/*SslConfigurator sslConfig = SslConfigurator.newInstance()
+			SslConfigurator sslConfig = SslConfigurator.newInstance()
 					.trustStoreFile(getProp().getProperty("ssl.truststore"))
 					.trustStorePassword(getProp().getProperty("ssl.truststorepass"))
 					.keyStoreFile(getProp().getProperty("ssl.keystore"))
 					.keyStorePassword(getProp().getProperty("ssl.keystorepass"))
-					.keyPassword(getProp().getProperty("ssl.keypass"));*/
+					.keyPassword(getProp().getProperty("ssl.keypass"));
 			
-			SslConfigurator sslConfig = SslConfigurator.newInstance()
+			/*SslConfigurator sslConfig = SslConfigurator.newInstance()
 					.trustStoreFile("testcloud1_cert.jks") //TODO add full path
 					.trustStorePassword("12345")
 					.keyStoreFile("client1.testcloud1.jks") //TODO add full path
 					.keyStorePassword("12345")
-					.keyPassword("12345");
+					.keyPassword("12345");*/
 			SSLContext sslContext = sslConfig.createSSLContext();
 
 			X509Certificate clientCert = null;
