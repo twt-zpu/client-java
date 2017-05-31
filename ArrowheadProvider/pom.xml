@@ -5,8 +5,8 @@
 
     <groupId>eu.arrowhead</groupId>
     <artifactId>ArrowheadProvider</artifactId>
-    <packaging>war</packaging>
-    <version>0.0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    <version>0.1</version>
     <name>ArrowheadProvider</name>
 
     <dependencyManagement>
