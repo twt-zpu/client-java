@@ -1,5 +1,6 @@
 package eu.arrowhead.ArrowheadProvider.common.model;
 
+
 public class ArrowheadSystem {
 	
 	private String systemGroup;
@@ -59,6 +60,34 @@ public class ArrowheadSystem {
 	public void setAuthenticationInfo(String authenticationInfo) {
 		this.authenticationInfo = authenticationInfo;
 	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (!(obj instanceof ArrowheadSystem))
+			return false;
+		ArrowheadSystem other = (ArrowheadSystem) obj;
+		if (address == null) {
+			if (other.address != null)
+				return false;
+		} else if (!address.equals(other.address))
+			return false;
+		if (systemGroup == null) {
+			if (other.systemGroup != null)
+				return false;
+		} else if (!systemGroup.equals(other.systemGroup))
+			return false;
+		if (systemName == null) {
+			if (other.systemName != null)
+				return false;
+		} else if (!systemName.equals(other.systemName))
+			return false;
+		return true;
+	}
+
 
 	@Override
 	public String toString(){

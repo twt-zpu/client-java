@@ -1,9 +1,10 @@
-package eu.arrowhead.ArrowheadProvider.common;
+package eu.arrowhead.common.ssl;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.security.Key;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -12,58 +13,14 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Enumeration;
-import java.util.Properties;
 
-import javax.ws.rs.NotAllowedException;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
+import javax.naming.InvalidNameException;
+import javax.naming.ldap.LdapName;
+import javax.naming.ldap.Rdn;
 
-public final class Utility {
+public final class SecurityUtils {
 	
-	private static Properties prop;
-	
-	private Utility(){
-	}
-
-	public static <T> Response sendRequest(String URI, String method, T payload){
-		
-		Response response = null;
-		try{
-		    Client client = ClientBuilder.newClient();
-
-		    WebTarget target = client.target(UriBuilder.fromUri(URI).build());
-		    switch(method){
-		    case "GET": 
-		        response = target.request().header("Content-type", "application/json").get();
-		        break;
-		    case "POST":
-		        response = target.request().header("Content-type", "application/json").post(Entity.json(payload));
-		        break;
-		    case "PUT":
-		        response = target.request().header("Content-type", "application/json").put(Entity.json(payload));
-		        break;
-		    case "DELETE":
-		        response = target.request().header("Content-type", "application/json").delete();
-		        break;
-		    default:
-		        throw new NotAllowedException("Invalid method type was given "
-		                + "to the Utility.sendRequest() method");
-		    }
-		    
-		    return response;
-		}
-		catch(Exception e){
-		    e.printStackTrace();
-		    
-		    return Response.status(response.getStatus()).entity(e.getMessage()).build();
-		}
-	}
-	
-public static KeyStore loadKeyStore(String filePath, String pass) throws Exception {
+	public static KeyStore loadKeyStore(String filePath, String pass) throws Exception {
 		
 		File tempFile = new File(filePath);
 		FileInputStream is = null;
@@ -118,6 +75,36 @@ public static KeyStore loadKeyStore(String filePath, String pass) throws Excepti
 		return xCert;		
 	}
 	
+	public static X509Certificate getCertFromKeyStore(KeyStore keystore, String name) {
+		
+		Enumeration<String> enumeration;
+		try {
+			enumeration = keystore.aliases();
+		} catch (KeyStoreException e) {
+			System.out.println("Error in Utils::getCertFromKeyStore(): " + e.toString());
+			return null;
+		}
+        
+        while(enumeration.hasMoreElements()) {
+            String alias = (String)enumeration.nextElement();	                        
+            
+            X509Certificate clientCert = null;
+			try {
+				clientCert = (X509Certificate) keystore.getCertificate(alias);
+			} catch (KeyStoreException e) {
+				System.out.println("Error, cannot load certificate " + alias + " in keystore, skipping...");
+				continue;
+			}
+            String clientCertCN = getCertCNFromSubject(clientCert.getSubjectDN().getName());
+            
+            if(!clientCertCN.equals(name)) continue;
+            
+            return clientCert;             
+        }
+        
+        return null;
+	}
+	
 	public static PrivateKey getPrivateKey(KeyStore keystore, String pass) throws Exception {
 		Enumeration<String> enumeration = null;
     	PrivateKey privatekey = null;   
@@ -143,23 +130,44 @@ public static KeyStore loadKeyStore(String filePath, String pass) throws Excepti
 		return privatekey;
 	}
 	
-	public synchronized static Properties getProp() {
+	public static String getCertCNFromSubject(String subjectname) {
+		String cn = null;
 		try {
-			if (prop == null) {
-				prop = new Properties();
-				File file = new File("config" + File.separator + "app.properties");
-				FileInputStream inputStream = new FileInputStream(file);
-				if (inputStream != null) {
-					prop.load(inputStream);
-				}
+			// Subject is in LDAP format, we can use the LdapName object for parsing
+			LdapName ldapname = new LdapName(subjectname);
+			for (Rdn rdn : ldapname.getRdns()) {
+				// Find the data after the CN field
+				if (rdn.getType().equalsIgnoreCase("CN"))
+					cn = (String) rdn.getValue();
 			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
+		} catch (InvalidNameException e) {
+			System.out.println("Exception in getCertCN: " + e.toString());
+			return "";
 		}
-		
-		return prop;
+
+		if (cn == null) {
+			return "";
+		}
+
+		return cn;
 	}
 	
+	public static String getKeyEncoded(Key key) {
+		if (key == null)
+			return "";
+
+		byte[] encpub = key.getEncoded();
+		StringBuilder sb = new StringBuilder(encpub.length * 2);
+		for (byte b : encpub)
+			sb.append(String.format("%02x", b & 0xff));
+		return sb.toString();
+	}
 	
-	
+	public static String getByteEncoded(byte[] array) {
+		StringBuilder sb = new StringBuilder(array.length * 2);
+		for (byte b : array)
+			sb.append(String.format("%02X", b & 0xff));
+		return sb.toString();
+	}
+
 }
