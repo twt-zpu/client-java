@@ -29,6 +29,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.SslConfigurator;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
 
 public final class Utility {
 	
@@ -39,7 +41,10 @@ public final class Utility {
 
 	public static <T> Response sendRequest(String URI, String method, T payload) {
 		
-		Client client = null;
+	    ClientConfig configuration = new ClientConfig();
+	    configuration.property(ClientProperties.CONNECT_TIMEOUT, 30000);
+	    configuration.property(ClientProperties.READ_TIMEOUT, 30000);
+	    Client client = null;
 		Response response = null;
 		boolean isSecure = false;
 		if(URI.startsWith("https")){
@@ -82,10 +87,10 @@ public final class Utility {
 				}
 			};
 			
-			client = ClientBuilder.newBuilder().sslContext(sslContext).hostnameVerifier(allHostsValid).build();
+			client = ClientBuilder.newBuilder().sslContext(sslContext).withConfig(configuration).hostnameVerifier(allHostsValid).build();
 		}
 		else{
-			client = ClientBuilder.newClient();
+			client = ClientBuilder.newClient(configuration);
 		}
 		
 		try {
