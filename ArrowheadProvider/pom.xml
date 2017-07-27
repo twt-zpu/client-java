@@ -61,15 +61,15 @@
 							<showDeprecation>true</showDeprecation>
 							<showWarnings>true</showWarnings>
 							<compilerArguments>
-								<source>1.7</source>
-								<target>1.7</target>
+								<source>1.8</source>
+								<target>1.8</target>
 							</compilerArguments>
 						</configuration>
 					</execution>
 				</executions>
 				<configuration>
-					<source>1.7</source>
-					<target>1.7</target>
+					<source>1.8</source>
+					<target>1.8</target>
 				</configuration>
 			</plugin>
 			<!-- Make this jar executable -->
@@ -84,7 +84,7 @@
 			            </manifestEntries>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<mainClass>eu.arrowhead.ArrowheadProvider.Main</mainClass>
+							<mainClass>eu.arrowhead.ArrowheadProvider.ProviderMain</mainClass>
 							<classpathPrefix>lib/</classpathPrefix>
 						</manifest>
 					</archive>

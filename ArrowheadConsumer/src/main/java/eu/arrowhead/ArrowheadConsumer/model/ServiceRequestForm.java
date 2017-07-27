@@ -1,4 +1,4 @@
-package eu.arrowhead.ArrowheadConsumerClient.model;
+package eu.arrowhead.ArrowheadConsumer.model;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -1,4 +1,4 @@
-package eu.arrowhead.ArrowheadConsumerClient;
+package eu.arrowhead.ArrowheadConsumer;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -159,7 +159,7 @@ public final class Utility {
 		try {
 			enumeration = keystore.aliases();
 			if (enumeration.hasMoreElements()) {
-				String alias = (String) enumeration.nextElement();
+				String alias = enumeration.nextElement();
 				Certificate certificate = keystore.getCertificate(alias);
 				xCert = (X509Certificate) certificate;
 			} else {

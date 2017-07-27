@@ -61,7 +61,7 @@ public final class SecurityUtils {
 			enumeration = keystore.aliases();
 			
 		    if(enumeration.hasMoreElements()) {
-		        String alias = (String)enumeration.nextElement();	            
+		        String alias = enumeration.nextElement();
 		        Certificate certificate = keystore.getCertificate(alias);     
 		        xCert = (X509Certificate) certificate;
 		    }
@@ -86,7 +86,7 @@ public final class SecurityUtils {
 		}
         
         while(enumeration.hasMoreElements()) {
-            String alias = (String)enumeration.nextElement();	                        
+            String alias = enumeration.nextElement();
             
             X509Certificate clientCert = null;
 			try {

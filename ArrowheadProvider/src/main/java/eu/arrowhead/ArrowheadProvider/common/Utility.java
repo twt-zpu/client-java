@@ -104,7 +104,7 @@ public static KeyStore loadKeyStore(String filePath, String pass) throws Excepti
 			enumeration = keystore.aliases();
 			
 		    if(enumeration.hasMoreElements()) {
-		        String alias = (String)enumeration.nextElement();	            
+		        String alias = enumeration.nextElement();
 		        Certificate certificate = keystore.getCertificate(alias);     
 		        xCert = (X509Certificate) certificate;
 		    }

@@ -4,10 +4,10 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>eu.arrowhead</groupId>
-	<artifactId>ArrowheadConsumerClient</artifactId>
+	<artifactId>ArrowheadConsumer</artifactId>
 	<packaging>jar</packaging>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>ArrowheadConsumerClient</name>
+	<name>ArrowheadConsumer</name>
 
 	<dependencyManagement>
 		<dependencies>
@@ -56,15 +56,15 @@
 							<showDeprecation>true</showDeprecation>
 							<showWarnings>true</showWarnings>
 							<compilerArguments>
-								<source>1.7</source>
-								<target>1.7</target>
+								<source>1.8</source>
+								<target>1.8</target>
 							</compilerArguments>
 						</configuration>
 					</execution>
 				</executions>
 				<configuration>
-					<source>1.7</source>
-					<target>1.7</target>
+					<source>1.8</source>
+					<target>1.8</target>
 				</configuration>
 			</plugin>
 			<!-- Make this jar executable -->
@@ -79,7 +79,7 @@
 						</manifestEntries>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<mainClass>eu.arrowhead.ArrowheadConsumerClient.Main</mainClass>
+							<mainClass>eu.arrowhead.ArrowheadConsumer.ConsumerMain</mainClass>
 							<classpathPrefix>lib/</classpathPrefix>
 						</manifest>
 					</archive>

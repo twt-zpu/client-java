@@ -43,7 +43,7 @@ public class TemperatureResource {
 				byte[] signaturebytes = Base64.getDecoder().decode(signature);
 
 				Signature signatureInstance = Signature.getInstance("SHA1withRSA");
-				signatureInstance.initVerify(Main.authorizationKey);
+				signatureInstance.initVerify(ProviderMain.authorizationKey);
 				signatureInstance.update(tokenbytes);
 
 				boolean verifies = signatureInstance.verify(signaturebytes);
@@ -54,7 +54,7 @@ public class TemperatureResource {
 				}
 
 				Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-				cipher.init(Cipher.DECRYPT_MODE, Main.privateKey);
+				cipher.init(Cipher.DECRYPT_MODE, ProviderMain.privateKey);
 				byte[] byteToken = cipher.doFinal(tokenbytes);
 
 				Gson gson = new Gson();
