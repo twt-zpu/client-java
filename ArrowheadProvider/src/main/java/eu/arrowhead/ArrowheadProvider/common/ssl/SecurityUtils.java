@@ -1,4 +1,4 @@
-package eu.arrowhead.common.ssl;
+package eu.arrowhead.ArrowheadProvider.common.ssl;
 
 import java.io.File;
 import java.io.FileInputStream;

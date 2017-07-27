@@ -1,4 +1,4 @@
-package eu.arrowhead.common.ssl;
+package eu.arrowhead.ArrowheadProvider.common.ssl;
 
 public class AuthenticationException extends RuntimeException{
 

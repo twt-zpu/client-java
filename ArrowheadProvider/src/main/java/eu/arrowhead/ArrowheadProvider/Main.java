@@ -11,7 +11,6 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
@@ -28,8 +27,8 @@ import eu.arrowhead.ArrowheadProvider.common.Utility;
 import eu.arrowhead.ArrowheadProvider.common.model.ArrowheadSystem;
 import eu.arrowhead.ArrowheadProvider.common.model.ServiceMetadata;
 import eu.arrowhead.ArrowheadProvider.common.model.ServiceRegistryEntry;
-import eu.arrowhead.common.ssl.AuthenticationException;
-import eu.arrowhead.common.ssl.SecurityUtils;
+import eu.arrowhead.ArrowheadProvider.common.ssl.AuthenticationException;
+import eu.arrowhead.ArrowheadProvider.common.ssl.SecurityUtils;
 
 public class Main {
 
@@ -63,9 +62,9 @@ public class Main {
 		try {
 			String authKeystorePath = getProp().getProperty("ssl.auth_keystore");
 			String authKeystorePass = getProp().getProperty("ssl.auth_keystorepass");
-			KeyStore authKeyStore = eu.arrowhead.common.ssl.SecurityUtils.loadKeyStore(authKeystorePath,
+			KeyStore authKeyStore = SecurityUtils.loadKeyStore(authKeystorePath,
 					authKeystorePass);
-			X509Certificate cert = eu.arrowhead.common.ssl.SecurityUtils.getFirstCertFromKeyStore(authKeyStore);
+			X509Certificate cert = SecurityUtils.getFirstCertFromKeyStore(authKeyStore);
 			authorizationKey = cert.getPublicKey();
 
 		} catch (Exception ex) {
