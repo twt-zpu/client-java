@@ -21,8 +21,6 @@ import eu.arrowhead.ArrowheadConsumer.model.ServiceMetadata;
 import eu.arrowhead.ArrowheadConsumer.model.ServiceRequestForm;
 
 public class ConsumerMain {
-	//TODO need to modify to receive token+signature with orchResp
-	
 	
 	private static Properties prop;
 	//public static final String ORCH_URI = getProp().getProperty("orch_uri", "http://localhost:8444/orchestrator/orchestration");
@@ -49,15 +47,14 @@ public class ConsumerMain {
 		String token = orchResponse.getResponse().get(0).getAuthorizationToken();
 		String signature = orchResponse.getResponse().get(0).getSignature();
 		String serviceURI = orchResponse.getResponse().get(0).getServiceURI();
-		
-		UriBuilder providerUriBuilder = UriBuilder
-	            .fromPath("//" + provider.getAddress() + ":" + provider.getPort())
-	            .scheme("https")
-	            .path(serviceURI)
-	            .queryParam("token", token)
-	            .queryParam("signature", signature);
-        //.port(Integer.parseInt(provider.getPort()))
-		
+			
+		UriBuilder providerUriBuilder = UriBuilder.fromUri(serviceURI)
+										.scheme("https")
+										.host(provider.getAddress())
+										.port(Integer.parseInt(provider.getPort()))
+										.queryParam("token", token)
+							            .queryParam("signature", signature); 
+	
 		System.out.println("Received provider system URL: " + providerUriBuilder.toString() + "\n");
 		
 		//Sending request to the provider, parsing the answer
