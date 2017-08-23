@@ -2,62 +2,79 @@ package eu.arrowhead.ArrowheadConsumer.model;
 
 public class OrchestrationForm {
 
-	private ArrowheadSystem provider;
-	private String serviceURI;
-	private String authorizationToken;
-	private String instruction;
-	private String signature;
+  private ArrowheadService service;
+  private ArrowheadSystem provider;
+  private String serviceURI;
+  private String instruction;
+  private String authorizationToken;
+  private String signature;
 
-	public OrchestrationForm() {
-	}
+  public OrchestrationForm() {
+  }
 
-	public OrchestrationForm(ArrowheadSystem provider, String serviceURI,
-			String authorizationToken, String instruction) {
-		this.provider = provider;
-		this.serviceURI = serviceURI;
-		this.authorizationToken = authorizationToken;
-		this.instruction = instruction;
-	}
+  public OrchestrationForm(ArrowheadService service, ArrowheadSystem provider, String serviceURI) {
+    this.service = service;
+    this.provider = provider;
+    this.serviceURI = serviceURI;
+  }
 
-	public ArrowheadSystem getProvider() {
-		return provider;
-	}
+  public OrchestrationForm(ArrowheadService service, ArrowheadSystem provider, String serviceURI, String instruction, String authorizationToken,
+                           String signature) {
+    this.service = service;
+    this.provider = provider;
+    this.serviceURI = serviceURI;
+    this.instruction = instruction;
+    this.authorizationToken = authorizationToken;
+    this.signature = signature;
+  }
 
-	public void setProvider(ArrowheadSystem provider) {
-		this.provider = provider;
-	}
+  public ArrowheadService getService() {
+    return service;
+  }
 
-	public String getServiceURI() {
-		return serviceURI;
-	}
+  public void setService(ArrowheadService service) {
+    this.service = service;
+  }
 
-	public void setServiceURI(String serviceURI) {
-		this.serviceURI = serviceURI;
-	}
+  public ArrowheadSystem getProvider() {
+    return provider;
+  }
 
-	public String getAuthorizationToken() {
-		return authorizationToken;
-	}
+  public void setProvider(ArrowheadSystem provider) {
+    this.provider = provider;
+  }
 
-	public void setAuthorizationToken(String authorizationToken) {
-		this.authorizationToken = authorizationToken;
-	}
+  public String getServiceURI() {
+    return serviceURI;
+  }
 
-	public String getInstruction() {
-		return instruction;
-	}
+  public void setServiceURI(String serviceURI) {
+    this.serviceURI = serviceURI;
+  }
 
-	public void setInstruction(String instruction) {
-		this.instruction = instruction;
-	}
+  public String getInstruction() {
+    return instruction;
+  }
 
-	public String getSignature() {
-		return signature;
-	}
+  public void setInstruction(String instruction) {
+    this.instruction = instruction;
+  }
 
-	public void setSignature(String signature) {
-		this.signature = signature;
-	}
-	
-	
+  public String getAuthorizationToken() {
+    return authorizationToken;
+  }
+
+  public void setAuthorizationToken(String authorizationToken) {
+    this.authorizationToken = authorizationToken;
+  }
+
+  public String getSignature() {
+    return signature;
+  }
+
+  public void setSignature(String signature) {
+    this.signature = signature;
+  }
+
 }
+

@@ -1,75 +1,74 @@
 package eu.arrowhead.BasicConsumer.model;
 
 public class ArrowheadSystem {
-	
-	private String systemGroup;
-	private String systemName;
-	private String address;
-	private String port;
-	private String authenticationInfo;
-	
-	public ArrowheadSystem(){	
-	}
-	
-	public ArrowheadSystem(String systemGroup, String systemName, String address) {
-		this.systemGroup = systemGroup;
-		this.systemName = systemName;
-		this.address = address;
-	}
 
-	public ArrowheadSystem(String systemGroup, String systemName, String address, String port,
-			String authenticationInfo) {
-		this.systemGroup = systemGroup;
-		this.systemName = systemName;
-		this.address = address;
-		this.port = port;
-		this.authenticationInfo = authenticationInfo;
-	}
+  private String systemGroup;
+  private String systemName;
+  private String address;
+  private String port;
+  private String authenticationInfo;
 
-	public String getSystemGroup() {
-		return systemGroup;
-	}
+  public ArrowheadSystem() {
+  }
 
-	public void setSystemGroup(String systemGroup) {
-		this.systemGroup = systemGroup;
-	}
+  public ArrowheadSystem(String systemGroup, String systemName, String address) {
+    this.systemGroup = systemGroup;
+    this.systemName = systemName;
+    this.address = address;
+  }
 
-	public String getSystemName() {
-		return systemName;
-	}
+  public ArrowheadSystem(String systemGroup, String systemName, String address, String port, String authenticationInfo) {
+    this.systemGroup = systemGroup;
+    this.systemName = systemName;
+    this.address = address;
+    this.port = port;
+    this.authenticationInfo = authenticationInfo;
+  }
 
-	public void setSystemName(String systemName) {
-		this.systemName = systemName;
-	}
+  public String getSystemGroup() {
+    return systemGroup;
+  }
 
-	public String getAddress() {
-		return address;
-	}
+  public void setSystemGroup(String systemGroup) {
+    this.systemGroup = systemGroup;
+  }
 
-	public void setAddress(String address) {
-		this.address = address;
-	}
+  public String getSystemName() {
+    return systemName;
+  }
 
-	public String getPort() {
-		return port;
-	}
+  public void setSystemName(String systemName) {
+    this.systemName = systemName;
+  }
 
-	public void setPort(String port) {
-		this.port = port;
-	}
+  public String getAddress() {
+    return address;
+  }
 
-	public String getAuthenticationInfo() {
-		return authenticationInfo;
-	}
+  public void setAddress(String address) {
+    this.address = address;
+  }
 
-	public void setAuthenticationInfo(String authenticationInfo) {
-		this.authenticationInfo = authenticationInfo;
-	}
+  public String getPort() {
+    return port;
+  }
 
-	@Override
-	public String toString(){
-		return "(" + systemGroup + ":" + systemName + ")";
-	}
-	
-	
+  public void setPort(String port) {
+    this.port = port;
+  }
+
+  public String getAuthenticationInfo() {
+    return authenticationInfo;
+  }
+
+  public void setAuthenticationInfo(String authenticationInfo) {
+    this.authenticationInfo = authenticationInfo;
+  }
+
+  @Override
+  public String toString() {
+    return "(" + systemGroup + ":" + systemName + ")";
+  }
+
+
 }

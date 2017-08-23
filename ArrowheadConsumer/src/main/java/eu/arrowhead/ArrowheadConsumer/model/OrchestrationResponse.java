@@ -3,28 +3,23 @@ package eu.arrowhead.ArrowheadConsumer.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
-@XmlRootElement
 public class OrchestrationResponse {
 
-	private List<OrchestrationForm> response = new ArrayList<OrchestrationForm>();
+  private List<OrchestrationForm> response = new ArrayList<>();
 
-	public OrchestrationResponse() {
-		super();
-	}
+  public OrchestrationResponse() {
+  }
 
-	public OrchestrationResponse(List<OrchestrationForm> response) {
-		super();
-		this.response = response;
-	}
+  public OrchestrationResponse(List<OrchestrationForm> response) {
+    this.response = response;
+  }
 
-	public List<OrchestrationForm> getResponse() {
-		return response;
-	}
+  public List<OrchestrationForm> getResponse() {
+    return response;
+  }
 
-	public void setResponse(List<OrchestrationForm> response) {
-		this.response = response;
-	}
+  public void setResponse(List<OrchestrationForm> response) {
+    this.response = response;
+  }
 
 }
