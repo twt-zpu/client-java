@@ -44,12 +44,7 @@ final class Utility {
     configuration.property(ClientProperties.READ_TIMEOUT, 30000);
     Client client;
 
-    boolean isSecure = false;
     if (uri.startsWith("https")) {
-      isSecure = true;
-    }
-
-    if (isSecure) {
       SslConfigurator sslConfig = SslConfigurator.newInstance().trustStoreFile(getProp().getProperty("ssl.truststore"))
           .trustStorePassword(getProp().getProperty("ssl.truststorepass")).keyStoreFile(getProp().getProperty("ssl.keystore"))
           .keyStorePassword(getProp().getProperty("ssl.keystorepass")).keyPassword(getProp().getProperty("ssl.keypass"));

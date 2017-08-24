@@ -1,13 +1,12 @@
 package eu.arrowhead.ArrowheadProvider;
 
 import eu.arrowhead.ArrowheadProvider.common.Utility;
+import eu.arrowhead.ArrowheadProvider.common.model.ArrowheadService;
 import eu.arrowhead.ArrowheadProvider.common.model.ArrowheadSystem;
 import eu.arrowhead.ArrowheadProvider.common.model.ServiceMetadata;
 import eu.arrowhead.ArrowheadProvider.common.model.ServiceRegistryEntry;
 import eu.arrowhead.ArrowheadProvider.common.ssl.AuthenticationException;
 import eu.arrowhead.ArrowheadProvider.common.ssl.SecurityUtils;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.security.KeyStore;
@@ -36,21 +35,20 @@ public class ProviderMain {
   public static PrivateKey privateKey = null;
   public static PublicKey authorizationKey = null;
   private static Properties prop;
-  public static final String BASE_URI_SECURED = getProp().getProperty("base_uri_secured", "https://0.0.0.0:8452/");
-  public static final String BASE_URI = getProp().getProperty("base_uri", "http://0.0.0.0:8453/");
+  public static final String BASE_URI_SECURED = Utility.getProp().getProperty("base_uri_secured", "https://0.0.0.0:8453/");
+  public static final String BASE_URI = Utility.getProp().getProperty("base_uri", "http://0.0.0.0:8452/");
   // Service Registry Data
-  public static final String SR_BASE_URI = getProp().getProperty("sr_base_uri", "http://arrowhead.tmit.bme.hu:8444/serviceregistry");
-  public static final String TSIG_KEY = getProp().getProperty("tsig_key", "RM/jKKEPYB83peT0DQnYGg==");
-  // address and port to be registered into the Service Registry, same as in
-  // BASE_URI_*
-  public static final String ADDRESS = getProp().getProperty("address", "0.0.0.0");
-  public static final String PORT_SECURE = getProp().getProperty("port_secure", "8452");
-  public static final String PORT_UNSECURE = getProp().getProperty("port_unsecure", "8453");
+  public static final String SR_BASE_URI = Utility.getProp().getProperty("sr_base_uri", "http://arrowhead.tmit.bme.hu:8444/serviceregistry");
+  public static final String TSIG_KEY = Utility.getProp().getProperty("tsig_key", "RM/jKKEPYB83peT0DQnYGg==");
+  // address and port to be registered into the Service Registry, same as in BASE_URI_*
+  public static final String ADDRESS = Utility.getProp().getProperty("address", "0.0.0.0");
+  public static final int PORT_SECURE = Integer.valueOf(Utility.getProp().getProperty("port_secure", "8452"));
+  public static final int PORT_UNSECURE = Integer.valueOf(Utility.getProp().getProperty("port_unsecure", "8453"));
 
   public static void main(String[] args) throws Exception {
     try {
-      String authKeystorePath = getProp().getProperty("ssl.auth_keystore");
-      String authKeystorePass = getProp().getProperty("ssl.auth_keystorepass");
+      String authKeystorePath = Utility.getProp().getProperty("ssl.auth_keystore");
+      String authKeystorePass = Utility.getProp().getProperty("ssl.auth_keystorepass");
       KeyStore authKeyStore = SecurityUtils.loadKeyStore(authKeystorePath, authKeystorePass);
       X509Certificate cert = SecurityUtils.getFirstCertFromKeyStore(authKeyStore);
       authorizationKey = cert.getPublicKey();
@@ -60,8 +58,9 @@ public class ProviderMain {
     }
 
     try {
-      KeyStore keyStore = Utility.loadKeyStore(Utility.getProp().getProperty("ssl.keystore"), Utility.getProp().getProperty("ssl.keystorepass"));
-      privateKey = Utility.getPrivateKey(keyStore, Utility.getProp().getProperty("ssl.keystorepass"));
+      KeyStore keyStore = SecurityUtils
+          .loadKeyStore(Utility.getProp().getProperty("ssl.keystore"), Utility.getProp().getProperty("ssl.keystorepass"));
+      privateKey = SecurityUtils.getPrivateKey(keyStore, Utility.getProp().getProperty("ssl.keystorepass"));
     } catch (Exception ex) {
       ex.printStackTrace();
     }
@@ -118,24 +117,7 @@ public class ProviderMain {
     System.out.println("Temperature Provider Server stopped.");
   }
 
-  public synchronized static Properties getProp() {
-    try {
-      if (prop == null) {
-        prop = new Properties();
-        File file = new File("config" + File.separator + "app.properties");
-        FileInputStream inputStream = new FileInputStream(file);
-        if (inputStream != null) {
-          prop.load(inputStream);
-        }
-      }
-    } catch (Exception ex) {
-      ex.printStackTrace();
-    }
-
-    return prop;
-  }
-
-  public static HttpServer startServer(String URI) throws IOException {
+  private static HttpServer startServer(String URI) throws IOException {
     URI uri = UriBuilder.fromUri(URI).build();
 
     final ResourceConfig config = new ResourceConfig();
@@ -147,7 +129,7 @@ public class ProviderMain {
     return server;
   }
 
-  public static void registerToServiceRegistry(String name, String port) throws Exception {
+  private static void registerToServiceRegistry(String name, int port) throws Exception {
     // prepare AS
     ArrowheadSystem provider = new ArrowheadSystem("TemperatureSensors", name, ADDRESS, port, "TBD");
 
@@ -155,16 +137,18 @@ public class ProviderMain {
     ServiceMetadata unit = new ServiceMetadata("unit", "celsius");
     List<ServiceMetadata> metadataList = new ArrayList<ServiceMetadata>();
     metadataList.add(unit);
-    if (port.equals(PORT_SECURE)) {
+    if (port == PORT_SECURE) {
       ServiceMetadata security = new ServiceMetadata("security", "token");
       metadataList.add(security);
     }
 
+    ArrowheadService service = new ArrowheadService("Temperature", "IndoorTemperature", Arrays.asList("json"), metadataList);
+
     // prepare ServiceRegistryEntry - the final payload
-    ServiceRegistryEntry entry = new ServiceRegistryEntry(provider, "/temperature", metadataList, TSIG_KEY, "1.0");
+    ServiceRegistryEntry entry = new ServiceRegistryEntry(service, provider, "/temperature");
 
     // prepare URI
-    UriBuilder ub = UriBuilder.fromPath(SR_BASE_URI).path("Temperature").path("IndoorTemperature").path("json");
+    UriBuilder ub = UriBuilder.fromPath(SR_BASE_URI).path("registration");
 
     // send request
     Response response = Utility.sendRequest(ub.toString(), "POST", entry);
@@ -175,7 +159,7 @@ public class ProviderMain {
     }
   }
 
-  public static HttpServer startSecureServer(String URI) throws IOException {
+  private static HttpServer startSecureServer(String URI) throws IOException {
     URI uri = UriBuilder.fromUri(URI).build();
 
     final ResourceConfig config = new ResourceConfig();
@@ -184,11 +168,11 @@ public class ProviderMain {
 
     SSLContextConfigurator sslCon = new SSLContextConfigurator();
 
-    String keystorePath = getProp().getProperty("ssl.keystore");
-    String keystorePass = getProp().getProperty("ssl.keystorepass");
-    String keyPass = getProp().getProperty("ssl.keypass");
-    String truststorePath = getProp().getProperty("ssl.truststore");
-    String truststorePass = getProp().getProperty("ssl.truststorepass");
+    String keystorePath = Utility.getProp().getProperty("ssl.keystore");
+    String keystorePass = Utility.getProp().getProperty("ssl.keystorepass");
+    String keyPass = Utility.getProp().getProperty("ssl.keypass");
+    String truststorePath = Utility.getProp().getProperty("ssl.truststore");
+    String truststorePass = Utility.getProp().getProperty("ssl.truststorepass");
 
     sslCon.setKeyStoreFile(keystorePath);
     sslCon.setKeyStorePass(keystorePass);
@@ -215,19 +199,26 @@ public class ProviderMain {
     return server;
   }
 
-  public static void unregisterFromServiceRegistry(String port) throws Exception {
+  private static void unregisterFromServiceRegistry(int port) throws Exception {
     // prepare AS
     ArrowheadSystem provider = new ArrowheadSystem("TemperatureSensors", "TemperatureSensor14", ADDRESS, port, "TBD");
 
     // prepare SM
-    ServiceMetadata smd = new ServiceMetadata("unit", "celsius");
-    List<ServiceMetadata> metadataList = new ArrayList<>(Arrays.asList(smd));
+    ServiceMetadata unit = new ServiceMetadata("unit", "celsius");
+    List<ServiceMetadata> metadataList = new ArrayList<ServiceMetadata>();
+    metadataList.add(unit);
+    if (port == PORT_SECURE) {
+      ServiceMetadata security = new ServiceMetadata("security", "token");
+      metadataList.add(security);
+    }
+
+    ArrowheadService service = new ArrowheadService("Temperature", "IndoorTemperature", Arrays.asList("json"), metadataList);
 
     // prepare ServiceRegistryEntry - the final payload
-    ServiceRegistryEntry entry = new ServiceRegistryEntry(provider, "temperature", metadataList, TSIG_KEY, "1.0");
+    ServiceRegistryEntry entry = new ServiceRegistryEntry(service, provider, "/temperature");
 
     // prepare URI
-    UriBuilder ub = UriBuilder.fromPath(SR_BASE_URI).path("Temperature").path("IndoorTemperature").path("json");
+    UriBuilder ub = UriBuilder.fromPath(SR_BASE_URI).path("removing");
 
     // send request
     Response response = Utility.sendRequest(ub.toString(), "PUT", entry);

@@ -1,13 +1,11 @@
 package eu.arrowhead.ArrowheadProvider.common.model;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
-@XmlRootElement
 public class ErrorMessage {
 
-  public final String documentation = "No documentation yet.";
   private String errorMessage;
   private int errorCode;
+  //TODO modify this once javadocs are published, it could even go to the specific exception doc
+  private String documentation = "No documentation yet.";
 
   public ErrorMessage() {
   }
@@ -37,5 +35,8 @@ public class ErrorMessage {
     return documentation;
   }
 
+  public void setDocumentation(String documentation) {
+    this.documentation = documentation;
+  }
 
 }

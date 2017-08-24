@@ -1,18 +1,17 @@
 package eu.arrowhead.ArrowheadProvider.common.model;
 
-
 public class ArrowheadSystem {
 
   private String systemGroup;
   private String systemName;
   private String address;
-  private String port;
+  private int port;
   private String authenticationInfo;
 
   public ArrowheadSystem() {
   }
 
-  public ArrowheadSystem(String systemGroup, String systemName, String address, String port, String authenticationInfo) {
+  public ArrowheadSystem(String systemGroup, String systemName, String address, int port, String authenticationInfo) {
     this.systemGroup = systemGroup;
     this.systemName = systemName;
     this.address = address;
@@ -44,11 +43,11 @@ public class ArrowheadSystem {
     this.address = address;
   }
 
-  public String getPort() {
+  public int getPort() {
     return port;
   }
 
-  public void setPort(String port) {
+  public void setPort(int port) {
     this.port = port;
   }
 
@@ -58,6 +57,20 @@ public class ArrowheadSystem {
 
   public void setAuthenticationInfo(String authenticationInfo) {
     this.authenticationInfo = authenticationInfo;
+  }
+
+  public boolean isValid() {
+    return systemGroup != null && systemName != null && address != null;
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((address == null) ? 0 : address.hashCode());
+    result = prime * result + ((systemGroup == null) ? 0 : systemGroup.hashCode());
+    result = prime * result + ((systemName == null) ? 0 : systemName.hashCode());
+    return result;
   }
 
   @Override
@@ -96,11 +109,9 @@ public class ArrowheadSystem {
     return true;
   }
 
-
   @Override
   public String toString() {
     return "(" + systemGroup + ":" + systemName + ")";
   }
-
 
 }

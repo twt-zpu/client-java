@@ -19,7 +19,7 @@ public class AccessControlFilter implements ContainerRequestFilter {
   @Context
   Configuration configuration;
   @Inject
-  javax.inject.Provider<UriInfo> uriInfo;
+  private javax.inject.Provider<UriInfo> uriInfo;
 
   @Override
   public void filter(ContainerRequestContext requestContext) throws IOException {
@@ -31,7 +31,6 @@ public class AccessControlFilter implements ContainerRequestFilter {
       if (requestTarget.contains("authorization") || requestTarget.contains("init")) {
         if (isClientAuthorized(sc, configuration, true)) {
           System.out.println("Identification is successful! (SSL)");
-          return;
         } else {
           System.out.println("Unauthorized access! (SSL)");
           /*throw new AuthenticationException
@@ -40,7 +39,6 @@ public class AccessControlFilter implements ContainerRequestFilter {
       } else {
         if (isClientAuthorized(sc, configuration, false)) {
           System.out.println("Identification is successful! (SSL)");
-          return;
         } else {
           System.out.println("Unauthorized access! (SSL)");
           /*throw new AuthenticationException

@@ -130,7 +130,7 @@ public final class SecurityUtils {
 
   public static PrivateKey getPrivateKey(KeyStore keystore, String pass) throws Exception {
     Enumeration<String> enumeration = null;
-    PrivateKey privatekey = null;
+    PrivateKey privatekey;
     String elem;
     try {
       enumeration = keystore.aliases();
@@ -146,10 +146,6 @@ public final class SecurityUtils {
       }
     } catch (Exception e) {
       throw new Exception("Error in Utils::getPrivateKey(): " + e.toString());
-    }
-
-    if (privatekey == null) {
-      throw new Exception("Error in Utils::getPrivateKey(): no private key " + "returned for alias: " + elem + " ,pass: " + pass);
     }
 
     return privatekey;

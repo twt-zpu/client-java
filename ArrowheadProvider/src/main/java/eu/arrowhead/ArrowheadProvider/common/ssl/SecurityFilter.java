@@ -17,7 +17,7 @@ import javax.ws.rs.ext.Provider;
 public class SecurityFilter implements ContainerRequestFilter {
 
   @Inject
-  javax.inject.Provider<UriInfo> uriInfo;
+  private javax.inject.Provider<UriInfo> uriInfo;
 
   @Override
   public void filter(ContainerRequestContext context) throws IOException {
@@ -35,7 +35,7 @@ public class SecurityFilter implements ContainerRequestFilter {
     private String user;
     private Principal principal;
 
-    public Authorizer(final String user) {
+    Authorizer(final String user) {
       this.user = user;
       this.principal = new Principal() {
 
