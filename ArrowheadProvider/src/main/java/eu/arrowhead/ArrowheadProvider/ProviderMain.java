@@ -9,6 +9,7 @@ import eu.arrowhead.ArrowheadProvider.common.ssl.AuthenticationException;
 import eu.arrowhead.ArrowheadProvider.common.ssl.SecurityUtils;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -16,9 +17,8 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.ssl.SSLContextConfigurator;
@@ -28,145 +28,68 @@ import org.glassfish.jersey.server.ResourceConfig;
 
 public class ProviderMain {
 
-  public static HttpServer server = null;
-  public static HttpServer secureServer = null;
-  // security-related variable
-  public static X509Certificate serverCert = null;
   public static PrivateKey privateKey = null;
   public static PublicKey authorizationKey = null;
-  private static Properties prop;
-  public static final String BASE_URI_SECURED = Utility.getProp().getProperty("base_uri_secured", "https://0.0.0.0:8453/");
-  public static final String BASE_URI = Utility.getProp().getProperty("base_uri", "http://0.0.0.0:8452/");
-  // Service Registry Data
-  public static final String SR_BASE_URI = Utility.getProp().getProperty("sr_base_uri", "http://arrowhead.tmit.bme.hu:8444/serviceregistry");
-  public static final String TSIG_KEY = Utility.getProp().getProperty("tsig_key", "RM/jKKEPYB83peT0DQnYGg==");
-  // address and port to be registered into the Service Registry, same as in BASE_URI_*
-  public static final String ADDRESS = Utility.getProp().getProperty("address", "0.0.0.0");
-  public static final int PORT_SECURE = Integer.valueOf(Utility.getProp().getProperty("port_secure", "8452"));
-  public static final int PORT_UNSECURE = Integer.valueOf(Utility.getProp().getProperty("port_unsecure", "8453"));
+  private static HttpServer server = null;
+  private static HttpServer secureServer = null;
+  private static final String BASE_URI = Utility.getProp().getProperty("base_uri", "http://0.0.0.0:8452/");
+  private static final String BASE_URI_SECURED = Utility.getProp().getProperty("base_uri_secured", "https://0.0.0.0:8453/");
+  private static final String SR_BASE_URI = Utility.getProp().getProperty("sr_base_uri", "http://arrowhead.tmit.bme.hu:8444/serviceregistry");
 
-  public static void main(String[] args) throws Exception {
-    try {
-      String authKeystorePath = Utility.getProp().getProperty("ssl.auth_keystore");
-      String authKeystorePass = Utility.getProp().getProperty("ssl.auth_keystorepass");
-      KeyStore authKeyStore = SecurityUtils.loadKeyStore(authKeystorePath, authKeystorePass);
-      X509Certificate cert = SecurityUtils.getFirstCertFromKeyStore(authKeyStore);
-      authorizationKey = cert.getPublicKey();
+  public static void main(String[] args) throws IOException {
 
-    } catch (Exception ex) {
-      ex.printStackTrace();
-    }
-
-    try {
-      KeyStore keyStore = SecurityUtils
-          .loadKeyStore(Utility.getProp().getProperty("ssl.keystore"), Utility.getProp().getProperty("ssl.keystorepass"));
-      privateKey = SecurityUtils.getPrivateKey(keyStore, Utility.getProp().getProperty("ssl.keystorepass"));
-    } catch (Exception ex) {
-      ex.printStackTrace();
-    }
-
-    int mode = 0;
-    for (int i = 0; i < args.length; ++i) {
-      if (args[i].equals("-m")) {
-        ++i;
-        switch (args[i]) {
-          case "secure":
-            mode = 1;
-            break;
-          case "both":
-            mode = 2;
-            break;
-        }
+    if (args.length > 0) {
+      switch (args[0]) {
+        case "insecure":
+          server = startServer();
+          break;
+        case "secure":
+          secureServer = startSecureServer();
+          break;
+        case "both":
+          server = startServer();
+          secureServer = startSecureServer();
+          break;
+        default:
+          throw new AssertionError("Unknown server mode: " + args[0]);
       }
+    } else {
+      server = startServer();
     }
 
-    switch (mode) {
-      case 0:
-        System.out.println("Starting unsecure server...");
-        server = startServer(BASE_URI);
-        registerToServiceRegistry("UnsecureTemperatureSensor", PORT_UNSECURE);
-        break;
-      case 1:
-        System.out.println("Starting secure server...");
-        secureServer = startSecureServer(BASE_URI_SECURED);
-        registerToServiceRegistry("SecureTemperatureSensor", PORT_SECURE);
-        break;
-      case 2:
-        System.out.println("Starting secure and unsecure servers...");
-        server = startServer(BASE_URI);
-        secureServer = startSecureServer(BASE_URI_SECURED);
-        registerToServiceRegistry("UnsecureTemperatureSensor", PORT_UNSECURE);
-        registerToServiceRegistry("SecureTemperatureSensor", PORT_SECURE);
-
-        break;
-    }
-
-    System.out.println("Press enter to shutdown the Temperature Provider Server...\n\n");
+    List<ServiceRegistryEntry> registeredEntries = registerToServiceRegistry();
+    System.out.println("Press enter to shutdown the Temperature Provider Server(s)...");
+    //noinspection ResultOfMethodCallIgnored
     System.in.read();
 
+    unregisterFromServiceRegistry(registeredEntries);
     if (server != null) {
-      unregisterFromServiceRegistry(PORT_UNSECURE);
       server.shutdownNow();
     }
-
     if (secureServer != null) {
-      unregisterFromServiceRegistry(PORT_SECURE);
       secureServer.shutdownNow();
     }
 
-    System.out.println("Temperature Provider Server stopped.");
+    System.out.println("Temperature Provider Server(s) stopped.");
   }
 
-  private static HttpServer startServer(String URI) throws IOException {
-    URI uri = UriBuilder.fromUri(URI).build();
-
+  private static HttpServer startServer() throws IOException {
+    URI uri = UriBuilder.fromUri(BASE_URI).build();
     final ResourceConfig config = new ResourceConfig();
     config.registerClasses(TemperatureResource.class);
 
     final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(uri, config);
     server.getServerConfiguration().setAllowPayloadForUndefinedHttpMethods(true);
     server.start();
+    System.out.println("Insecure server launched...");
     return server;
   }
 
-  private static void registerToServiceRegistry(String name, int port) throws Exception {
-    // prepare AS
-    ArrowheadSystem provider = new ArrowheadSystem("TemperatureSensors", name, ADDRESS, port, "TBD");
-
-    // prepare SM
-    ServiceMetadata unit = new ServiceMetadata("unit", "celsius");
-    List<ServiceMetadata> metadataList = new ArrayList<ServiceMetadata>();
-    metadataList.add(unit);
-    if (port == PORT_SECURE) {
-      ServiceMetadata security = new ServiceMetadata("security", "token");
-      metadataList.add(security);
-    }
-
-    ArrowheadService service = new ArrowheadService("Temperature", "IndoorTemperature", Arrays.asList("json"), metadataList);
-
-    // prepare ServiceRegistryEntry - the final payload
-    ServiceRegistryEntry entry = new ServiceRegistryEntry(service, provider, "/temperature");
-
-    // prepare URI
-    UriBuilder ub = UriBuilder.fromPath(SR_BASE_URI).path("registration");
-
-    // send request
-    Response response = Utility.sendRequest(ub.toString(), "POST", entry);
-    if (response.getStatus() != 204) {
-      throw new Exception("Service registering FAILED!");
-    } else {
-      System.out.println("Service registering successful!");
-    }
-  }
-
-  private static HttpServer startSecureServer(String URI) throws IOException {
-    URI uri = UriBuilder.fromUri(URI).build();
-
+  private static HttpServer startSecureServer() throws IOException {
+    URI uri = UriBuilder.fromUri(BASE_URI_SECURED).build();
     final ResourceConfig config = new ResourceConfig();
     config.registerClasses(TemperatureResource.class);
-    config.packages("eu.arrowhead.common.ssl");
-
-    SSLContextConfigurator sslCon = new SSLContextConfigurator();
+    config.packages("eu.arrowhead.ArrowheadProvider.common.ssl");
 
     String keystorePath = Utility.getProp().getProperty("ssl.keystore");
     String keystorePass = Utility.getProp().getProperty("ssl.keystorepass");
@@ -174,16 +97,21 @@ public class ProviderMain {
     String truststorePath = Utility.getProp().getProperty("ssl.truststore");
     String truststorePass = Utility.getProp().getProperty("ssl.truststorepass");
 
+    SSLContextConfigurator sslCon = new SSLContextConfigurator();
     sslCon.setKeyStoreFile(keystorePath);
     sslCon.setKeyStorePass(keystorePass);
     sslCon.setKeyPass(keyPass);
     sslCon.setTrustStoreFile(truststorePath);
     sslCon.setTrustStorePass(truststorePass);
+    if (!sslCon.validateConfiguration(true)) {
+      throw new AuthenticationException("SSL Context is not valid, check the certificate files or app.properties!");
+    }
 
+    X509Certificate serverCert;
     try {
       KeyStore keyStore = SecurityUtils.loadKeyStore(keystorePath, keystorePass);
       serverCert = SecurityUtils.getFirstCertFromKeyStore(keyStore);
-      System.out.println("Server PublicKey encoded: " + serverCert.getPublicKey().getEncoded());
+      System.out.println("Server PublicKey encoded: " + Arrays.toString(serverCert.getPublicKey().getEncoded()));
       System.out.println("Server PublicKey Base64: " + Base64.getEncoder().encodeToString(serverCert.getPublicKey().getEncoded()));
     } catch (Exception ex) {
       throw new AuthenticationException(ex.getMessage());
@@ -192,41 +120,93 @@ public class ProviderMain {
     System.out.println("Certificate of the secure server: " + serverCN);
     config.property("server_common_name", serverCN);
 
+    // Getting certificate keys
+    try {
+      String authKeystorePath = Utility.getProp().getProperty("ssl.auth_keystore");
+      String authKeystorePass = Utility.getProp().getProperty("ssl.auth_keystorepass");
+      KeyStore authKeyStore = SecurityUtils.loadKeyStore(authKeystorePath, authKeystorePass);
+      X509Certificate cert = SecurityUtils.getFirstCertFromKeyStore(authKeyStore);
+      authorizationKey = cert.getPublicKey();
+
+      KeyStore keyStore = SecurityUtils
+          .loadKeyStore(Utility.getProp().getProperty("ssl.keystore"), Utility.getProp().getProperty("ssl.keystorepass"));
+      privateKey = SecurityUtils.getPrivateKey(keyStore, Utility.getProp().getProperty("ssl.keystorepass"));
+    } catch (Exception ex) {
+      ex.printStackTrace();
+    }
+
     final HttpServer server = GrizzlyHttpServerFactory
         .createHttpServer(uri, config, true, new SSLEngineConfigurator(sslCon).setClientMode(false).setNeedClientAuth(true));
     server.getServerConfiguration().setAllowPayloadForUndefinedHttpMethods(true);
     server.start();
+    System.out.println("Secure server launched...");
     return server;
   }
 
-  private static void unregisterFromServiceRegistry(int port) throws Exception {
-    // prepare AS
-    ArrowheadSystem provider = new ArrowheadSystem("TemperatureSensors", "TemperatureSensor14", ADDRESS, port, "TBD");
+  private static List<ServiceRegistryEntry> registerToServiceRegistry() {
+    List<ServiceRegistryEntry> entries = new ArrayList<>();
 
-    // prepare SM
+    // create the URI for the request
+    String registerUri = UriBuilder.fromPath(SR_BASE_URI).path("registration").toString();
+
+    // create the ServiceMetadata list object
     ServiceMetadata unit = new ServiceMetadata("unit", "celsius");
-    List<ServiceMetadata> metadataList = new ArrayList<ServiceMetadata>();
+    List<ServiceMetadata> metadataList = new ArrayList<>();
     metadataList.add(unit);
-    if (port == PORT_SECURE) {
+
+    // create the ArrowheadService object
+    ArrowheadService service = new ArrowheadService("Temperature", "IndoorTemperature", Collections.singletonList("json"), metadataList);
+
+    // objects specific to insecure mode
+    if (server != null) {
+      URI baseUri;
+      try {
+        baseUri = new URI(BASE_URI);
+      } catch (URISyntaxException e) {
+        throw new RuntimeException("Parsing the BASE_URI resulted in an error.", e);
+      }
+      // create the ArrowheadSystem object
+      ArrowheadSystem provider = new ArrowheadSystem("TemperatureSensors", "InsecureTemperatureSensor", baseUri.getHost(), baseUri.getPort(), "TBD");
+      // create the final request payload
+      ServiceRegistryEntry entry = new ServiceRegistryEntry(service, provider, "/temperature");
+      Utility.sendRequest(registerUri, "POST", entry);
+      System.out.println("Registering insecure service is successful!");
+      entries.add(entry);
+    }
+
+    // objects specific to secure mode
+    if (secureServer != null) {
+      // adding metadata indicating the security choice of the provider
       ServiceMetadata security = new ServiceMetadata("security", "token");
       metadataList.add(security);
+
+      URI baseUri;
+      try {
+        baseUri = new URI(BASE_URI_SECURED);
+      } catch (URISyntaxException e) {
+        throw new RuntimeException("Parsing the BASE_URI_SECURED resulted in an error.", e);
+      }
+      // create the ArrowheadSystem object
+      ArrowheadSystem provider = new ArrowheadSystem("TemperatureSensors", "SecureTemperatureSensor", baseUri.getHost(), baseUri.getPort(), "TBD");
+      // create the final request payload
+      ServiceRegistryEntry entry = new ServiceRegistryEntry(service, provider, "/temperature");
+      Utility.sendRequest(registerUri, "POST", entry);
+      System.out.println("Registering secure service is successful!");
+      entries.add(entry);
     }
 
-    ArrowheadService service = new ArrowheadService("Temperature", "IndoorTemperature", Arrays.asList("json"), metadataList);
+    return entries;
+  }
 
-    // prepare ServiceRegistryEntry - the final payload
-    ServiceRegistryEntry entry = new ServiceRegistryEntry(service, provider, "/temperature");
-
-    // prepare URI
-    UriBuilder ub = UriBuilder.fromPath(SR_BASE_URI).path("removing");
-
-    // send request
-    Response response = Utility.sendRequest(ub.toString(), "PUT", entry);
-    if (response.getStatus() != 204) {
-      throw new Exception("Removing service FAILED!");
-    } else {
-      System.out.println("Removing service successful!");
+  private static void unregisterFromServiceRegistry(List<ServiceRegistryEntry> registeredEntries) {
+    // create the URI for the request
+    String removeUri = UriBuilder.fromPath(SR_BASE_URI).path("removing").toString();
+    // remove every service we registered (2 at max)
+    for (ServiceRegistryEntry entry : registeredEntries) {
+      Utility.sendRequest(removeUri, "PUT", entry);
     }
+
+    System.out.println("Removing service(s) is successful!");
   }
 
 }

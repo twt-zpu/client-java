@@ -17,7 +17,7 @@ public class ConsumerMain {
   private static final String ORCH_URI = Utility.getProp().getProperty("orch_uri", "http://0.0.0.0:8440/orchestrator/");
   private static final boolean IS_SECURE = ORCH_URI.startsWith("https");
 
-  public static void main(String[] args) throws Exception {
+  public static void main(String[] args) {
     //Payload compiling
     ServiceRequestForm srf = compileSRF();
 

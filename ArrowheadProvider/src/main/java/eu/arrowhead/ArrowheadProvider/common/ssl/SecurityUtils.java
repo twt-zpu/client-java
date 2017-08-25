@@ -17,6 +17,7 @@ import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
 
+//todo could use a refactor and maybe merging it with the Utility class
 public final class SecurityUtils {
 
   public static KeyStore loadKeyStore(String filePath, String pass) throws Exception {
