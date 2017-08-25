@@ -30,19 +30,14 @@ public class SecurityFilter implements ContainerRequestFilter {
     }
   }
 
-  public class Authorizer implements SecurityContext {
+  class Authorizer implements SecurityContext {
 
     private String user;
     private Principal principal;
 
     Authorizer(final String user) {
       this.user = user;
-      this.principal = new Principal() {
-
-        public String getName() {
-          return user;
-        }
-      };
+      this.principal = () -> user;
     }
 
     public Principal getUserPrincipal() {

@@ -1,6 +1,6 @@
 package eu.arrowhead.ArrowheadProvider.common.model;
 
-public class ArrowheadToken {
+class ArrowheadToken {
 
   private String token;
   private String signature;

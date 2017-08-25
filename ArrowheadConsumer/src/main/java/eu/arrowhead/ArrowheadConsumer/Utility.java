@@ -57,9 +57,10 @@ final class Utility {
       } catch (Exception ex) {
         ex.printStackTrace();
       }
-      String clientCN = getCertCNFromSubject(clientCert.getSubjectDN().getName());
-      System.out.println("Sending request with the common name: " + clientCN + "\n");
-
+      if (clientCert != null) {
+        String clientCN = getCertCNFromSubject(clientCert.getSubjectDN().getName());
+        System.out.println("Sending request with the common name: " + clientCN + "\n");
+      }
       // building hostname verifier to avoid exception
       HostnameVerifier allHostsValid = (hostname, session) -> {
         // Decide whether to allow the connection...
@@ -125,7 +126,7 @@ final class Utility {
   }
 
   // Below this comment are non-essential methods for acquiring the common name from the client certificate
-  public static KeyStore loadKeyStore(String filePath, String pass) throws Exception {
+  private static KeyStore loadKeyStore(String filePath, String pass) throws Exception {
 
     File tempFile = new File(filePath);
     FileInputStream is = null;

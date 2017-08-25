@@ -24,7 +24,7 @@ public final class SecurityUtils {
 
     File tempFile = new File(filePath);
     FileInputStream is = null;
-    KeyStore keystore = null;
+    KeyStore keystore;
 
     try {
       keystore = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -55,7 +55,7 @@ public final class SecurityUtils {
 
   public static X509Certificate getFirstCertFromKeyStore(KeyStore keystore) throws Exception {
 
-    X509Certificate xCert = null;
+    X509Certificate xCert;
     Enumeration<String> enumeration;
     try {
       enumeration = keystore.aliases();
@@ -87,7 +87,7 @@ public final class SecurityUtils {
     while (enumeration.hasMoreElements()) {
       String alias = enumeration.nextElement();
 
-      X509Certificate clientCert = null;
+      X509Certificate clientCert;
       try {
         clientCert = (X509Certificate) keystore.getCertificate(alias);
       } catch (KeyStoreException e) {
@@ -130,7 +130,7 @@ public final class SecurityUtils {
   }
 
   public static PrivateKey getPrivateKey(KeyStore keystore, String pass) throws Exception {
-    Enumeration<String> enumeration = null;
+    Enumeration<String> enumeration;
     PrivateKey privatekey;
     String elem;
     try {
