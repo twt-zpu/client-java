@@ -18,13 +18,13 @@ import java.util.Properties;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+//Simple java project with minimal dependencies
 public class BasicConsumerMain {
 
   private static Properties prop;
-  public static final String ORCH_URI = getProp().getProperty("orch_uri", "http://arrowhead.tmit.bme.hu:8084/orchestrator/orchestration");
+  private static final String ORCH_URI = getProp().getProperty("orch_uri", "http://arrowhead.tmit.bme.hu:8084/orchestrator/orchestration");
 
   public static void main(String[] args) throws Exception {
-    System.out.println("Orchestrator URL: " + ORCH_URI + "\n");
     String payload = compileSRF();
     System.out.println("Sending this request form for the Orchestrator: " + payload + "\n");
 
@@ -35,16 +35,16 @@ public class BasicConsumerMain {
     System.out.println("The indoor temperature is " + temperature + " degrees celsius.");
   }
 
-  public static String compileSRF() throws JSONException {
-    List<Map<String, Object>> entryList = new ArrayList<>();
+  private static String compileSRF() throws JSONException {
     Map<String, Object> flag1 = new HashMap<>();
     flag1.put("key", "overrideStore");
     flag1.put("value", true);
-    entryList.add(flag1);
-
     Map<String, Object> flag2 = new HashMap<>();
     flag2.put("key", "matchmaking");
     flag2.put("value", true);
+
+    List<Map<String, Object>> entryList = new ArrayList<>();
+    entryList.add(flag1);
     entryList.add(flag2);
 
     JSONObject orchestrationFlags = new JSONObject();
@@ -59,7 +59,7 @@ public class BasicConsumerMain {
 
     requestedService.put("serviceGroup", "Temperature");
     requestedService.put("serviceDefinition", "IndoorTemperature");
-    List<String> interfaces = new ArrayList<String>();
+    List<String> interfaces = new ArrayList<>();
     interfaces.add("json");
     requestedService.put("interfaces", interfaces);
 
@@ -71,7 +71,7 @@ public class BasicConsumerMain {
     return payload.toString(4);
   }
 
-  public static String sendServiceRequest(String payload) throws Exception {
+  private static String sendServiceRequest(String payload) throws Exception {
     URL url = new URL(ORCH_URI);
 
     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -89,9 +89,9 @@ public class BasicConsumerMain {
     int HttpResult = connection.getResponseCode();
     if (HttpResult == HttpURLConnection.HTTP_OK) {
       BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"));
-      String line = null;
+      String line;
       while ((line = br.readLine()) != null) {
-        sb.append(line + "\n");
+        sb.append(line).append("\n");
       }
       br.close();
     } else {
@@ -100,14 +100,29 @@ public class BasicConsumerMain {
 
     System.out.println("Orchestrator response : " + sb.toString());
     OrchestrationResponse response = new Gson().fromJson(sb.toString(), OrchestrationResponse.class);
-    ArrowheadSystem provider = new ArrowheadSystem();
-    provider = response.getResponse().get(0).getProvider();
+    ArrowheadSystem provider = response.getResponse().get(0).getProvider();
+    String serviceUri = response.getResponse().get(0).getServiceURI();
 
-    String URL = "http://" + provider.getAddress() + ":" + provider.getPort() + response.getResponse().get(0).getServiceURI();
-    return URL;
+    if (provider.getPort() > 0) {
+      if (serviceUri == null) {
+        return "http://" + provider.getAddress() + ":" + provider.getPort();
+      } else if (serviceUri.startsWith("/")) {
+        return "http://" + provider.getAddress() + ":" + provider.getPort() + serviceUri;
+      } else {
+        return "http://" + provider.getAddress() + ":" + provider.getPort() + "/" + serviceUri;
+      }
+    } else {
+      if (serviceUri == null) {
+        return "http://" + provider.getAddress();
+      } else if (serviceUri.startsWith("/")) {
+        return "http://" + provider.getAddress() + serviceUri;
+      } else {
+        return "http://" + provider.getAddress() + "/" + serviceUri;
+      }
+    }
   }
 
-  public static String connectToProvider(String URL) throws Exception {
+  private static String connectToProvider(String URL) throws Exception {
     URL url = new URL(URL);
 
     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -119,9 +134,9 @@ public class BasicConsumerMain {
     int HttpResult = connection.getResponseCode();
     if (HttpResult == HttpURLConnection.HTTP_OK) {
       BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"));
-      String line = null;
+      String line;
       while ((line = br.readLine()) != null) {
-        sb.append(line + "\n");
+        sb.append(line).append("\n");
       }
       br.close();
     } else {
@@ -131,15 +146,13 @@ public class BasicConsumerMain {
     return sb.toString();
   }
 
-  public synchronized static Properties getProp() {
+  private static synchronized Properties getProp() {
     try {
       if (prop == null) {
         prop = new Properties();
         File file = new File("config" + File.separator + "app.properties");
         FileInputStream inputStream = new FileInputStream(file);
-        if (inputStream != null) {
-          prop.load(inputStream);
-        }
+        prop.load(inputStream);
       }
     } catch (Exception ex) {
       ex.printStackTrace();
