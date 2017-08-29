@@ -14,7 +14,7 @@ import javax.ws.rs.core.UriBuilder;
 
 public class ConsumerMain {
 
-  private static final String ORCH_URI = Utility.getProp().getProperty("orch_uri", "http://0.0.0.0:8440/orchestrator/");
+  private static final String ORCH_URI = Utility.getProp().getProperty("orch_uri", "http://0.0.0.0:8440/orchestrator//orchestration");
   private static final boolean IS_SECURE = ORCH_URI.startsWith("https");
 
   public static void main(String[] args) {

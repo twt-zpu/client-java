@@ -32,8 +32,8 @@ public class ProviderMain {
   public static PublicKey authorizationKey = null;
   private static HttpServer server = null;
   private static HttpServer secureServer = null;
-  private static final String BASE_URI = Utility.getProp().getProperty("base_uri", "http://0.0.0.0:8452/");
-  private static final String BASE_URI_SECURED = Utility.getProp().getProperty("base_uri_secured", "https://0.0.0.0:8453/");
+  private static final String BASE_URI = Utility.getProp().getProperty("base_uri", "http://0.0.0.0:8454/");
+  private static final String BASE_URI_SECURED = Utility.getProp().getProperty("base_uri_secured", "https://0.0.0.0:8455/");
   private static final String SR_BASE_URI = Utility.getProp().getProperty("sr_base_uri", "http://arrowhead.tmit.bme.hu:8444/serviceregistry");
 
   public static void main(String[] args) throws IOException {

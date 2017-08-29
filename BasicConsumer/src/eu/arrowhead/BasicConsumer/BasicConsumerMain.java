@@ -22,7 +22,7 @@ import org.json.JSONObject;
 public class BasicConsumerMain {
 
   private static Properties prop;
-  private static final String ORCH_URI = getProp().getProperty("orch_uri", "http://arrowhead.tmit.bme.hu:8084/orchestrator/orchestration");
+  private static final String ORCH_URI = getProp().getProperty("orch_uri", "http://arrowhead.tmit.bme.hu:8440/orchestrator/orchestration");
 
   public static void main(String[] args) throws Exception {
     String payload = compileSRF();
