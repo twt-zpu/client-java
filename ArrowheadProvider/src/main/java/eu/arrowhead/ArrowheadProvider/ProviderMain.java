@@ -1,5 +1,6 @@
 package eu.arrowhead.ArrowheadProvider;
 
+import com.google.gson.Gson;
 import eu.arrowhead.ArrowheadProvider.common.Utility;
 import eu.arrowhead.ArrowheadProvider.common.model.ArrowheadService;
 import eu.arrowhead.ArrowheadProvider.common.model.ArrowheadSystem;
@@ -190,6 +191,8 @@ public class ProviderMain {
       ArrowheadSystem provider = new ArrowheadSystem("TemperatureSensors", "SecureTemperatureSensor", baseUri.getHost(), baseUri.getPort(), "TBD");
       // create the final request payload
       ServiceRegistryEntry entry = new ServiceRegistryEntry(service, provider, "/temperature");
+      Gson gson = new Gson();
+      System.out.println(gson.toJson(entry));
       Utility.sendRequest(registerUri, "POST", entry);
       System.out.println("Registering secure service is successful!");
       entries.add(entry);

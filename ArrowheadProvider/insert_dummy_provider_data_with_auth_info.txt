@@ -1,4 +1,6 @@
-INSERT INTO `arrowhead`.`arrowhead_system` (`id`, `address`, `authentication_info`, `port`, `system_group`, `system_name`) VALUES ('3', '127.0.0.1', 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4xtg4MD1lWp69yeeJ+a5mzdHWRx9k/HIlNf+3/iAFutpUItxw62HidvP0rtX2xLPn8jiQ5chlKvVqm4cOoel+xA5jelJgfVY/VC3gaP8jlK4ZgM/nqPuwkAS/i+FKS8FyfZiey64u6H6LjrakG8PjjddR/r/Ge4b/NavB7q99q2sMWVkYqCzGFas5PQEKQ4hQZxLwiNNvYU8eMEOWp9Chsqq4ZoZ6yrHC3RIoXjOYoIqgLeZT19MI9Z6Fg84QL+TkVd0zniLd4qRlUcxkRqJE+EIYoQyI9ku192JLLGdpnA5jSijCDPckv+1L6FSWjLw31UsHlx0oqO1DAuBB+tqqQIDAQAB', '8452', 'group1', 'client1');
+INSERT INTO `arrowhead`.`arrowhead_system` (`id`, `address`, `authentication_info`, `port`, `system_group`, `system_name`) VALUES ('3', '127.0.0.1',
+'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4xtg4MD1lWp69yeeJ+a5mzdHWRx9k/HIlNf+3/iAFutpUItxw62HidvP0rtX2xLPn8jiQ5chlKvVqm4cOoel+xA5jelJgfVY
+/VC3gaP8jlK4ZgM/nqPuwkAS/i+FKS8FyfZiey64u6H6LjrakG8PjjddR/r/Ge4b/NavB7q99q2sMWVkYqCzGFas5PQEKQ4hQZxLwiNNvYU8eMEOWp9Chsqq4ZoZ6yrHC3RIoXjOYoIqgLeZT19MI9Z6Fg84QL+TkVd0zniLd4qRlUcxkRqJE+EIYoQyI9ku192JLLGdpnA5jSijCDPckv+1L6FSWjLw31UsHlx0oqO1DAuBB+tqqQIDAQAB', '8455', 'TemperatureSensors', 'SecureTemperatureSensor');
 
 
 db_user=admin

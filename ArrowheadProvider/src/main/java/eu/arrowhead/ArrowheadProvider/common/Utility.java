@@ -8,6 +8,7 @@ import eu.arrowhead.ArrowheadProvider.common.model.RawTokenInfo;
 import eu.arrowhead.ArrowheadProvider.common.ssl.AuthenticationException;
 import java.io.File;
 import java.io.FileInputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.security.Principal;
 import java.security.Signature;
 import java.util.Base64;
@@ -111,7 +112,8 @@ public final class Utility {
       } catch (RuntimeException e) {
         throw new RuntimeException("Unknown error occurred at " + uri);
       }
-      throw new RuntimeException(errorMessage.getErrorMessage() + "(This exception is from " + uri + " Status code: " + errorMessage.getErrorCode() + ")");
+      //noinspection unchecked
+      throwExceptionAgain(errorMessage.getExceptionType(), errorMessage.getErrorMessage() + "(This exception was passed from another module)");
     }
 
     return response;
@@ -137,7 +139,7 @@ public final class Utility {
       boolean verifies = signatureInstance.verify(signaturebytes);
 
       if (!verifies) {
-        ErrorMessage error = new ErrorMessage("Token validation failed", 401);
+        ErrorMessage error = new ErrorMessage("Token validation failed", 401, AuthenticationException.class);
         return Response.status(401).entity(error).build();
       }
 
@@ -161,17 +163,17 @@ public final class Utility {
         if (endTime == 0L || (endTime > currentTime)) {
           return Response.status(200).entity(responseEntity).build();
         }
-        ErrorMessage error = new ErrorMessage("Authorization token has expired", 401);
+        ErrorMessage error = new ErrorMessage("Authorization token has expired", 401, AuthenticationException.class);
         return Response.status(401).entity(error).build();
 
       } else {
-        ErrorMessage error = new ErrorMessage("Permission denied", 401);
+        ErrorMessage error = new ErrorMessage("Permission denied", 401, AuthenticationException.class);
         return Response.status(401).entity(error).build();
       }
 
     } catch (Exception ex) {
       ex.printStackTrace();
-      ErrorMessage error = new ErrorMessage("Internal Server Error: " + ex.getMessage(), 500);
+      ErrorMessage error = new ErrorMessage("Internal Server Error: " + ex.getMessage(), 500, null);
       return Response.status(500).entity(error).build();
     }
   }
@@ -189,6 +191,18 @@ public final class Utility {
     }
 
     return prop;
+  }
+
+  // IMPORTANT: only use this function with RuntimeExceptions that have a public String constructor
+  private static <T extends RuntimeException> void throwExceptionAgain(Class<T> exceptionType, String message) {
+    try {
+      throw exceptionType.getConstructor(String.class).newInstance(message);
+    }
+    // Exception is thrown if the given exception type does not have an accessible constructor which accepts a String argument.
+    catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException |
+        SecurityException e) {
+      e.printStackTrace();
+    }
   }
 
 }

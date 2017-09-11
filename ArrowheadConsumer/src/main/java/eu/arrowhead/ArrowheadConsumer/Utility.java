@@ -3,8 +3,8 @@ package eu.arrowhead.ArrowheadConsumer;
 import eu.arrowhead.ArrowheadConsumer.model.ErrorMessage;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -12,7 +12,9 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Enumeration;
+import java.util.NoSuchElementException;
 import java.util.Properties;
+import java.util.ServiceConfigurationError;
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
@@ -103,8 +105,8 @@ final class Utility {
       } catch (RuntimeException e) {
         throw new RuntimeException("Unknown error occurred at " + uri);
       }
-      throw new RuntimeException(
-          errorMessage.getErrorMessage() + "(This exception is from " + uri + " Status code: " + errorMessage.getErrorCode() + ")");
+      //noinspection unchecked
+      throwExceptionAgain(errorMessage.getExceptionType(), errorMessage.getErrorMessage() + "(This exception was passed from another module)");
     }
 
     return response;
@@ -125,58 +127,44 @@ final class Utility {
     return prop;
   }
 
-  // Below this comment are non-essential methods for acquiring the common name from the client certificate
-  private static KeyStore loadKeyStore(String filePath, String pass) throws Exception {
-
-    File tempFile = new File(filePath);
-    FileInputStream is = null;
-    KeyStore keystore;
-
+  // IMPORTANT: only use this function with RuntimeExceptions that have a public String constructor
+  private static <T extends RuntimeException> void throwExceptionAgain(Class<T> exceptionType, String message) {
     try {
-      keystore = KeyStore.getInstance(KeyStore.getDefaultType());
-      is = new FileInputStream(tempFile);
-      keystore.load(is, pass.toCharArray());
-    } catch (KeyStoreException e) {
-      throw new Exception("In Utils::loadKeyStore, KeyStoreException occured: " + e.toString());
-    } catch (FileNotFoundException e) {
-      throw new Exception("In Utils::loadKeyStore, FileNotFoundException occured: " + e.toString());
-    } catch (NoSuchAlgorithmException e) {
-      throw new Exception("In Utils::loadKeyStore, NoSuchAlgorithmException occured: " + e.toString());
-    } catch (CertificateException e) {
-      throw new Exception("In Utils::loadKeyStore, CertificateException occured: " + e.toString());
-    } catch (IOException e) {
-      throw new Exception("In Utils::loadKeyStore, IOException occured: " + e.toString());
-    } finally {
-      if (is != null) {
-        try {
-          is.close();
-        } catch (IOException e) {
-          throw new Exception("In Utils::loadKeyStore, IOException occured: " + e.toString());
-        }
-      }
+      throw exceptionType.getConstructor(String.class).newInstance(message);
     }
-
-    return keystore;
+    // Exception is thrown if the given exception type does not have an accessible constructor which accepts a String argument.
+    catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException |
+        SecurityException e) {
+      e.printStackTrace();
+    }
   }
 
-  private static X509Certificate getFirstCertFromKeyStore(KeyStore keystore) throws Exception {
+  // Below this comment are non-essential methods for acquiring the common name from the client certificate
+  private static KeyStore loadKeyStore(String filePath, String pass) {
+    File file = new File(filePath);
 
-    X509Certificate xCert;
-    Enumeration<String> enumeration;
     try {
-      enumeration = keystore.aliases();
-      if (enumeration.hasMoreElements()) {
-        String alias = enumeration.nextElement();
-        Certificate certificate = keystore.getCertificate(alias);
-        xCert = (X509Certificate) certificate;
-      } else {
-        throw new Exception("Error: no certificate was in keystore!");
-      }
-    } catch (KeyStoreException e) {
-      throw new Exception("KeyStoreException occured: " + e.toString());
+      KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+      FileInputStream is = new FileInputStream(file);
+      keystore.load(is, pass.toCharArray());
+      is.close();
+      return keystore;
+    } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e) {
+      e.printStackTrace();
+      throw new ServiceConfigurationError("Loading the keystore failed: " + e.getMessage(), e);
     }
+  }
 
-    return xCert;
+  private static X509Certificate getFirstCertFromKeyStore(KeyStore keystore) {
+    try {
+      Enumeration<String> enumeration = keystore.aliases();
+      String alias = enumeration.nextElement();
+      Certificate certificate = keystore.getCertificate(alias);
+      return (X509Certificate) certificate;
+    } catch (KeyStoreException | NoSuchElementException e) {
+      e.printStackTrace();
+      throw new ServiceConfigurationError("Getting the first cert from keystore failed: " + e.getMessage(), e);
+    }
   }
 
   private static String getCertCNFromSubject(String subjectname) {
@@ -191,7 +179,7 @@ final class Utility {
         }
       }
     } catch (InvalidNameException e) {
-      System.out.println("Exception in getCertCN: " + e.toString());
+      System.out.println("InvalidNameException in getCertCNFromSubject: " + e.getMessage());
       return "";
     }
 
