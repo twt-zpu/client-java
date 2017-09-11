@@ -5,6 +5,7 @@ import eu.arrowhead.ArrowheadConsumer.model.ArrowheadSystem;
 import eu.arrowhead.ArrowheadConsumer.model.OrchestrationResponse;
 import eu.arrowhead.ArrowheadConsumer.model.ServiceMetadata;
 import eu.arrowhead.ArrowheadConsumer.model.ServiceRequestForm;
+import eu.arrowhead.ArrowheadConsumer.model.TemperatureReadout;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,8 +42,8 @@ public class ConsumerMain {
 
     //Sending request to the provider, parsing the answer
     Response getResponse = Utility.sendRequest(ub.toString(), "GET", null);
-    String temperature = getResponse.readEntity(String.class);
-    System.out.println("The indoor temperature is " + temperature + " degrees celsius.");
+    TemperatureReadout readout = getResponse.readEntity(TemperatureReadout.class);
+    System.out.println("The indoor temperature is " + readout.getTemperature() + " degrees celsius.");
   }
 
   private static ServiceRequestForm compileSRF() {

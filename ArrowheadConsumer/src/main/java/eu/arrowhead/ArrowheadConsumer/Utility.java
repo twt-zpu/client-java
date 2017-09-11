@@ -104,10 +104,12 @@ final class Utility {
       } catch (RuntimeException e) {
         throw new RuntimeException("Unknown error occurred at " + uri);
       }
-      if (errorMessage.getExceptionType() != null) {
-        throw new RuntimeException(errorMessage.getErrorMessage() + " (This " + errorMessage.getExceptionType() + " was passed from another module)");
-      } else {
+      if (errorMessage == null) {
+        throw new RuntimeException("Unknown error occurred at " + uri);
+      } else if (errorMessage.getExceptionType() == null) {
         throw new RuntimeException(errorMessage.getErrorMessage() + " (This exception was passed from another module)");
+      } else {
+        throw new RuntimeException(errorMessage.getErrorMessage() + " (This " + errorMessage.getExceptionType() + " was passed from another module)");
       }
     }
 
