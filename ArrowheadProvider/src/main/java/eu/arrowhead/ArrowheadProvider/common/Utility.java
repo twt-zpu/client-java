@@ -5,15 +5,28 @@ import eu.arrowhead.ArrowheadProvider.ProviderMain;
 import eu.arrowhead.ArrowheadProvider.common.model.ArrowheadSystem;
 import eu.arrowhead.ArrowheadProvider.common.model.ErrorMessage;
 import eu.arrowhead.ArrowheadProvider.common.model.RawTokenInfo;
-import eu.arrowhead.ArrowheadProvider.common.ssl.AuthenticationException;
+import eu.arrowhead.ArrowheadProvider.common.security.AuthenticationException;
 import java.io.File;
 import java.io.FileInputStream;
-import java.lang.reflect.InvocationTargetException;
+import java.io.IOException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
+import java.security.PrivateKey;
 import java.security.Signature;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Base64;
-import java.util.Properties;
+import java.util.Enumeration;
+import java.util.NoSuchElementException;
+import java.util.ServiceConfigurationError;
 import javax.crypto.Cipher;
+import javax.naming.InvalidNameException;
+import javax.naming.ldap.LdapName;
+import javax.naming.ldap.Rdn;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.ws.rs.NotAllowedException;
@@ -32,19 +45,18 @@ import org.glassfish.jersey.client.ClientProperties;
 
 public final class Utility {
 
-  private static Properties prop;
-  private static SSLContext sslContext = null;
+  public static SSLContext sslContext = null;
 
   private Utility() {
   }
 
   private static SSLContext getSSLContext() {
     if (sslContext == null) {
-      String keystorePath = getProp().getProperty("ssl.keystore");
-      String keystorePass = getProp().getProperty("ssl.keystorepass");
-      String keyPass = getProp().getProperty("ssl.keypass");
-      String truststorePath = getProp().getProperty("ssl.truststore");
-      String truststorePass = getProp().getProperty("ssl.truststorepass");
+      String keystorePath = ProviderMain.getProp().getProperty("ssl.keystore");
+      String keystorePass = ProviderMain.getProp().getProperty("ssl.keystorepass");
+      String keyPass = ProviderMain.getProp().getProperty("ssl.keypass");
+      String truststorePath = ProviderMain.getProp().getProperty("ssl.truststore");
+      String truststorePass = ProviderMain.getProp().getProperty("ssl.truststorepass");
 
       SSLContextConfigurator sslCon = new SSLContextConfigurator();
       sslCon.setKeyStoreFile(keystorePath);
@@ -70,13 +82,12 @@ public final class Utility {
     Client client;
 
     if (uri.startsWith("https")) {
-      SSLContext sslContext = getSSLContext();
       HostnameVerifier allHostsValid = (hostname, session) -> {
         // Decide whether to allow the connection...
         return true;
       };
 
-      client = ClientBuilder.newBuilder().sslContext(sslContext).withConfig(configuration).hostnameVerifier(allHostsValid).build();
+      client = ClientBuilder.newBuilder().sslContext(getSSLContext()).withConfig(configuration).hostnameVerifier(allHostsValid).build();
     } else {
       client = ClientBuilder.newClient(configuration);
     }
@@ -112,8 +123,12 @@ public final class Utility {
       } catch (RuntimeException e) {
         throw new RuntimeException("Unknown error occurred at " + uri);
       }
-      //noinspection unchecked
-      throwExceptionAgain(errorMessage.getExceptionType(), errorMessage.getErrorMessage() + "(This exception was passed from another module)");
+      if(errorMessage.getExceptionType() != null){
+        throw new RuntimeException(errorMessage.getErrorMessage() + " (This " + errorMessage.getExceptionType() + " was passed from another module)");
+      }
+      else{
+        throw new RuntimeException(errorMessage.getErrorMessage() + " (This exception was passed from another module)");
+      }
     }
 
     return response;
@@ -139,7 +154,8 @@ public final class Utility {
       boolean verifies = signatureInstance.verify(signaturebytes);
 
       if (!verifies) {
-        ErrorMessage error = new ErrorMessage("Token validation failed", 401, AuthenticationException.class);
+        //todo find messagebodywriter cause
+        ErrorMessage error = new ErrorMessage("Token validation failed", 401, AuthenticationException.class.toString());
         return Response.status(401).entity(error).build();
       }
 
@@ -163,11 +179,11 @@ public final class Utility {
         if (endTime == 0L || (endTime > currentTime)) {
           return Response.status(200).entity(responseEntity).build();
         }
-        ErrorMessage error = new ErrorMessage("Authorization token has expired", 401, AuthenticationException.class);
+        ErrorMessage error = new ErrorMessage("Authorization token has expired", 401, AuthenticationException.class.toString());
         return Response.status(401).entity(error).build();
 
       } else {
-        ErrorMessage error = new ErrorMessage("Permission denied", 401, AuthenticationException.class);
+        ErrorMessage error = new ErrorMessage("Permission denied", 401, AuthenticationException.class.toString());
         return Response.status(401).entity(error).build();
       }
 
@@ -178,31 +194,77 @@ public final class Utility {
     }
   }
 
-  public static synchronized Properties getProp() {
-    try {
-      if (prop == null) {
-        prop = new Properties();
-        File file = new File("config" + File.separator + "app.properties");
-        FileInputStream inputStream = new FileInputStream(file);
-        prop.load(inputStream);
-      }
-    } catch (Exception ex) {
-      ex.printStackTrace();
-    }
+  public static KeyStore loadKeyStore(String filePath, String pass) {
+    File file = new File(filePath);
 
-    return prop;
+    try {
+      KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+      FileInputStream is = new FileInputStream(file);
+      keystore.load(is, pass.toCharArray());
+      is.close();
+      return keystore;
+    } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e) {
+      e.printStackTrace();
+      throw new ServiceConfigurationError("Loading the keystore failed: " + e.getMessage(), e);
+    }
   }
 
-  // IMPORTANT: only use this function with RuntimeExceptions that have a public String constructor
-  private static <T extends RuntimeException> void throwExceptionAgain(Class<T> exceptionType, String message) {
+  public static X509Certificate getFirstCertFromKeyStore(KeyStore keystore) {
     try {
-      throw exceptionType.getConstructor(String.class).newInstance(message);
-    }
-    // Exception is thrown if the given exception type does not have an accessible constructor which accepts a String argument.
-    catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException |
-        SecurityException e) {
+      Enumeration<String> enumeration = keystore.aliases();
+      String alias = enumeration.nextElement();
+      Certificate certificate = keystore.getCertificate(alias);
+      return (X509Certificate) certificate;
+    } catch (KeyStoreException | NoSuchElementException e) {
       e.printStackTrace();
+      throw new ServiceConfigurationError("Getting the first cert from keystore failed: " + e.getMessage(), e);
     }
+  }
+
+  public static String getCertCNFromSubject(String subjectname) {
+    String cn = null;
+    try {
+      // Subject is in LDAP format, we can use the LdapName object for parsing
+      LdapName ldapname = new LdapName(subjectname);
+      for (Rdn rdn : ldapname.getRdns()) {
+        // Find the data after the CN field
+        if (rdn.getType().equalsIgnoreCase("CN")) {
+          cn = (String) rdn.getValue();
+        }
+      }
+    } catch (InvalidNameException e) {
+      System.out.println("Exception in getCertCN: " + e.toString());
+      return "";
+    }
+
+    if (cn == null) {
+      return "";
+    }
+
+    return cn;
+  }
+
+  public static PrivateKey getPrivateKey(KeyStore keystore, String pass) {
+    PrivateKey privatekey = null;
+    String element;
+    try {
+      Enumeration<String> enumeration = keystore.aliases();
+      while (enumeration.hasMoreElements()) {
+        element = enumeration.nextElement();
+        privatekey = (PrivateKey) keystore.getKey(element, pass.toCharArray());
+        if (privatekey != null) {
+          break;
+        }
+      }
+    } catch (KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException e) {
+      e.printStackTrace();
+      throw new ServiceConfigurationError("Getting the private key from keystore failed...", e);
+    }
+
+    if (privatekey == null) {
+      throw new ServiceConfigurationError("Getting the private key failed, keystore aliases do not identify a key.");
+    }
+    return privatekey;
   }
 
 }

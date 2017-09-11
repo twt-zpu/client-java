@@ -4,7 +4,6 @@ import eu.arrowhead.ArrowheadConsumer.model.ErrorMessage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -105,8 +104,11 @@ final class Utility {
       } catch (RuntimeException e) {
         throw new RuntimeException("Unknown error occurred at " + uri);
       }
-      //noinspection unchecked
-      throwExceptionAgain(errorMessage.getExceptionType(), errorMessage.getErrorMessage() + "(This exception was passed from another module)");
+      if (errorMessage.getExceptionType() != null) {
+        throw new RuntimeException(errorMessage.getErrorMessage() + " (This " + errorMessage.getExceptionType() + " was passed from another module)");
+      } else {
+        throw new RuntimeException(errorMessage.getErrorMessage() + " (This exception was passed from another module)");
+      }
     }
 
     return response;
@@ -125,18 +127,6 @@ final class Utility {
     }
 
     return prop;
-  }
-
-  // IMPORTANT: only use this function with RuntimeExceptions that have a public String constructor
-  private static <T extends RuntimeException> void throwExceptionAgain(Class<T> exceptionType, String message) {
-    try {
-      throw exceptionType.getConstructor(String.class).newInstance(message);
-    }
-    // Exception is thrown if the given exception type does not have an accessible constructor which accepts a String argument.
-    catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException |
-        SecurityException e) {
-      e.printStackTrace();
-    }
   }
 
   // Below this comment are non-essential methods for acquiring the common name from the client certificate

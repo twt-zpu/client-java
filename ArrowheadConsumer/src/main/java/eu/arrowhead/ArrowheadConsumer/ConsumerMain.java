@@ -26,7 +26,8 @@ public class ConsumerMain {
     OrchestrationResponse orchResponse = postResponse.readEntity(OrchestrationResponse.class);
     ArrowheadSystem provider = orchResponse.getResponse().get(0).getProvider();
     String serviceURI = orchResponse.getResponse().get(0).getServiceURI();
-    UriBuilder ub = UriBuilder.fromPath("").host(provider.getAddress()).path(serviceURI).scheme("http");
+    UriBuilder ub = UriBuilder.fromPath("").host(provider.getAddress()).path(serviceURI).scheme
+        ("http");
     if (provider.getPort() > 0) {
       ub.port(provider.getPort());
     }

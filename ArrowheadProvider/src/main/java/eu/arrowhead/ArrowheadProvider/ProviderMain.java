@@ -1,13 +1,13 @@
 package eu.arrowhead.ArrowheadProvider;
 
-import com.google.gson.Gson;
 import eu.arrowhead.ArrowheadProvider.common.Utility;
 import eu.arrowhead.ArrowheadProvider.common.model.ArrowheadService;
 import eu.arrowhead.ArrowheadProvider.common.model.ArrowheadSystem;
 import eu.arrowhead.ArrowheadProvider.common.model.ServiceMetadata;
 import eu.arrowhead.ArrowheadProvider.common.model.ServiceRegistryEntry;
-import eu.arrowhead.ArrowheadProvider.common.ssl.AuthenticationException;
-import eu.arrowhead.ArrowheadProvider.common.ssl.SecurityUtils;
+import eu.arrowhead.ArrowheadProvider.common.security.AuthenticationException;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 import javax.ws.rs.core.UriBuilder;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.ssl.SSLContextConfigurator;
@@ -29,13 +30,14 @@ import org.glassfish.jersey.server.ResourceConfig;
 
 public class ProviderMain {
 
+  private static Properties prop;
   public static PrivateKey privateKey = null;
   public static PublicKey authorizationKey = null;
   private static HttpServer server = null;
   private static HttpServer secureServer = null;
-  private static final String BASE_URI = Utility.getProp().getProperty("base_uri", "http://0.0.0.0:8454/");
-  private static final String BASE_URI_SECURED = Utility.getProp().getProperty("base_uri_secured", "https://0.0.0.0:8455/");
-  private static final String SR_BASE_URI = Utility.getProp().getProperty("sr_base_uri", "http://arrowhead.tmit.bme.hu:8444/serviceregistry");
+  private static final String BASE_URI = getProp().getProperty("base_uri", "http://0.0.0.0:8454/");
+  private static final String BASE_URI_SECURED = getProp().getProperty("base_uri_secured", "https://0.0.0.0:8455/");
+  private static final String SR_BASE_URI = getProp().getProperty("sr_base_uri", "http://arrowhead.tmit.bme.hu:8444/serviceregistry");
 
   public static void main(String[] args) throws IOException {
 
@@ -90,13 +92,13 @@ public class ProviderMain {
     URI uri = UriBuilder.fromUri(BASE_URI_SECURED).build();
     final ResourceConfig config = new ResourceConfig();
     config.registerClasses(TemperatureResource.class);
-    config.packages("eu.arrowhead.ArrowheadProvider.common.ssl");
+    config.packages("eu.arrowhead.ArrowheadProvider.common.security");
 
-    String keystorePath = Utility.getProp().getProperty("ssl.keystore");
-    String keystorePass = Utility.getProp().getProperty("ssl.keystorepass");
-    String keyPass = Utility.getProp().getProperty("ssl.keypass");
-    String truststorePath = Utility.getProp().getProperty("ssl.truststore");
-    String truststorePass = Utility.getProp().getProperty("ssl.truststorepass");
+    String keystorePath = getProp().getProperty("ssl.keystore");
+    String keystorePass = getProp().getProperty("ssl.keystorepass");
+    String keyPass = getProp().getProperty("ssl.keypass");
+    String truststorePath = getProp().getProperty("ssl.truststore");
+    String truststorePass = getProp().getProperty("ssl.truststorepass");
 
     SSLContextConfigurator sslCon = new SSLContextConfigurator();
     sslCon.setKeyStoreFile(keystorePath);
@@ -107,34 +109,25 @@ public class ProviderMain {
     if (!sslCon.validateConfiguration(true)) {
       throw new AuthenticationException("SSL Context is not valid, check the certificate files or app.properties!");
     }
+    Utility.sslContext = sslCon.createSSLContext();
 
-    X509Certificate serverCert;
-    try {
-      KeyStore keyStore = SecurityUtils.loadKeyStore(keystorePath, keystorePass);
-      serverCert = SecurityUtils.getFirstCertFromKeyStore(keyStore);
-      System.out.println("Server PublicKey encoded: " + Arrays.toString(serverCert.getPublicKey().getEncoded()));
-      System.out.println("Server PublicKey Base64: " + Base64.getEncoder().encodeToString(serverCert.getPublicKey().getEncoded()));
-    } catch (Exception ex) {
-      throw new AuthenticationException(ex.getMessage());
-    }
-    String serverCN = SecurityUtils.getCertCNFromSubject(serverCert.getSubjectDN().getName());
+    // Getting certificate keys
+    KeyStore keyStore = Utility.loadKeyStore(keystorePath, keystorePass);
+    privateKey = Utility.getPrivateKey(keyStore, keystorePass);
+    X509Certificate serverCert = Utility.getFirstCertFromKeyStore(keyStore);
+    System.out.println("Server PublicKey encoded: " + Arrays.toString(serverCert.getPublicKey().getEncoded()));
+    System.out.println("Server PublicKey Base64: " + Base64.getEncoder().encodeToString(serverCert.getPublicKey().getEncoded()));
+    String serverCN = Utility.getCertCNFromSubject(serverCert.getSubjectDN().getName());
     System.out.println("Certificate of the secure server: " + serverCN);
     config.property("server_common_name", serverCN);
 
-    // Getting certificate keys
-    try {
-      String authKeystorePath = Utility.getProp().getProperty("ssl.auth_keystore");
-      String authKeystorePass = Utility.getProp().getProperty("ssl.auth_keystorepass");
-      KeyStore authKeyStore = SecurityUtils.loadKeyStore(authKeystorePath, authKeystorePass);
-      X509Certificate cert = SecurityUtils.getFirstCertFromKeyStore(authKeyStore);
-      authorizationKey = cert.getPublicKey();
+    String authKeystorePath = getProp().getProperty("ssl.auth_keystore");
+    String authKeystorePass = getProp().getProperty("ssl.auth_keystorepass");
+    KeyStore authKeyStore = Utility.loadKeyStore(authKeystorePath, authKeystorePass);
+    X509Certificate cert = Utility.getFirstCertFromKeyStore(authKeyStore);
+    authorizationKey = cert.getPublicKey();
 
-      KeyStore keyStore = SecurityUtils
-          .loadKeyStore(Utility.getProp().getProperty("ssl.keystore"), Utility.getProp().getProperty("ssl.keystorepass"));
-      privateKey = SecurityUtils.getPrivateKey(keyStore, Utility.getProp().getProperty("ssl.keystorepass"));
-    } catch (Exception ex) {
-      ex.printStackTrace();
-    }
+    System.out.println("Authorization PublicKey Base64: " + Base64.getEncoder().encodeToString(authorizationKey.getEncoded()));
 
     final HttpServer server = GrizzlyHttpServerFactory
         .createHttpServer(uri, config, true, new SSLEngineConfigurator(sslCon).setClientMode(false).setNeedClientAuth(true));
@@ -191,8 +184,6 @@ public class ProviderMain {
       ArrowheadSystem provider = new ArrowheadSystem("TemperatureSensors", "SecureTemperatureSensor", baseUri.getHost(), baseUri.getPort(), "TBD");
       // create the final request payload
       ServiceRegistryEntry entry = new ServiceRegistryEntry(service, provider, "/temperature");
-      Gson gson = new Gson();
-      System.out.println(gson.toJson(entry));
       Utility.sendRequest(registerUri, "POST", entry);
       System.out.println("Registering secure service is successful!");
       entries.add(entry);
@@ -210,6 +201,21 @@ public class ProviderMain {
     }
 
     System.out.println("Removing service(s) is successful!");
+  }
+
+  public static synchronized Properties getProp() {
+    try {
+      if (prop == null) {
+        prop = new Properties();
+        File file = new File("config" + File.separator + "app.properties");
+        FileInputStream inputStream = new FileInputStream(file);
+        prop.load(inputStream);
+      }
+    } catch (Exception ex) {
+      ex.printStackTrace();
+    }
+
+    return prop;
   }
 
 }

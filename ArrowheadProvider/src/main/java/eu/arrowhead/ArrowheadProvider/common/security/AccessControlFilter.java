@@ -1,5 +1,6 @@
-package eu.arrowhead.ArrowheadProvider.common.ssl;
+package eu.arrowhead.ArrowheadProvider.common.security;
 
+import eu.arrowhead.ArrowheadProvider.common.Utility;
 import java.io.IOException;
 import javax.annotation.Priority;
 import javax.inject.Inject;
@@ -50,7 +51,7 @@ public class AccessControlFilter implements ContainerRequestFilter {
 
   private static boolean isClientAuthorized(SecurityContext sc, Configuration configuration, boolean onlyFromOrchestrator) {
     String subjectname = sc.getUserPrincipal().getName();
-    String clientCN = SecurityUtils.getCertCNFromSubject(subjectname);
+    String clientCN = Utility.getCertCNFromSubject(subjectname);
     String serverCN = (String) configuration.getProperty("server_common_name");
 
     String[] serverFields = serverCN.split("\\.", -1);
