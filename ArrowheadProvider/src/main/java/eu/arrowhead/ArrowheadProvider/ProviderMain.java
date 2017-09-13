@@ -141,7 +141,7 @@ public class ProviderMain {
     List<ServiceRegistryEntry> entries = new ArrayList<>();
 
     // create the URI for the request
-    String registerUri = UriBuilder.fromPath(SR_BASE_URI).path("registration").toString();
+    String registerUri = UriBuilder.fromPath(SR_BASE_URI).path("register").toString();
 
     // create the ServiceMetadata list object
     ServiceMetadata unit = new ServiceMetadata("unit", "celsius");
@@ -194,7 +194,7 @@ public class ProviderMain {
 
   private static void unregisterFromServiceRegistry(List<ServiceRegistryEntry> registeredEntries) {
     // create the URI for the request
-    String removeUri = UriBuilder.fromPath(SR_BASE_URI).path("removing").toString();
+    String removeUri = UriBuilder.fromPath(SR_BASE_URI).path("remove").toString();
     // remove every service we registered (2 at max)
     for (ServiceRegistryEntry entry : registeredEntries) {
       Utility.sendRequest(removeUri, "PUT", entry);
