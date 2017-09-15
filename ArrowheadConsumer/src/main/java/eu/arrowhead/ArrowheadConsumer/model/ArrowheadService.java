@@ -1,19 +1,21 @@
 package eu.arrowhead.ArrowheadConsumer.model;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ArrowheadService {
 
   private String serviceGroup;
   private String serviceDefinition;
   private List<String> interfaces = new ArrayList<>();
-  private List<ServiceMetadata> serviceMetadata;
+  private Map<String, String> serviceMetadata = new HashMap<>();
 
   public ArrowheadService() {
   }
 
-  public ArrowheadService(String serviceGroup, String serviceDefinition, List<String> interfaces, List<ServiceMetadata> serviceMetadata) {
+  public ArrowheadService(String serviceGroup, String serviceDefinition, List<String> interfaces, Map<String, String> serviceMetadata) {
     this.serviceGroup = serviceGroup;
     this.serviceDefinition = serviceDefinition;
     this.interfaces = interfaces;
@@ -50,15 +52,15 @@ public class ArrowheadService {
     this.interfaces = interfaces;
   }
 
-  public List<ServiceMetadata> getServiceMetadata() {
+  public Map<String, String> getServiceMetadata() {
     return serviceMetadata;
   }
 
-  public void setServiceMetadata(List<ServiceMetadata> metaData) {
+  public void setServiceMetadata(Map<String, String> metaData) {
     this.serviceMetadata = metaData;
   }
 
-  public boolean isValid() {
+  boolean isValid() {
     return serviceGroup != null && serviceDefinition != null;
   }
 

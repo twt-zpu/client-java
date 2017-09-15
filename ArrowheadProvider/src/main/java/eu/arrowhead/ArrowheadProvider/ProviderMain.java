@@ -1,9 +1,9 @@
 package eu.arrowhead.ArrowheadProvider;
 
+import com.google.gson.Gson;
 import eu.arrowhead.ArrowheadProvider.common.Utility;
 import eu.arrowhead.ArrowheadProvider.common.model.ArrowheadService;
 import eu.arrowhead.ArrowheadProvider.common.model.ArrowheadSystem;
-import eu.arrowhead.ArrowheadProvider.common.model.ServiceMetadata;
 import eu.arrowhead.ArrowheadProvider.common.model.ServiceRegistryEntry;
 import eu.arrowhead.ArrowheadProvider.common.security.AuthenticationException;
 import java.io.File;
@@ -19,7 +19,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import javax.ws.rs.core.UriBuilder;
 import org.glassfish.grizzly.http.server.HttpServer;
@@ -143,14 +145,14 @@ public class ProviderMain {
     // create the URI for the request
     String registerUri = UriBuilder.fromPath(SR_BASE_URI).path("register").toString();
 
-    // create the ServiceMetadata list object
-    ServiceMetadata unit = new ServiceMetadata("unit", "celsius");
-    List<ServiceMetadata> metadataList = new ArrayList<>();
-    metadataList.add(unit);
+    // create the metadata HashMap for the service
+    Map<String, String> metadata = new HashMap<>();
+    metadata.put("unit", "celsius");
 
     // create the ArrowheadService object
-    ArrowheadService service = new ArrowheadService("Temperature", "IndoorTemperature", Collections.singletonList("json"), metadataList);
+    ArrowheadService service = new ArrowheadService("Temperature", "IndoorTemperature", Collections.singletonList("json"), metadata);
 
+    Gson gson = new Gson();
     // objects specific to insecure mode
     if (server != null) {
       URI baseUri;
@@ -162,8 +164,17 @@ public class ProviderMain {
       // create the ArrowheadSystem object
       ArrowheadSystem provider = new ArrowheadSystem("TemperatureSensors", "InsecureTemperatureSensor", baseUri.getHost(), baseUri.getPort(), "TBD");
       // create the final request payload
-      ServiceRegistryEntry entry = new ServiceRegistryEntry(service, provider, "/temperature");
-      Utility.sendRequest(registerUri, "POST", entry);
+      ServiceRegistryEntry entry = new ServiceRegistryEntry(service, provider, "temperature");
+      System.out.println("Request payload: " + gson.toJson(entry));
+      try {
+        Utility.sendRequest(registerUri, "POST", entry);
+      } catch (Exception e) {
+        if (e.getMessage().contains("DuplicateEntryException")) {
+          System.out.println("Received DuplicateEntryException from SR, sending delete request and then registering again.");
+          unregisterFromServiceRegistry(Collections.singletonList(entry));
+          Utility.sendRequest(registerUri, "POST", entry);
+        }
+      }
       System.out.println("Registering insecure service is successful!");
       entries.add(entry);
     }
@@ -171,8 +182,7 @@ public class ProviderMain {
     // objects specific to secure mode
     if (secureServer != null) {
       // adding metadata indicating the security choice of the provider
-      ServiceMetadata security = new ServiceMetadata("security", "token");
-      metadataList.add(security);
+      metadata.put("security", "token");
 
       URI baseUri;
       try {
@@ -183,8 +193,17 @@ public class ProviderMain {
       // create the ArrowheadSystem object
       ArrowheadSystem provider = new ArrowheadSystem("TemperatureSensors", "SecureTemperatureSensor", baseUri.getHost(), baseUri.getPort(), "TBD");
       // create the final request payload
-      ServiceRegistryEntry entry = new ServiceRegistryEntry(service, provider, "/temperature");
-      Utility.sendRequest(registerUri, "POST", entry);
+      ServiceRegistryEntry entry = new ServiceRegistryEntry(service, provider, "temperature");
+      System.out.println("Request payload: " + gson.toJson(entry));
+      try {
+        Utility.sendRequest(registerUri, "POST", entry);
+      } catch (Exception e) {
+        if (e.getMessage().contains("DuplicateEntryException")) {
+          System.out.println("Received DuplicateEntryException from SR, sending delete request and then registering again.");
+          unregisterFromServiceRegistry(Collections.singletonList(entry));
+          Utility.sendRequest(registerUri, "POST", entry);
+        }
+      }
       System.out.println("Registering secure service is successful!");
       entries.add(entry);
     }

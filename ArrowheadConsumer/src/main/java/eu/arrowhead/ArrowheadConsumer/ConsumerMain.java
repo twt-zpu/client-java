@@ -3,7 +3,6 @@ package eu.arrowhead.ArrowheadConsumer;
 import eu.arrowhead.ArrowheadConsumer.model.ArrowheadService;
 import eu.arrowhead.ArrowheadConsumer.model.ArrowheadSystem;
 import eu.arrowhead.ArrowheadConsumer.model.OrchestrationResponse;
-import eu.arrowhead.ArrowheadConsumer.model.ServiceMetadata;
 import eu.arrowhead.ArrowheadConsumer.model.ServiceRequestForm;
 import eu.arrowhead.ArrowheadConsumer.model.TemperatureReadout;
 import java.util.ArrayList;
@@ -51,16 +50,17 @@ public class ConsumerMain {
 
     List<String> interfaces = new ArrayList<>();
     interfaces.add("json");
-    List<ServiceMetadata> serviceMetadata = new ArrayList<>();
-    serviceMetadata.add(new ServiceMetadata("unit", "celsius"));
+    Map<String, String> serviceMetadata = new HashMap<>();
+    serviceMetadata.put("unit", "celsius");
     if (IS_SECURE) {
-      serviceMetadata.add(new ServiceMetadata("security", "token"));
+      serviceMetadata.put("security", "token");
     }
     ArrowheadService service = new ArrowheadService("Temperature", "IndoorTemperature", interfaces, serviceMetadata);
 
     Map<String, Boolean> orchestrationFlags = new HashMap<>();
     orchestrationFlags.put("overrideStore", true);
     orchestrationFlags.put("matchmaking", true);
+    orchestrationFlags.put("metadataSearch", true);
 
     return new ServiceRequestForm.Builder(consumer).requestedService(service).orchestrationFlags(orchestrationFlags).build();
   }
