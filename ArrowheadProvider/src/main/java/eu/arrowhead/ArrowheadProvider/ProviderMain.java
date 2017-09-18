@@ -202,6 +202,8 @@ public class ProviderMain {
           System.out.println("Received DuplicateEntryException from SR, sending delete request and then registering again.");
           unregisterFromServiceRegistry(Collections.singletonList(entry));
           Utility.sendRequest(registerUri, "POST", entry);
+        } else {
+          throw e;
         }
       }
       System.out.println("Registering secure service is successful!");
