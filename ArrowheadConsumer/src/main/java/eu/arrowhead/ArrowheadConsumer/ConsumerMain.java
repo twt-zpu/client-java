@@ -1,5 +1,6 @@
 package eu.arrowhead.ArrowheadConsumer;
 
+import com.google.gson.Gson;
 import eu.arrowhead.ArrowheadConsumer.model.ArrowheadService;
 import eu.arrowhead.ArrowheadConsumer.model.ArrowheadSystem;
 import eu.arrowhead.ArrowheadConsumer.model.OrchestrationResponse;
@@ -20,6 +21,8 @@ public class ConsumerMain {
   public static void main(String[] args) {
     //Payload compiling
     ServiceRequestForm srf = compileSRF();
+    Gson gson = new Gson();
+    System.out.println("Request payload: " + gson.toJson(srf));
 
     //Sending request to the orchestrator, parsing the response
     Response postResponse = Utility.sendRequest(ORCH_URI, "POST", srf);

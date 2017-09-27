@@ -40,6 +40,7 @@ public class ProviderMain {
   private static final String BASE_URI = getProp().getProperty("base_uri", "http://0.0.0.0:8454/");
   private static final String BASE_URI_SECURED = getProp().getProperty("base_uri_secured", "https://0.0.0.0:8455/");
   private static final String SR_BASE_URI = getProp().getProperty("sr_base_uri", "http://arrowhead.tmit.bme.hu:8444/serviceregistry");
+  private static String PROVIDER_PUBLIC_KEY;
 
   public static void main(String[] args) throws IOException {
 
@@ -118,7 +119,8 @@ public class ProviderMain {
     privateKey = Utility.getPrivateKey(keyStore, keystorePass);
     X509Certificate serverCert = Utility.getFirstCertFromKeyStore(keyStore);
     System.out.println("Server PublicKey encoded: " + Arrays.toString(serverCert.getPublicKey().getEncoded()));
-    System.out.println("Server PublicKey Base64: " + Base64.getEncoder().encodeToString(serverCert.getPublicKey().getEncoded()));
+    PROVIDER_PUBLIC_KEY = Base64.getEncoder().encodeToString(serverCert.getPublicKey().getEncoded());
+    System.out.println("Server PublicKey Base64: " + PROVIDER_PUBLIC_KEY);
     String serverCN = Utility.getCertCNFromSubject(serverCert.getSubjectDN().getName());
     System.out.println("Certificate of the secure server: " + serverCN);
     config.property("server_common_name", serverCN);
@@ -162,7 +164,7 @@ public class ProviderMain {
         throw new RuntimeException("Parsing the BASE_URI resulted in an error.", e);
       }
       // create the ArrowheadSystem object
-      ArrowheadSystem provider = new ArrowheadSystem("TemperatureSensors", "InsecureTemperatureSensor", baseUri.getHost(), baseUri.getPort(), "TBD");
+      ArrowheadSystem provider = new ArrowheadSystem("TemperatureSensors", "InsecureTemperatureSensor", baseUri.getHost(), baseUri.getPort(), null);
       // create the final request payload
       ServiceRegistryEntry entry = new ServiceRegistryEntry(service, provider, "temperature");
       System.out.println("Request payload: " + gson.toJson(entry));
@@ -191,7 +193,8 @@ public class ProviderMain {
         throw new RuntimeException("Parsing the BASE_URI_SECURED resulted in an error.", e);
       }
       // create the ArrowheadSystem object
-      ArrowheadSystem provider = new ArrowheadSystem("TemperatureSensors", "SecureTemperatureSensor", baseUri.getHost(), baseUri.getPort(), "TBD");
+      ArrowheadSystem provider = new ArrowheadSystem("TemperatureSensors", "SecureTemperatureSensor", baseUri.getHost(), baseUri.getPort(),
+                                                     PROVIDER_PUBLIC_KEY);
       // create the final request payload
       ServiceRegistryEntry entry = new ServiceRegistryEntry(service, provider, "temperature");
       System.out.println("Request payload: " + gson.toJson(entry));
