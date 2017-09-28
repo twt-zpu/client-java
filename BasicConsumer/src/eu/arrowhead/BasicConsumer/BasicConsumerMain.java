@@ -3,6 +3,7 @@ package eu.arrowhead.BasicConsumer;
 import com.google.gson.Gson;
 import eu.arrowhead.BasicConsumer.model.ArrowheadSystem;
 import eu.arrowhead.BasicConsumer.model.OrchestrationResponse;
+import eu.arrowhead.BasicConsumer.model.TemperatureReadout;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,7 +32,7 @@ public class BasicConsumerMain {
     String providerURI = sendServiceRequest(payload);
     System.out.println("Received provider system URL: " + providerURI + "\n");
 
-    String temperature = connectToProvider(providerURI);
+    double temperature = connectToProvider(providerURI);
     System.out.println("The indoor temperature is " + temperature + " degrees celsius.");
   }
 
@@ -53,8 +54,8 @@ public class BasicConsumerMain {
 
     orchestrationFlags.put("entry", entryList);
 
-    requesterSystem.put("systemGroup", "testGroup");
-    requesterSystem.put("systemName", "testSystem");
+    requesterSystem.put("systemGroup", "group1");
+    requesterSystem.put("systemName", "client2");
     requesterSystem.put("address", "localhost");
 
     requestedService.put("serviceGroup", "Temperature");
@@ -99,6 +100,7 @@ public class BasicConsumerMain {
     }
 
     System.out.println("Orchestrator response : " + sb.toString());
+    //JsonElement je = new JsonParser().parse(sb.toString());
     OrchestrationResponse response = new Gson().fromJson(sb.toString(), OrchestrationResponse.class);
     ArrowheadSystem provider = response.getResponse().get(0).getProvider();
     String serviceUri = response.getResponse().get(0).getServiceURI();
@@ -122,7 +124,7 @@ public class BasicConsumerMain {
     }
   }
 
-  private static String connectToProvider(String URL) throws Exception {
+  private static double connectToProvider(String URL) throws Exception {
     URL url = new URL(URL);
 
     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -143,7 +145,8 @@ public class BasicConsumerMain {
       throw new Exception(connection.getResponseMessage());
     }
 
-    return sb.toString();
+    TemperatureReadout readout = new Gson().fromJson(sb.toString(), TemperatureReadout.class);
+    return readout.getTemperature();
   }
 
   private static synchronized Properties getProp() {

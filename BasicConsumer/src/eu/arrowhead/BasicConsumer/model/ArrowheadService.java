@@ -10,12 +10,12 @@ public class ArrowheadService {
   private String serviceGroup;
   private String serviceDefinition;
   private List<String> interfaces = new ArrayList<>();
-  private Map<String, String> serviceMetadata = new HashMap<>();
+  private Map<String, List<HashMapEntry>> serviceMetadata = new HashMap<>();
 
   public ArrowheadService() {
   }
 
-  public ArrowheadService(String serviceGroup, String serviceDefinition, List<String> interfaces, Map<String, String> serviceMetadata) {
+  public ArrowheadService(String serviceGroup, String serviceDefinition, List<String> interfaces, Map<String, List<HashMapEntry>> serviceMetadata) {
     this.serviceGroup = serviceGroup;
     this.serviceDefinition = serviceDefinition;
     this.interfaces = interfaces;
@@ -52,11 +52,11 @@ public class ArrowheadService {
     this.interfaces = interfaces;
   }
 
-  public Map<String, String> getServiceMetadata() {
+  public Map<String, List<HashMapEntry>> getServiceMetadata() {
     return serviceMetadata;
   }
 
-  public void setServiceMetadata(Map<String, String> metaData) {
+  public void setServiceMetadata(Map<String, List<HashMapEntry>> metaData) {
     this.serviceMetadata = metaData;
   }
 

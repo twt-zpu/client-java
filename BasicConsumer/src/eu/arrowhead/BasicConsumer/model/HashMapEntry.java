@@ -1,15 +1,14 @@
 package eu.arrowhead.BasicConsumer.model;
 
-public class ServiceMetadata {
+public class HashMapEntry {
 
   private String key;
   private String value;
 
-  public ServiceMetadata() {
-
+  public HashMapEntry() {
   }
 
-  public ServiceMetadata(String key, String value) {
+  public HashMapEntry(String key, String value) {
     this.key = key;
     this.value = value;
   }
@@ -29,5 +28,4 @@ public class ServiceMetadata {
   public void setValue(String value) {
     this.value = value;
   }
-
 }
