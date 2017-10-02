@@ -50,10 +50,12 @@ public class ConsumerMain {
       e.printStackTrace();
       System.out.println("Provider did not send the temperature readout in SenML format.");
     }
-    if(readout.getE().get(0) != null){
+    if(readout.getE().get(0) == null){
+      System.out.println("Provider did not send any MeasurementEntry.");
+    }
+    else{
       System.out.println("The indoor temperature is " + readout.getE().get(0).getV() + " degrees celsius.");
     }
-    System.out.println("Provider did not send any MeasurementEntry.");
   }
 
   private static ServiceRequestForm compileSRF() {
