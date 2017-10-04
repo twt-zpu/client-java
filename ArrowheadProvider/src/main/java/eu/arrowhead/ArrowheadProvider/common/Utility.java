@@ -268,4 +268,17 @@ public final class Utility {
     return privatekey;
   }
 
+  //TODO dont forget to modify this, if we migrate to a version without systemgroup
+  public static boolean isCommonNameArrowheadValid(String commonName) {
+    String[] cnFields = commonName.split("\\.", 0);
+    return cnFields.length == 6;
+  }
+
+  public static String stripEndSlash(String uri) {
+    if (uri != null && uri.endsWith("/")) {
+      return uri.substring(0, uri.length() - 1);
+    }
+    return uri;
+  }
+
 }

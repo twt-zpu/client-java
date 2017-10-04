@@ -24,71 +24,34 @@ public class AccessControlFilter implements ContainerRequestFilter {
 
   @Override
   public void filter(ContainerRequestContext requestContext) throws IOException {
-
     SecurityContext sc = requestContext.getSecurityContext();
+    String requestTarget = Utility.stripEndSlash(requestContext.getUriInfo().getRequestUri().toString());
     if (sc.isSecure()) {
-      System.out.println("Got a request from a secure channel. Cert: " + sc.getUserPrincipal().getName());
-      String requestTarget = uriInfo.get().getAbsolutePath().getPath();
-      if (requestTarget.contains("authorization") || requestTarget.contains("init")) {
-        if (isClientAuthorized(sc, configuration, true)) {
-          System.out.println("Identification is successful! (SSL)");
-        } else {
-          System.out.println("Unauthorized access! (SSL)");
-          /*throw new AuthenticationException
-          ("This client is not allowed to use this resource: " + requestTarget);*/
-        }
+      String subjectName = sc.getUserPrincipal().getName();
+      if (isClientAuthorized(subjectName)) {
+        System.out.println("SSL identification is successful! Cert: " + subjectName);
       } else {
-        if (isClientAuthorized(sc, configuration, false)) {
-          System.out.println("Identification is successful! (SSL)");
-        } else {
-          System.out.println("Unauthorized access! (SSL)");
-          /*throw new AuthenticationException
-          ("This client is not allowed to use this resource: " + requestTarget);*/
-        }
+        System.out.println(Utility.getCertCNFromSubject(subjectName) + " is unauthorized to access " + requestTarget);
+        throw new AuthenticationException(Utility.getCertCNFromSubject(subjectName) + " is unauthorized to access " + requestTarget);
       }
     }
   }
 
-  private static boolean isClientAuthorized(SecurityContext sc, Configuration configuration, boolean onlyFromOrchestrator) {
-    String subjectname = sc.getUserPrincipal().getName();
-    String clientCN = Utility.getCertCNFromSubject(subjectname);
+  private boolean isClientAuthorized(String subjectName) {
+    String clientCN = Utility.getCertCNFromSubject(subjectName);
     String serverCN = (String) configuration.getProperty("server_common_name");
 
-    String[] serverFields = serverCN.split("\\.", -1);
-    String[] clientFields = clientCN.split("\\.", -1);
-    String allowedCN = "orchestrator.coresystems";
-    String serverCNend = "";
-    String clientCNend = "";
-    if (serverFields.length < 3 || clientFields.length < 3) {
-      System.out.println("SSL error: one of the CNs have less than 3 fields!");
+    if (!Utility.isCommonNameArrowheadValid(clientCN)) {
+      System.out.println("Client cert does not have 6 parts, so the access will be denied.");
       return false;
-    } else {
-      for (int i = 2; i < serverFields.length; i++) {
-        serverCNend = serverCNend.concat("." + serverFields[i]);
-        allowedCN = allowedCN.concat("." + serverFields[i]);
-      }
-
-      for (int i = 2; i < clientFields.length; i++) {
-        clientCNend = clientCNend.concat("." + clientFields[i]);
-      }
     }
+    // All requests from the local cloud are allowed, so omit the first 2 parts of the common names (systemName.systemGroup)
+    String[] serverFields = serverCN.split("\\.", 3);
+    String[] clientFields = clientCN.split("\\.", 3);
+    // serverFields contains: coreSystemName, coresystems, cloudName.operator.arrowhead.eu
 
-    //If we only accept requests from the Orchestrator
-    if (onlyFromOrchestrator) {
-      if (!clientCN.equalsIgnoreCase(allowedCN)) {
-        System.out.println("SSL error: common names are not equal!");
-        return false;
-      }
-    }
-    //If we accept requests from anywhere in the local cloud
-    else {
-      if (!clientCNend.equalsIgnoreCase(serverCNend)) {
-        System.out.println("SSL error: common names are not equal!");
-        return false;
-      }
-    }
-
-    return true;
+    // If this is true, then the certificates are from the same local cloud
+    return serverFields[2].equalsIgnoreCase(clientFields[2]);
   }
 
 }
