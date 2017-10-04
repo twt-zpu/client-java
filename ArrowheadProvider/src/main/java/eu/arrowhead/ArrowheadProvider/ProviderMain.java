@@ -16,7 +16,6 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
@@ -44,22 +43,29 @@ public class ProviderMain {
 
   public static void main(String[] args) throws IOException {
 
-    if (args.length > 0) {
-      switch (args[0]) {
-        case "insecure":
-          server = startServer();
-          break;
-        case "secure":
-          secureServer = startSecureServer();
-          break;
-        case "both":
-          server = startServer();
-          secureServer = startSecureServer();
-          break;
-        default:
-          throw new AssertionError("Unknown server mode: " + args[0]);
+    boolean serverModeSet = false;
+    argLoop:
+    for (int i = 0; i < args.length; ++i) {
+      if (args[i].equals("-m")) {
+        serverModeSet = true;
+        ++i;
+        switch (args[i]) {
+          case "insecure":
+            server = startServer();
+            break argLoop;
+          case "secure":
+            secureServer = startSecureServer();
+            break argLoop;
+          case "both":
+            server = startServer();
+            secureServer = startSecureServer();
+            break argLoop;
+          default:
+            throw new AssertionError("Unknown server mode: " + args[i]);
+        }
       }
-    } else {
+    }
+    if (!serverModeSet) {
       server = startServer();
     }
 
@@ -118,9 +124,8 @@ public class ProviderMain {
     KeyStore keyStore = Utility.loadKeyStore(keystorePath, keystorePass);
     privateKey = Utility.getPrivateKey(keyStore, keystorePass);
     X509Certificate serverCert = Utility.getFirstCertFromKeyStore(keyStore);
-    System.out.println("Server PublicKey encoded: " + Arrays.toString(serverCert.getPublicKey().getEncoded()));
     PROVIDER_PUBLIC_KEY = Base64.getEncoder().encodeToString(serverCert.getPublicKey().getEncoded());
-    System.out.println("Server PublicKey Base64: " + PROVIDER_PUBLIC_KEY);
+    System.out.println("My PublicKey Base64: " + PROVIDER_PUBLIC_KEY);
     String serverCN = Utility.getCertCNFromSubject(serverCert.getSubjectDN().getName());
     System.out.println("Certificate of the secure server: " + serverCN);
     config.property("server_common_name", serverCN);

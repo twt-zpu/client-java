@@ -72,7 +72,7 @@ public class ConsumerMain {
 
     Map<String, Boolean> orchestrationFlags = new HashMap<>();
     orchestrationFlags.put("overrideStore", true);
-    orchestrationFlags.put("matchmaking", true);
+    orchestrationFlags.put("pingProviders", true);
     orchestrationFlags.put("metadataSearch", false);
 
     return new ServiceRequestForm.Builder(consumer).requestedService(service).orchestrationFlags(orchestrationFlags).build();
