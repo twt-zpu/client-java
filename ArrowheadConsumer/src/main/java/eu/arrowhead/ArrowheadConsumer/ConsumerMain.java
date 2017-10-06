@@ -16,30 +16,51 @@ import javax.ws.rs.core.UriBuilder;
 public class ConsumerMain {
 
   private static final String ORCH_URI = Utility.getProp().getProperty("orch_uri", "http://0.0.0.0:8440/orchestrator//orchestration");
-  private static final boolean IS_SECURE = ORCH_URI.startsWith("https");
-
+  private static boolean isSecure = false;
   public static void main(String[] args) {
+
+    argLoop:
+    for (int i = 0; i < args.length; ++i) {
+      if (args[i].equals("-m")) {
+        ++i;
+        switch (args[i]) {
+          case "insecure":
+            isSecure = false;
+            break argLoop;
+          case "secure":
+            isSecure = true;
+            break argLoop;
+          default:
+            throw new AssertionError("Unknown security level: " + args[i]);
+        }
+      }
+    }
+
     System.out.println("Working directory: " + System.getProperty("user.dir"));
     long startTime = System.currentTimeMillis();
 
     //Payload compiling
     ServiceRequestForm srf = compileSRF();
     Gson gson = new Gson();
-    System.out.println("Request payload: " + gson.toJson(srf));
+    System.out.println("Service Request payload: " + gson.toJson(srf));
 
     //Sending request to the orchestrator, parsing the response
     Response postResponse = Utility.sendRequest(ORCH_URI, "POST", srf);
     OrchestrationResponse orchResponse = postResponse.readEntity(OrchestrationResponse.class);
+    System.out.println("Orchestration Response payload: " + gson.toJson(orchResponse));
+
     ArrowheadSystem provider = orchResponse.getResponse().get(0).getProvider();
     String serviceURI = orchResponse.getResponse().get(0).getServiceURI();
     UriBuilder ub = UriBuilder.fromPath("").host(provider.getAddress()).path(serviceURI).scheme("http");
     if (provider.getPort() > 0) {
       ub.port(provider.getPort());
     }
-    if (IS_SECURE) {
+    if (orchResponse.getResponse().get(0).getService().getServiceMetadata().containsKey("security")) {
       ub.scheme("https");
       ub.queryParam("token", orchResponse.getResponse().get(0).getAuthorizationToken());
       ub.queryParam("signature", orchResponse.getResponse().get(0).getSignature());
+    } else {
+      ub.scheme("http");
     }
 
     System.out.println("Received provider system URL: " + ub.toString() + "\n");
@@ -70,7 +91,7 @@ public class ConsumerMain {
     interfaces.add("json");
     Map<String, String> serviceMetadata = new HashMap<>();
     serviceMetadata.put("unit", "celsius");
-    if (IS_SECURE) {
+    if (isSecure) {
       serviceMetadata.put("security", "token");
     }
     ArrowheadService service = new ArrowheadService("Temperature", "IndoorTemperature", interfaces, serviceMetadata);
