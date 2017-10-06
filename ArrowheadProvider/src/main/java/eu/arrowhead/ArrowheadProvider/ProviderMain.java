@@ -42,6 +42,7 @@ public class ProviderMain {
   private static String PROVIDER_PUBLIC_KEY;
 
   public static void main(String[] args) throws IOException {
+    System.out.println("Working directory: " + System.getProperty("user.dir"));
 
     boolean serverModeSet = false;
     argLoop:
@@ -125,18 +126,18 @@ public class ProviderMain {
     privateKey = Utility.getPrivateKey(keyStore, keystorePass);
     X509Certificate serverCert = Utility.getFirstCertFromKeyStore(keyStore);
     PROVIDER_PUBLIC_KEY = Base64.getEncoder().encodeToString(serverCert.getPublicKey().getEncoded());
-    System.out.println("My PublicKey Base64: " + PROVIDER_PUBLIC_KEY);
+    System.out.println("My certificate PublicKey in Base64: " + PROVIDER_PUBLIC_KEY);
     String serverCN = Utility.getCertCNFromSubject(serverCert.getSubjectDN().getName());
-    System.out.println("Certificate of the secure server: " + serverCN);
+    System.out.println("My certificate CN: " + serverCN);
     config.property("server_common_name", serverCN);
 
     String authKeystorePath = getProp().getProperty("ssl.auth_keystore");
     String authKeystorePass = getProp().getProperty("ssl.auth_keystorepass");
     KeyStore authKeyStore = Utility.loadKeyStore(authKeystorePath, authKeystorePass);
-    X509Certificate cert = Utility.getFirstCertFromKeyStore(authKeyStore);
-    authorizationKey = cert.getPublicKey();
-
-    System.out.println("Authorization PublicKey Base64: " + Base64.getEncoder().encodeToString(authorizationKey.getEncoded()));
+    X509Certificate authCert = Utility.getFirstCertFromKeyStore(authKeyStore);
+    authorizationKey = authCert.getPublicKey();
+    System.out.println("Authorization CN: "+ Utility.getCertCNFromSubject(authCert.getSubjectDN().getName()));
+    //System.out.println("Authorization System PublicKey Base64: " + Base64.getEncoder().encodeToString(authorizationKey.getEncoded()));
 
     final HttpServer server = GrizzlyHttpServerFactory
         .createHttpServer(uri, config, true, new SSLEngineConfigurator(sslCon).setClientMode(false).setNeedClientAuth(true));

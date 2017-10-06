@@ -19,6 +19,9 @@ public class ConsumerMain {
   private static final boolean IS_SECURE = ORCH_URI.startsWith("https");
 
   public static void main(String[] args) {
+    System.out.println("Working directory: " + System.getProperty("user.dir"));
+    long startTime = System.currentTimeMillis();
+
     //Payload compiling
     ServiceRequestForm srf = compileSRF();
     Gson gson = new Gson();
@@ -54,7 +57,9 @@ public class ConsumerMain {
       System.out.println("Provider did not send any MeasurementEntry.");
     }
     else{
+      long endTime = System.currentTimeMillis();
       System.out.println("The indoor temperature is " + readout.getE().get(0).getV() + " degrees celsius.");
+      System.out.println("Orchestration and Service consumption response time:" + Long.toString(endTime-startTime));
     }
   }
 
@@ -72,7 +77,7 @@ public class ConsumerMain {
 
     Map<String, Boolean> orchestrationFlags = new HashMap<>();
     orchestrationFlags.put("overrideStore", true);
-    orchestrationFlags.put("pingProviders", true);
+    orchestrationFlags.put("pingProviders", false);
     orchestrationFlags.put("metadataSearch", false);
 
     return new ServiceRequestForm.Builder(consumer).requestedService(service).orchestrationFlags(orchestrationFlags).build();

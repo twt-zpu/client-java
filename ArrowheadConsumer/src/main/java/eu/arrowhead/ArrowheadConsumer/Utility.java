@@ -41,7 +41,7 @@ final class Utility {
 
   static <T> Response sendRequest(String uri, String method, T payload) {
     ClientConfig configuration = new ClientConfig();
-    configuration.property(ClientProperties.CONNECT_TIMEOUT, 30000);
+    configuration.property(ClientProperties.CONNECT_TIMEOUT, 60000);
     configuration.property(ClientProperties.READ_TIMEOUT, 30000);
     Client client;
 
