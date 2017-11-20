@@ -1,6 +1,5 @@
 package eu.arrowhead.ArrowheadProvider;
 
-import com.google.gson.Gson;
 import eu.arrowhead.ArrowheadProvider.common.Utility;
 import eu.arrowhead.ArrowheadProvider.common.model.ArrowheadService;
 import eu.arrowhead.ArrowheadProvider.common.model.ArrowheadSystem;
@@ -165,7 +164,6 @@ public class ProviderMain {
     // create the ArrowheadService object
     ArrowheadService service = new ArrowheadService("Temperature", "IndoorTemperature", Collections.singletonList("json"), metadata);
 
-    Gson gson = new Gson();
     // objects specific to insecure mode
     if (server != null) {
       URI baseUri;
@@ -178,7 +176,7 @@ public class ProviderMain {
       ArrowheadSystem provider = new ArrowheadSystem("TemperatureSensors", "InsecureTemperatureSensor", baseUri.getHost(), baseUri.getPort(), null);
       // create the final request payload
       ServiceRegistryEntry entry = new ServiceRegistryEntry(service, provider, "temperature");
-      System.out.println("Request payload: " + gson.toJson(entry));
+      System.out.println("Request payload: " + Utility.toPrettyJson(null, entry));
       try {
         Utility.sendRequest(registerUri, "POST", entry);
       } catch (Exception e) {
@@ -208,7 +206,7 @@ public class ProviderMain {
                                                      PROVIDER_PUBLIC_KEY);
       // create the final request payload
       ServiceRegistryEntry entry = new ServiceRegistryEntry(service, provider, "temperature");
-      System.out.println("Request payload: " + gson.toJson(entry));
+      System.out.println("Request payload: " + Utility.toPrettyJson(null, entry));
       try {
         Utility.sendRequest(registerUri, "POST", entry);
       } catch (Exception e) {
