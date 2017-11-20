@@ -40,6 +40,7 @@ public class ProviderMain {
   private static final String BASE_URI_SECURED = getProp().getProperty("base_uri_secured", "https://0.0.0.0:8455/");
   private static final String SR_BASE_URI = getProp().getProperty("sr_base_uri", "http://arrowhead.tmit.bme.hu:8444/serviceregistry");
   private static String PROVIDER_PUBLIC_KEY;
+  public static boolean DEBUG_MODE;
 
   public static void main(String[] args) throws IOException {
     System.out.println("Working directory: " + System.getProperty("user.dir"));
@@ -64,6 +65,10 @@ public class ProviderMain {
           default:
             throw new AssertionError("Unknown server mode: " + args[i]);
         }
+      }
+      if (args[i].equals("-d")) {
+        DEBUG_MODE = true;
+        System.out.println("Starting server in debug mode!");
       }
     }
     if (!serverModeSet) {

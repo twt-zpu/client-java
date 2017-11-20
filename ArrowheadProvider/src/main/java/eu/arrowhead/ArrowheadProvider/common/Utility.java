@@ -1,6 +1,9 @@
 package eu.arrowhead.ArrowheadProvider.common;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import eu.arrowhead.ArrowheadProvider.ProviderMain;
 import eu.arrowhead.ArrowheadProvider.common.model.ArrowheadSystem;
 import eu.arrowhead.ArrowheadProvider.common.model.ErrorMessage;
@@ -46,6 +49,7 @@ import org.glassfish.jersey.client.ClientProperties;
 public final class Utility {
 
   public static SSLContext sslContext = null;
+  private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
   private Utility() {
   }
@@ -121,6 +125,8 @@ public final class Utility {
       try {
         errorMessage = response.readEntity(ErrorMessage.class);
       } catch (RuntimeException e) {
+        System.out.println("Request failed, response status code: " + response.getStatus());
+        System.out.println("Request failed, response body: " + toPrettyJson(null, response.getEntity()));
         throw new RuntimeException("Unknown error occurred at " + uri);
       }
       if (errorMessage == null) {
@@ -279,6 +285,18 @@ public final class Utility {
       return uri.substring(0, uri.length() - 1);
     }
     return uri;
+  }
+
+  public static String toPrettyJson(String jsonString, Object obj) {
+    if (jsonString != null) {
+      JsonParser parser = new JsonParser();
+      JsonObject json = parser.parse(jsonString).getAsJsonObject();
+      return gson.toJson(json);
+    }
+    if (obj != null) {
+      return gson.toJson(obj);
+    }
+    return null;
   }
 
 }

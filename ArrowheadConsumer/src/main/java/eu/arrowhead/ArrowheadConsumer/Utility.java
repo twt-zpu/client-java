@@ -1,5 +1,9 @@
 package eu.arrowhead.ArrowheadConsumer;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import eu.arrowhead.ArrowheadConsumer.model.ErrorMessage;
 import java.io.File;
 import java.io.FileInputStream;
@@ -35,6 +39,7 @@ import org.glassfish.jersey.client.ClientProperties;
 final class Utility {
 
   private static Properties prop;
+  private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
   private Utility() {
   }
@@ -102,6 +107,8 @@ final class Utility {
       try {
         errorMessage = response.readEntity(ErrorMessage.class);
       } catch (RuntimeException e) {
+        System.out.println("Request failed, response status code: " + response.getStatus());
+        System.out.println("Request failed, response body: " + toPrettyJson(null, response.getEntity()));
         throw new RuntimeException("Unknown error occurred at " + uri);
       }
       if (errorMessage == null) {
@@ -180,6 +187,18 @@ final class Utility {
     }
 
     return cn;
+  }
+
+  public static String toPrettyJson(String jsonString, Object obj) {
+    if (jsonString != null) {
+      JsonParser parser = new JsonParser();
+      JsonObject json = parser.parse(jsonString).getAsJsonObject();
+      return gson.toJson(json);
+    }
+    if (obj != null) {
+      return gson.toJson(obj);
+    }
+    return null;
   }
 
 }
