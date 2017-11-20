@@ -94,6 +94,7 @@ public class ProviderMain {
     URI uri = UriBuilder.fromUri(BASE_URI).build();
     final ResourceConfig config = new ResourceConfig();
     config.registerClasses(TemperatureResource.class);
+    config.packages("eu.arrowhead.ArrowheadProvider.common.filter");
 
     final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(uri, config);
     server.getServerConfiguration().setAllowPayloadForUndefinedHttpMethods(true);
@@ -106,7 +107,7 @@ public class ProviderMain {
     URI uri = UriBuilder.fromUri(BASE_URI_SECURED).build();
     final ResourceConfig config = new ResourceConfig();
     config.registerClasses(TemperatureResource.class);
-    config.packages("eu.arrowhead.ArrowheadProvider.common.security");
+    config.packages("eu.arrowhead.ArrowheadProvider.common.filter", "eu.arrowhead.ArrowheadProvider.common.security");
 
     String keystorePath = getProp().getProperty("ssl.keystore");
     String keystorePass = getProp().getProperty("ssl.keystorepass");
