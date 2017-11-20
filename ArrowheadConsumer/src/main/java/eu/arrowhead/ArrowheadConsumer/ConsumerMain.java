@@ -100,6 +100,7 @@ public class ConsumerMain {
     orchestrationFlags.put("overrideStore", true);
     orchestrationFlags.put("pingProviders", false);
     orchestrationFlags.put("metadataSearch", false);
+    orchestrationFlags.put("enableInterCloud", true);
 
     return new ServiceRequestForm.Builder(consumer).requestedService(service).orchestrationFlags(orchestrationFlags).build();
   }
