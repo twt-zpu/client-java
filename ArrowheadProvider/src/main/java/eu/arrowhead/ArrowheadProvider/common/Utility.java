@@ -119,6 +119,8 @@ public final class Utility {
       throw new RuntimeException("Could not get any response from: " + uri);
     }
 
+    //The response body has to be extracted before the stream closes
+    String errorMessageBody = toPrettyJson(null, response.getEntity());
     //If the response status code does not start with 2 the request was not successful
     if (!(response.getStatusInfo().getFamily() == Family.SUCCESSFUL)) {
       ErrorMessage errorMessage;
@@ -126,10 +128,12 @@ public final class Utility {
         errorMessage = response.readEntity(ErrorMessage.class);
       } catch (RuntimeException e) {
         System.out.println("Request failed, response status code: " + response.getStatus());
-        System.out.println("Request failed, response body: " + toPrettyJson(null, response.getEntity()));
+        System.out.println("Request failed, response body: " + toPrettyJson(null, errorMessageBody));
         throw new RuntimeException("Unknown error occurred at " + uri);
       }
       if (errorMessage == null) {
+        System.out.println("Request failed, response status code: " + response.getStatus());
+        System.out.println("Request failed, response body: " + toPrettyJson(null, errorMessageBody));
         throw new RuntimeException("Unknown error occurred at " + uri);
       } else if (errorMessage.getExceptionType() == null) {
         throw new RuntimeException(errorMessage.getErrorMessage() + " (This exception was passed from another module)");
