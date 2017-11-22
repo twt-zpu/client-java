@@ -93,16 +93,15 @@ public class ConsumerMain {
   }
 
   private static ServiceRequestForm compileSRF() {
-    ArrowheadSystem consumer = new ArrowheadSystem("group1", "client2", "localhost", 0, "null");
+    ArrowheadSystem consumer = new ArrowheadSystem("CarDemo", "Car2", "localhost", 0, null);
 
     List<String> interfaces = new ArrayList<>();
     interfaces.add("json");
     Map<String, String> serviceMetadata = new HashMap<>();
-    serviceMetadata.put("unit", "celsius");
     if (IS_SECURE) {
       serviceMetadata.put("security", "token");
     }
-    ArrowheadService service = new ArrowheadService("Temperature", "IndoorTemperature", interfaces, serviceMetadata);
+    ArrowheadService service = new ArrowheadService("SafetyServices", "BrakeSignal", interfaces, serviceMetadata);
 
     Map<String, Boolean> orchestrationFlags = new HashMap<>();
     orchestrationFlags.put("overrideStore", true);
