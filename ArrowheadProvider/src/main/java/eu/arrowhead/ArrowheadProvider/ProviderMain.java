@@ -38,6 +38,9 @@ public class ProviderMain {
   private static final String BASE_URI = getProp().getProperty("base_uri", "http://0.0.0.0:8454/");
   private static final String BASE_URI_SECURED = getProp().getProperty("base_uri_secured", "https://0.0.0.0:8455/");
   private static final String SR_BASE_URI = getProp().getProperty("sr_base_uri", "http://arrowhead.tmit.bme.hu:8444/serviceregistry");
+  private static final String SYSTEM_GROUP = getProp().getProperty("system_group", "CarDemo");
+  private static final String SYSTEM_NAME = getProp().getProperty("system_name", "Car1");
+  private static final String CAR_PUBLIC_KEY = getProp().getProperty("public_key");
   private static String PROVIDER_PUBLIC_KEY;
   public static boolean DEBUG_MODE;
 
@@ -45,29 +48,28 @@ public class ProviderMain {
     System.out.println("Working directory: " + System.getProperty("user.dir"));
 
     boolean serverModeSet = false;
-    argLoop:
     for (int i = 0; i < args.length; ++i) {
+      if (args[i].equals("-d")) {
+        DEBUG_MODE = true;
+        System.out.println("Starting server in debug mode!");
+      }
       if (args[i].equals("-m")) {
         serverModeSet = true;
         ++i;
         switch (args[i]) {
           case "insecure":
             server = startServer();
-            break argLoop;
+            break;
           case "secure":
             secureServer = startSecureServer();
-            break argLoop;
+            break;
           case "both":
             server = startServer();
             secureServer = startSecureServer();
-            break argLoop;
+            break;
           default:
             throw new AssertionError("Unknown server mode: " + args[i]);
         }
-      }
-      if (args[i].equals("-d")) {
-        DEBUG_MODE = true;
-        System.out.println("Starting server in debug mode!");
       }
     }
     if (!serverModeSet) {
@@ -93,7 +95,7 @@ public class ProviderMain {
   private static HttpServer startServer() throws IOException {
     URI uri = UriBuilder.fromUri(BASE_URI).build();
     final ResourceConfig config = new ResourceConfig();
-    config.registerClasses(TemperatureResource.class);
+    config.registerClasses(TemperatureResource.class, BreakResource.class);
     config.packages("eu.arrowhead.ArrowheadProvider.common.filter");
 
     final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(uri, config);
@@ -106,7 +108,7 @@ public class ProviderMain {
   private static HttpServer startSecureServer() throws IOException {
     URI uri = UriBuilder.fromUri(BASE_URI_SECURED).build();
     final ResourceConfig config = new ResourceConfig();
-    config.registerClasses(TemperatureResource.class);
+    config.registerClasses(TemperatureResource.class, BreakResource.class);
     config.packages("eu.arrowhead.ArrowheadProvider.common.filter", "eu.arrowhead.ArrowheadProvider.common.security");
 
     String keystorePath = getProp().getProperty("ssl.keystore");
@@ -141,7 +143,7 @@ public class ProviderMain {
     KeyStore authKeyStore = Utility.loadKeyStore(authKeystorePath, authKeystorePass);
     X509Certificate authCert = Utility.getFirstCertFromKeyStore(authKeyStore);
     authorizationKey = authCert.getPublicKey();
-    System.out.println("Authorization CN: "+ Utility.getCertCNFromSubject(authCert.getSubjectDN().getName()));
+    System.out.println("Authorization CN: " + Utility.getCertCNFromSubject(authCert.getSubjectDN().getName()));
     //System.out.println("Authorization System PublicKey Base64: " + Base64.getEncoder().encodeToString(authorizationKey.getEncoded()));
 
     final HttpServer server = GrizzlyHttpServerFactory
@@ -158,72 +160,115 @@ public class ProviderMain {
     // create the URI for the request
     String registerUri = UriBuilder.fromPath(SR_BASE_URI).path("register").toString();
 
-    // create the metadata HashMap for the service
-    Map<String, String> metadata = new HashMap<>();
-    metadata.put("unit", "celsius");
-
-    // create the ArrowheadService object
-    ArrowheadService service = new ArrowheadService("Temperature", "IndoorTemperature", Collections.singletonList("json"), metadata);
-
-    // objects specific to insecure mode
     if (server != null) {
-      URI baseUri;
+      ServiceRegistryEntry temperatureEntry = createServiceRegistryEntry("temperature", false);
       try {
-        baseUri = new URI(BASE_URI);
-      } catch (URISyntaxException e) {
-        throw new RuntimeException("Parsing the BASE_URI resulted in an error.", e);
-      }
-      // create the ArrowheadSystem object
-      ArrowheadSystem provider = new ArrowheadSystem("TemperatureSensors", "InsecureTemperatureSensor", baseUri.getHost(), baseUri.getPort(), null);
-      // create the final request payload
-      ServiceRegistryEntry entry = new ServiceRegistryEntry(service, provider, "temperature");
-      System.out.println("Request payload: " + Utility.toPrettyJson(null, entry));
-      try {
-        Utility.sendRequest(registerUri, "POST", entry);
+        Utility.sendRequest(registerUri, "POST", temperatureEntry);
       } catch (Exception e) {
         if (e.getMessage().contains("DuplicateEntryException")) {
           System.out.println("Received DuplicateEntryException from SR, sending delete request and then registering again.");
-          unregisterFromServiceRegistry(Collections.singletonList(entry));
-          Utility.sendRequest(registerUri, "POST", entry);
+          unregisterFromServiceRegistry(Collections.singletonList(temperatureEntry));
+          Utility.sendRequest(registerUri, "POST", temperatureEntry);
         }
       }
-      System.out.println("Registering insecure service is successful!");
-      entries.add(entry);
+      entries.add(temperatureEntry);
+
+      ServiceRegistryEntry breakEntry = createServiceRegistryEntry("break", false);
+      try {
+        Utility.sendRequest(registerUri, "POST", breakEntry);
+      } catch (Exception e) {
+        if (e.getMessage().contains("DuplicateEntryException")) {
+          System.out.println("Received DuplicateEntryException from SR, sending delete request and then registering again.");
+          unregisterFromServiceRegistry(Collections.singletonList(breakEntry));
+          Utility.sendRequest(registerUri, "POST", breakEntry);
+        }
+      }
+      entries.add(breakEntry);
+      System.out.println("Registering insecure services was successful!");
     }
 
-    // objects specific to secure mode
     if (secureServer != null) {
-      // adding metadata indicating the security choice of the provider
-      metadata.put("security", "token");
-
-      URI baseUri;
+      ServiceRegistryEntry temperatureEntry = createServiceRegistryEntry("temperature", true);
       try {
-        baseUri = new URI(BASE_URI_SECURED);
-      } catch (URISyntaxException e) {
-        throw new RuntimeException("Parsing the BASE_URI_SECURED resulted in an error.", e);
-      }
-      // create the ArrowheadSystem object
-      ArrowheadSystem provider = new ArrowheadSystem("TemperatureSensors", "SecureTemperatureSensor", baseUri.getHost(), baseUri.getPort(),
-                                                     PROVIDER_PUBLIC_KEY);
-      // create the final request payload
-      ServiceRegistryEntry entry = new ServiceRegistryEntry(service, provider, "temperature");
-      System.out.println("Request payload: " + Utility.toPrettyJson(null, entry));
-      try {
-        Utility.sendRequest(registerUri, "POST", entry);
+        Utility.sendRequest(registerUri, "POST", temperatureEntry);
       } catch (Exception e) {
         if (e.getMessage().contains("DuplicateEntryException")) {
           System.out.println("Received DuplicateEntryException from SR, sending delete request and then registering again.");
-          unregisterFromServiceRegistry(Collections.singletonList(entry));
-          Utility.sendRequest(registerUri, "POST", entry);
-        } else {
-          throw e;
+          unregisterFromServiceRegistry(Collections.singletonList(temperatureEntry));
+          Utility.sendRequest(registerUri, "POST", temperatureEntry);
         }
       }
-      System.out.println("Registering secure service is successful!");
-      entries.add(entry);
+      entries.add(temperatureEntry);
+
+      ServiceRegistryEntry breakEntry = createServiceRegistryEntry("break", true);
+      try {
+        Utility.sendRequest(registerUri, "POST", breakEntry);
+      } catch (Exception e) {
+        if (e.getMessage().contains("DuplicateEntryException")) {
+          System.out.println("Received DuplicateEntryException from SR, sending delete request and then registering again.");
+          unregisterFromServiceRegistry(Collections.singletonList(breakEntry));
+          Utility.sendRequest(registerUri, "POST", breakEntry);
+        }
+      }
+      entries.add(breakEntry);
+      System.out.println("Registering secure services was successful!");
     }
 
     return entries;
+  }
+
+  private static ServiceRegistryEntry createServiceRegistryEntry(String useCase, boolean isSecure) {
+    URI baseUri;
+    Map<String, String> metadata = new HashMap<>();
+
+    switch (useCase) {
+      case "temperature":
+        metadata.put("unit", "celsius");
+        ArrowheadService tempService = new ArrowheadService("Temperature", "IndoorTemperature", Collections.singletonList("json"), metadata);
+        if (isSecure) {
+          //TODO test if this works as intented with the ArrowheadService
+          metadata.put("security", "token");
+          try {
+            baseUri = new URI(BASE_URI_SECURED);
+          } catch (URISyntaxException e) {
+            throw new RuntimeException("Parsing the BASE_URI_SECURED resulted in an error.", e);
+          }
+          ArrowheadSystem provider = new ArrowheadSystem("TemperatureSensors", "SecureTemperatureSensor", baseUri.getHost(), baseUri.getPort(),
+                                                         PROVIDER_PUBLIC_KEY);
+          return new ServiceRegistryEntry(tempService, provider, "temperature");
+        } else {
+          try {
+            baseUri = new URI(BASE_URI);
+          } catch (URISyntaxException e) {
+            throw new RuntimeException("Parsing the BASE_URI resulted in an error.", e);
+          }
+          ArrowheadSystem provider = new ArrowheadSystem("TemperatureSensors", "InsecureTemperatureSensor", baseUri.getHost(), baseUri.getPort(),
+                                                         null);
+          return new ServiceRegistryEntry(tempService, provider, "temperature");
+        }
+      case "break":
+        ArrowheadService breakService = new ArrowheadService("SafetyServices", "BrakeSignal", Collections.singletonList("json"), metadata);
+        if (isSecure) {
+          metadata.put("security", "token");
+          try {
+            baseUri = new URI(BASE_URI_SECURED);
+          } catch (URISyntaxException e) {
+            throw new RuntimeException("Parsing the BASE_URI_SECURED resulted in an error.", e);
+          }
+          ArrowheadSystem provider = new ArrowheadSystem(SYSTEM_GROUP, SYSTEM_NAME, baseUri.getHost(), baseUri.getPort(), CAR_PUBLIC_KEY);
+          return new ServiceRegistryEntry(breakService, provider, "break");
+        } else {
+          try {
+            baseUri = new URI(BASE_URI);
+          } catch (URISyntaxException e) {
+            throw new RuntimeException("Parsing the BASE_URI resulted in an error.", e);
+          }
+          ArrowheadSystem provider = new ArrowheadSystem(SYSTEM_GROUP, SYSTEM_NAME, baseUri.getHost(), baseUri.getPort(), null);
+          return new ServiceRegistryEntry(breakService, provider, "break");
+        }
+      default:
+        return new ServiceRegistryEntry();
+    }
   }
 
   private static void unregisterFromServiceRegistry(List<ServiceRegistryEntry> registeredEntries) {

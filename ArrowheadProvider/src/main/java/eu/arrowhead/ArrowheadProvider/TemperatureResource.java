@@ -12,8 +12,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
-@Produces(MediaType.APPLICATION_JSON)
 @Path("temperature")
+@Produces(MediaType.APPLICATION_JSON)
 public class TemperatureResource {
 
   @GET
@@ -22,12 +22,11 @@ public class TemperatureResource {
     if (context.isSecure()) {
       TemperatureReadout readout = new TemperatureReadout("TemperatureSensors_SecureTemperatureSensor", System.currentTimeMillis(), "celsius", 1);
       readout.getE().add(entry);
-      return Utility.verifyRequester(context, token, signature, readout);
+      return Utility.requesterVerified(context, token, signature, readout);
     }
     TemperatureReadout readout = new TemperatureReadout("TemperatureSensors_InsecureTemperatureSensor", System.currentTimeMillis(), "celsius", 1);
     readout.getE().add(entry);
     return Response.status(200).entity(readout).build();
-    //test
   }
 
 }

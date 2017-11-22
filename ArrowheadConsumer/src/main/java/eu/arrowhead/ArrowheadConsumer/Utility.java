@@ -35,6 +35,8 @@ import javax.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.media.sse.EventInput;
+import org.glassfish.jersey.media.sse.InboundEvent;
 
 final class Utility {
 
@@ -100,7 +102,7 @@ final class Utility {
     } catch (ProcessingException e) {
       throw new RuntimeException("Could not get any response from: " + uri);
     }
-    
+
   //The response body has to be extracted before the stream closes
     String errorMessageBody = toPrettyJson(null, response.getEntity());
     //If the response status code does not start with 2 the request was not successful
@@ -125,6 +127,53 @@ final class Utility {
     }
 
     return response;
+  }
+
+  static void sendRequestToServerEvent(String uri) {
+    ClientConfig configuration = new ClientConfig();
+    configuration.property(ClientProperties.CONNECT_TIMEOUT, 60000);
+    configuration.property(ClientProperties.READ_TIMEOUT, 30000);
+    Client client;
+
+    if (uri.startsWith("https")) {
+      SslConfigurator sslConfig = SslConfigurator.newInstance().trustStoreFile(getProp().getProperty("ssl.truststore"))
+          .trustStorePassword(getProp().getProperty("ssl.truststorepass")).keyStoreFile(getProp().getProperty("ssl.keystore"))
+          .keyStorePassword(getProp().getProperty("ssl.keystorepass")).keyPassword(getProp().getProperty("ssl.keypass"));
+      SSLContext sslContext = sslConfig.createSSLContext();
+
+      X509Certificate clientCert = null;
+      try {
+        KeyStore keyStore = loadKeyStore(getProp().getProperty("ssl.keystore"), getProp().getProperty("ssl.keystorepass"));
+        clientCert = getFirstCertFromKeyStore(keyStore);
+      } catch (Exception ex) {
+        ex.printStackTrace();
+      }
+      if (clientCert != null) {
+        String clientCN = getCertCNFromSubject(clientCert.getSubjectDN().getName());
+        System.out.println("Sending request with the common name: " + clientCN + "\n");
+      }
+      // building hostname verifier to avoid exception
+      HostnameVerifier allHostsValid = (hostname, session) -> {
+        // Decide whether to allow the connection...
+        return true;
+      };
+
+      client = ClientBuilder.newBuilder().sslContext(sslContext).withConfig(configuration).hostnameVerifier(allHostsValid).build();
+    } else {
+      client = ClientBuilder.newClient(configuration);
+    }
+
+    WebTarget target = client.target(UriBuilder.fromUri(uri).build());
+    EventInput eventInput = target.request().get(EventInput.class);
+    while (!eventInput.isClosed()) {
+      final InboundEvent inboundEvent = eventInput.read();
+      if (inboundEvent == null) {
+        // connection has been closed
+        break;
+      }
+      //inboundEvent.getName() (like a topic name in MQTT)
+      System.out.println(inboundEvent.readData(String.class));
+    }
   }
 
   static synchronized Properties getProp() {

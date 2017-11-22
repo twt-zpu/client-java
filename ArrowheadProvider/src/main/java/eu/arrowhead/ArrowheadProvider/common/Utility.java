@@ -8,6 +8,7 @@ import eu.arrowhead.ArrowheadProvider.ProviderMain;
 import eu.arrowhead.ArrowheadProvider.common.model.ArrowheadSystem;
 import eu.arrowhead.ArrowheadProvider.common.model.ErrorMessage;
 import eu.arrowhead.ArrowheadProvider.common.model.RawTokenInfo;
+import eu.arrowhead.ArrowheadProvider.common.model.RequestVerifying;
 import eu.arrowhead.ArrowheadProvider.common.security.AuthenticationException;
 import java.io.File;
 import java.io.FileInputStream;
@@ -145,7 +146,7 @@ public final class Utility {
     return response;
   }
 
-  public static <T> Response verifyRequester(SecurityContext context, String token, String signature, T responseEntity) {
+  public static <T> Response requesterVerified(SecurityContext context, String token, String signature, T responseEntity) {
     try {
       Principal consumerPrincipal = context.getUserPrincipal();
       String consumerName = consumerPrincipal.getName().substring(3, consumerPrincipal.getName().indexOf(" ") - 1);
@@ -165,7 +166,6 @@ public final class Utility {
       boolean verifies = signatureInstance.verify(signaturebytes);
 
       if (!verifies) {
-        //todo find messagebodywriter cause
         ErrorMessage error = new ErrorMessage("Token validation failed", 401, AuthenticationException.class.toString());
         return Response.status(401).entity(error).build();
       }
@@ -192,16 +192,67 @@ public final class Utility {
         }
         ErrorMessage error = new ErrorMessage("Authorization token has expired", 401, AuthenticationException.class.toString());
         return Response.status(401).entity(error).build();
-
       } else {
         ErrorMessage error = new ErrorMessage("Permission denied", 401, AuthenticationException.class.toString());
         return Response.status(401).entity(error).build();
       }
-
     } catch (Exception ex) {
       ex.printStackTrace();
       ErrorMessage error = new ErrorMessage("Internal Server Error: " + ex.getMessage(), 500, null);
       return Response.status(500).entity(error).build();
+    }
+  }
+
+  public static <T> RequestVerifying requesterVerified(SecurityContext context, String token, String signature) {
+    try {
+      Principal consumerPrincipal = context.getUserPrincipal();
+      String consumerName = consumerPrincipal.getName().substring(3, consumerPrincipal.getName().indexOf(" ") - 1);
+
+      ArrowheadSystem consumer = new ArrowheadSystem();
+      String[] consumerNameParts = consumerName.split("\\.");
+      consumer.setSystemName(consumerNameParts[0]);
+      consumer.setSystemGroup(consumerNameParts[1]);
+
+      byte[] tokenbytes = Base64.getDecoder().decode(token);
+      byte[] signaturebytes = Base64.getDecoder().decode(signature);
+
+      Signature signatureInstance = Signature.getInstance("SHA1withRSA");
+      signatureInstance.initVerify(ProviderMain.authorizationKey);
+      signatureInstance.update(tokenbytes);
+
+      boolean verifies = signatureInstance.verify(signaturebytes);
+
+      if (!verifies) {
+        return new RequestVerifying(false, 401, "Token validation failed");
+      }
+
+      Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+      cipher.init(Cipher.DECRYPT_MODE, ProviderMain.privateKey);
+      byte[] byteToken = cipher.doFinal(tokenbytes);
+
+      Gson gson = new Gson();
+      String json = new String(byteToken, "UTF-8");
+      RawTokenInfo rawTokenInfo = gson.fromJson(json, RawTokenInfo.class);
+
+      ArrowheadSystem consumerWithToken = new ArrowheadSystem();
+      String[] rawTokenInfoParts = rawTokenInfo.getC().split("\\.");
+      consumerWithToken.setSystemName(rawTokenInfoParts[0]);
+      consumerWithToken.setSystemGroup(rawTokenInfoParts[1]);
+
+      long endTime = rawTokenInfo.getE();
+      long currentTime = System.currentTimeMillis();
+
+      if (consumer.equals(consumerWithToken)) {
+        if (endTime == 0L || (endTime > currentTime)) {
+          return new RequestVerifying(true, 200, null);
+        }
+        return new RequestVerifying(false, 401, "Authorization token has expired");
+      } else {
+        return new RequestVerifying(false, 401, "Permission denied");
+      }
+    } catch (Exception ex) {
+      ex.printStackTrace();
+      return new RequestVerifying(false, 500, "Internal Server Error: " + ex.getMessage());
     }
   }
 

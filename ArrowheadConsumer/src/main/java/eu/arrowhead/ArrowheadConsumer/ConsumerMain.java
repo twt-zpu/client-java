@@ -15,7 +15,10 @@ import javax.ws.rs.core.UriBuilder;
 public class ConsumerMain {
 
   private static final String ORCH_URI = Utility.getProp().getProperty("orch_uri", "http://0.0.0.0:8440/orchestrator//orchestration");
-  private static boolean isSecure = false;
+  private static boolean IS_SECURE = false;
+  private static boolean SERVER_SENT_EVENT = false;
+
+
   public static void main(String[] args) {
 
     argLoop:
@@ -24,14 +27,18 @@ public class ConsumerMain {
         ++i;
         switch (args[i]) {
           case "insecure":
-            isSecure = false;
+            IS_SECURE = false;
             break argLoop;
           case "secure":
-            isSecure = true;
+            IS_SECURE = true;
             break argLoop;
           default:
             throw new AssertionError("Unknown security level: " + args[i]);
         }
+      }
+      if (args[i].equals("sse")) {
+        SERVER_SENT_EVENT = true;
+        System.out.println("Starting the Consumer expecting a Server Sent Event Provider!");
       }
     }
 
@@ -63,22 +70,25 @@ public class ConsumerMain {
 
     System.out.println("Received provider system URL: " + ub.toString() + "\n");
 
-    //Sending request to the provider, parsing the answer
-    Response getResponse = Utility.sendRequest(ub.toString(), "GET", null);
-    TemperatureReadout readout = new TemperatureReadout();
-    try {
-      readout = getResponse.readEntity(TemperatureReadout.class);
-    } catch (RuntimeException e) {
-      e.printStackTrace();
-      System.out.println("Provider did not send the temperature readout in SenML format.");
-    }
-    if(readout.getE().get(0) == null){
-      System.out.println("Provider did not send any MeasurementEntry.");
-    }
-    else{
-      long endTime = System.currentTimeMillis();
-      System.out.println("The indoor temperature is " + readout.getE().get(0).getV() + " degrees celsius.");
-      System.out.println("Orchestration and Service consumption response time:" + Long.toString(endTime-startTime));
+    if (SERVER_SENT_EVENT) {
+      Utility.sendRequestToServerEvent(ub.toString());
+    } else {
+      //Sending request to the provider, parsing the answer
+      Response getResponse = Utility.sendRequest(ub.toString(), "GET", null);
+      TemperatureReadout readout = new TemperatureReadout();
+      try {
+        readout = getResponse.readEntity(TemperatureReadout.class);
+      } catch (RuntimeException e) {
+        e.printStackTrace();
+        System.out.println("Provider did not send the temperature readout in SenML format.");
+      }
+      if (readout.getE().get(0) == null) {
+        System.out.println("Provider did not send any MeasurementEntry.");
+      } else {
+        long endTime = System.currentTimeMillis();
+        System.out.println("The indoor temperature is " + readout.getE().get(0).getV() + " degrees celsius.");
+        System.out.println("Orchestration and Service consumption response time:" + Long.toString(endTime - startTime));
+      }
     }
   }
 
@@ -89,7 +99,7 @@ public class ConsumerMain {
     interfaces.add("json");
     Map<String, String> serviceMetadata = new HashMap<>();
     serviceMetadata.put("unit", "celsius");
-    if (isSecure) {
+    if (IS_SECURE) {
       serviceMetadata.put("security", "token");
     }
     ArrowheadService service = new ArrowheadService("Temperature", "IndoorTemperature", interfaces, serviceMetadata);
