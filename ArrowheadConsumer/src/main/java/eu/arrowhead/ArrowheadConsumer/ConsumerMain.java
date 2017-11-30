@@ -14,7 +14,7 @@ import javax.ws.rs.core.UriBuilder;
 
 public class ConsumerMain {
 
-  private static final String ORCH_URI = Utility.getProp().getProperty("orch_uri", "http://0.0.0.0:8440/orchestrator//orchestration");
+  private static final String ORCH_URI = Utility.getProp().getProperty("orch_uri", "http://0.0.0.0:8440/orchestrator/orchestration");
   private static boolean IS_SECURE = false;
   private static boolean SERVER_SENT_EVENT = false;
 
@@ -38,21 +38,24 @@ public class ConsumerMain {
       }
       if (args[i].equals("sse")) {
         SERVER_SENT_EVENT = true;
-        System.out.println("Starting the Consumer expecting a Server Sent Event Provider!");
+        //System.out.println("Starting the Consumer expecting a Server Sent Event Provider!");
       }
     }
 
-    System.out.println("Working directory: " + System.getProperty("user.dir"));
+    //System.out.println("Working directory: " + System.getProperty("user.dir"));
     long startTime = System.currentTimeMillis();
 
     //Payload compiling
     ServiceRequestForm srf = compileSRF();
-    System.out.println("Service Request payload: " + Utility.toPrettyJson(null, srf));
+    //System.out.println("Service Request payload: " + Utility.toPrettyJson(null, srf));
 
     //Sending request to the orchestrator, parsing the response
     Response postResponse = Utility.sendRequest(ORCH_URI, "POST", srf);
     OrchestrationResponse orchResponse = postResponse.readEntity(OrchestrationResponse.class);
-    System.out.println("Orchestration Response payload: " + Utility.toPrettyJson(null, orchResponse));
+    //System.out.println("Orchestration Response payload: " + Utility.toPrettyJson(null, orchResponse));
+
+    long endTime = System.currentTimeMillis();
+    System.out.println("Orchestration response time:" + Long.toString(endTime - startTime));
 
     ArrowheadSystem provider = orchResponse.getResponse().get(0).getProvider();
     String serviceURI = orchResponse.getResponse().get(0).getServiceURI();
@@ -68,7 +71,7 @@ public class ConsumerMain {
       ub.scheme("http");
     }
 
-    System.out.println("Received provider system URL: " + ub.toString() + "\n");
+    //System.out.println("Received provider system URL: " + ub.toString() + "\n");
 
     if (SERVER_SENT_EVENT) {
       Utility.sendRequestToServerEvent(ub.toString());
@@ -85,7 +88,7 @@ public class ConsumerMain {
       if (readout.getE().get(0) == null) {
         System.out.println("Provider did not send any MeasurementEntry.");
       } else {
-        long endTime = System.currentTimeMillis();
+        endTime = System.currentTimeMillis();
         System.out.println("The indoor temperature is " + readout.getE().get(0).getV() + " degrees celsius.");
         System.out.println("Orchestration and Service consumption response time:" + Long.toString(endTime - startTime));
       }
@@ -93,7 +96,7 @@ public class ConsumerMain {
   }
 
   private static ServiceRequestForm compileSRF() {
-    ArrowheadSystem consumer = new ArrowheadSystem("CarDemo", "Car2", "localhost", 0, null);
+    ArrowheadSystem consumer = new ArrowheadSystem("CarDemoSSE", "Car2", "localhost", 0, null);
 
     List<String> interfaces = new ArrayList<>();
     interfaces.add("json");
@@ -107,7 +110,7 @@ public class ConsumerMain {
     orchestrationFlags.put("overrideStore", true);
     orchestrationFlags.put("pingProviders", false);
     orchestrationFlags.put("metadataSearch", false);
-    orchestrationFlags.put("enableInterCloud", true);
+    orchestrationFlags.put("enableInterCloud", false);
 
     return new ServiceRequestForm.Builder(consumer).requestedService(service).orchestrationFlags(orchestrationFlags).build();
   }

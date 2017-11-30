@@ -148,8 +148,14 @@ public final class Utility {
 
   public static <T> Response requesterVerified(SecurityContext context, String token, String signature, T responseEntity) {
     try {
-      Principal consumerPrincipal = context.getUserPrincipal();
-      String consumerName = consumerPrincipal.getName().substring(3, consumerPrincipal.getName().indexOf(" ") - 1);
+      String commonName = context.getUserPrincipal().getName();
+      String consumerName;
+      //TODO create a general common name extracting method
+      if (commonName.contains(" ")) {
+        consumerName = commonName.substring(3, commonName.indexOf(" ") - 1);
+      } else {
+        consumerName = commonName.substring(3, commonName.length());
+      }
 
       ArrowheadSystem consumer = new ArrowheadSystem();
       String[] consumerNameParts = consumerName.split("\\.");
@@ -205,8 +211,14 @@ public final class Utility {
 
   public static <T> RequestVerifying requesterVerified(SecurityContext context, String token, String signature) {
     try {
-      Principal consumerPrincipal = context.getUserPrincipal();
-      String consumerName = consumerPrincipal.getName().substring(3, consumerPrincipal.getName().indexOf(" ") - 1);
+      String commonName = context.getUserPrincipal().getName();
+      String consumerName;
+      //TODO create a general common name extracting method
+      if (commonName.contains(" ")) {
+        consumerName = commonName.substring(3, commonName.indexOf(" ") - 1);
+      } else {
+        consumerName = commonName.substring(3, commonName.length());
+      }
 
       ArrowheadSystem consumer = new ArrowheadSystem();
       String[] consumerNameParts = consumerName.split("\\.");

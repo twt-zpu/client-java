@@ -67,7 +67,7 @@ final class Utility {
       }
       if (clientCert != null) {
         String clientCN = getCertCNFromSubject(clientCert.getSubjectDN().getName());
-        System.out.println("Sending request with the common name: " + clientCN + "\n");
+        //System.out.println("Sending request with the common name: " + clientCN + "\n");
       }
       // building hostname verifier to avoid exception
       HostnameVerifier allHostsValid = (hostname, session) -> {
@@ -150,7 +150,7 @@ final class Utility {
       }
       if (clientCert != null) {
         String clientCN = getCertCNFromSubject(clientCert.getSubjectDN().getName());
-        System.out.println("Sending request with the common name: " + clientCN + "\n");
+        //System.out.println("Sending request with the common name: " + clientCN + "\n");
       }
       // building hostname verifier to avoid exception
       HostnameVerifier allHostsValid = (hostname, session) -> {
@@ -166,13 +166,16 @@ final class Utility {
     WebTarget target = client.target(UriBuilder.fromUri(uri).build());
     EventInput eventInput = target.request().get(EventInput.class);
     while (!eventInput.isClosed()) {
+      long startTime = System.currentTimeMillis();
       final InboundEvent inboundEvent = eventInput.read();
       if (inboundEvent == null) {
         // connection has been closed
         break;
       }
-      //inboundEvent.getName() (like a topic name in MQTT)
-      System.out.println(inboundEvent.readData(String.class));
+
+      int delay = inboundEvent.readData(Integer.class);
+      long endTime = System.currentTimeMillis();
+      System.out.println(endTime - startTime - (delay * 1000));
     }
   }
 

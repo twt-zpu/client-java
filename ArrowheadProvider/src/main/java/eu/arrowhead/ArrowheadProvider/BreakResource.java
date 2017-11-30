@@ -5,8 +5,6 @@ import eu.arrowhead.ArrowheadProvider.common.model.ErrorMessage;
 import eu.arrowhead.ArrowheadProvider.common.model.RequestVerifying;
 import eu.arrowhead.ArrowheadProvider.common.security.AuthenticationException;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Random;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -23,8 +21,7 @@ import org.glassfish.jersey.media.sse.SseFeature;
 public class BreakResource {
 
   @GET
-  public EventOutput getServerSentEvents(@Context SecurityContext context, @QueryParam("token") String token,
-                                         @QueryParam("signature") String signature) {
+  public EventOutput getServerSentEvents(@Context SecurityContext context, @QueryParam("token") String token, @QueryParam("signature") String signature) {
     final EventOutput eventOutput = new EventOutput();
 
     if (context.isSecure()) {
@@ -43,28 +40,27 @@ public class BreakResource {
         } catch (IOException e) {
           e.printStackTrace();
         }
+
+        return eventOutput;
       }
     }
 
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy MMM dd HH:mm:ss");
-
     new Thread(new Runnable() {
+      @Override
       public void run() {
+        final OutboundEvent.Builder eventBuilder = new OutboundEvent.Builder();
+        eventBuilder.name("message-to-client");
         try {
           Random rand = new Random();
-          while (true) {
-            // Generate a random number between 5 and 30
-            int value = rand.nextInt((30 - 5) + 1) + 5;
+          for (int i = 0; i < 10; i++) {
+            // Generate a random number between 2 and 5
+            int value = rand.nextInt((5 - 2) + 1) + 2;
+            System.out.println("delay: " + value);
             Thread.sleep(value * 1000);
 
-            Date timestamp = new Date(System.currentTimeMillis());
-            final OutboundEvent.Builder eventBuilder = new OutboundEvent.Builder();
-            eventBuilder.name("message-to-client");
-            eventBuilder.data(String.class, "BREAK! " + sdf.format(timestamp));
-            final OutboundEvent event = eventBuilder.build();
-            eventOutput.write(event);
-
-            System.out.println("BREAK! " + sdf.format(timestamp));
+            eventBuilder.data(Integer.class, value);
+            OutboundEvent breakEvent = eventBuilder.build();
+            eventOutput.write(breakEvent);
           }
         } catch (IOException | InterruptedException e) {
           throw new RuntimeException("Error when writing the event.", e);
@@ -77,6 +73,7 @@ public class BreakResource {
         }
       }
     }).start();
+
     return eventOutput;
   }
 

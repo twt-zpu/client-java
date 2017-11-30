@@ -38,9 +38,6 @@ public class ProviderMain {
   private static final String BASE_URI = getProp().getProperty("base_uri", "http://0.0.0.0:8454/");
   private static final String BASE_URI_SECURED = getProp().getProperty("base_uri_secured", "https://0.0.0.0:8455/");
   private static final String SR_BASE_URI = getProp().getProperty("sr_base_uri", "http://arrowhead.tmit.bme.hu:8444/serviceregistry");
-  private static final String SYSTEM_GROUP = getProp().getProperty("system_group", "CarDemo");
-  private static final String SYSTEM_NAME = getProp().getProperty("system_name", "Car1");
-  private static final String CAR_PUBLIC_KEY = getProp().getProperty("public_key");
   private static String PROVIDER_PUBLIC_KEY;
   public static boolean DEBUG_MODE;
 
@@ -255,7 +252,7 @@ public class ProviderMain {
           } catch (URISyntaxException e) {
             throw new RuntimeException("Parsing the BASE_URI_SECURED resulted in an error.", e);
           }
-          ArrowheadSystem provider = new ArrowheadSystem(SYSTEM_GROUP, SYSTEM_NAME, baseUri.getHost(), baseUri.getPort(), CAR_PUBLIC_KEY);
+          ArrowheadSystem provider = new ArrowheadSystem("CarDemoSSE", "Car1", baseUri.getHost(), baseUri.getPort(), PROVIDER_PUBLIC_KEY);
           return new ServiceRegistryEntry(breakService, provider, "break");
         } else {
           try {
@@ -263,7 +260,7 @@ public class ProviderMain {
           } catch (URISyntaxException e) {
             throw new RuntimeException("Parsing the BASE_URI resulted in an error.", e);
           }
-          ArrowheadSystem provider = new ArrowheadSystem(SYSTEM_GROUP, SYSTEM_NAME, baseUri.getHost(), baseUri.getPort(), null);
+          ArrowheadSystem provider = new ArrowheadSystem("CarDemoSSE", "Car1", baseUri.getHost(), baseUri.getPort(), null);
           return new ServiceRegistryEntry(breakService, provider, "break");
         }
       default:
