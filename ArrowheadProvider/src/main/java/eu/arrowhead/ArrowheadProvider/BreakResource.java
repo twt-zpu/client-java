@@ -16,6 +16,10 @@ import org.glassfish.jersey.media.sse.EventOutput;
 import org.glassfish.jersey.media.sse.OutboundEvent;
 import org.glassfish.jersey.media.sse.SseFeature;
 
+import java.io.*;
+import java.net.*;
+
+
 @Path("break")
 @Produces(SseFeature.SERVER_SENT_EVENTS)
 public class BreakResource {
@@ -48,6 +52,39 @@ public class BreakResource {
     new Thread(new Runnable() {
       @Override
       public void run() {
+		 DatagramSocket serverSocket = null;	
+				   try {
+		serverSocket = new DatagramSocket(9876);
+	  } catch (Exception e) {}
+            byte[] receiveData = new byte[1024];
+            while(true)
+               {
+				   try {
+                  DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                  serverSocket.receive(receivePacket);
+                //  java.util.Date date= new java.util.Date();
+//            System.out.print(new Timestamp(date.getTime()));
+//				  String message = date.toString();
+				long startTime = System.currentTimeMillis();
+				  String message = ""+startTime+"\n";
+
+				  File outfile = new File("timestampEND.txt");
+				  if (!outfile.exists()) {
+					outfile.createNewFile();
+				  }
+                  FileWriter fw = new FileWriter(outfile.getAbsoluteFile(), true);
+                  BufferedWriter bw = new BufferedWriter(fw);
+                  bw.write(message+"\n");
+				  bw.flush(); 
+				  bw.close();
+				   } catch (Exception e) {}
+               }
+    }}).start();
+
+	
+    new Thread(new Runnable() {
+      @Override
+      public void run() {
         final OutboundEvent.Builder eventBuilder = new OutboundEvent.Builder();
         eventBuilder.name("message-to-client");
         try {
@@ -58,6 +95,21 @@ public class BreakResource {
             System.out.println("delay: " + value);
             Thread.sleep(value * 1000);
 
+				long startTime = System.currentTimeMillis();
+				  String message = ""+startTime+"\n";
+
+				  File outfile = new File("timestampSTART.txt");
+				  if (!outfile.exists()) {
+					outfile.createNewFile();
+				  }
+                  FileWriter fw = new FileWriter(outfile.getAbsoluteFile(), true);
+                  BufferedWriter bw = new BufferedWriter(fw);
+                  bw.write(message+"\n");
+				  bw.flush(); 
+				  bw.close();
+
+//            java.util.Date date= new java.util.Date();
+//            System.out.println(date.toString());
             eventBuilder.data(Integer.class, value);
             OutboundEvent breakEvent = eventBuilder.build();
             eventOutput.write(breakEvent);

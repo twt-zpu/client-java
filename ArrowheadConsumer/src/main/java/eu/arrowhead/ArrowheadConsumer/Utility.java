@@ -1,5 +1,9 @@
 package eu.arrowhead.ArrowheadConsumer;
 
+
+import java.io.*;
+import java.net.*;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -173,6 +177,22 @@ final class Utility {
         break;
       }
 
+	  
+	  // Michele stupidly complex part
+        byte[] sendData = new byte[1024];
+		byte[] ipAddr = new byte[]{(byte)192, (byte)168, (byte)17, (byte)2};
+		try {
+		InetAddress addr = InetAddress.getByAddress(ipAddr);
+		sendData = "fuck you".getBytes();
+	    DatagramSocket clientSocket = new DatagramSocket();
+		DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, addr, 9876);
+        clientSocket.send(sendPacket);
+	    clientSocket.close();
+		} catch (Exception e) {}
+
+
+
+		
       int delay = inboundEvent.readData(Integer.class);
       long endTime = System.currentTimeMillis();
       System.out.println(endTime - startTime - (delay * 1000));
