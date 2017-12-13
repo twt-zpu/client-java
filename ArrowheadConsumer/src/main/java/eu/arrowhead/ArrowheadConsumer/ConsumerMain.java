@@ -14,7 +14,7 @@ import javax.ws.rs.core.UriBuilder;
 
 public class ConsumerMain {
 
-  private static final String ORCH_URI = Utility.getProp().getProperty("orch_uri", "http://0.0.0.0:8440/orchestrator//orchestration");
+  private static final String ORCH_URI = Utility.getProp().getProperty("orch_uri", "http://0.0.0.0:8440/orchestrator/orchestration");
   private static boolean isSecure = false;
   public static void main(String[] args) {
 
@@ -97,7 +97,7 @@ public class ConsumerMain {
     Map<String, Boolean> orchestrationFlags = new HashMap<>();
     orchestrationFlags.put("overrideStore", true);
     orchestrationFlags.put("pingProviders", false);
-    orchestrationFlags.put("metadataSearch", false);
+    orchestrationFlags.put("metadataSearch", true);
     orchestrationFlags.put("enableInterCloud", true);
 
     return new ServiceRequestForm.Builder(consumer).requestedService(service).orchestrationFlags(orchestrationFlags).build();

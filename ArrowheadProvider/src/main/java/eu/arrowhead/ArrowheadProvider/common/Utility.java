@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.UnrecoverableKeyException;
@@ -147,8 +146,14 @@ public final class Utility {
 
   public static <T> Response verifyRequester(SecurityContext context, String token, String signature, T responseEntity) {
     try {
-      Principal consumerPrincipal = context.getUserPrincipal();
-      String consumerName = consumerPrincipal.getName().substring(3, consumerPrincipal.getName().indexOf(" ") - 1);
+      String commonName = context.getUserPrincipal().getName();
+      String consumerName;
+      //TODO create a general common name extracting method
+      if (commonName.contains(" ")) {
+        consumerName = commonName.substring(3, commonName.indexOf(" ") - 1);
+      } else {
+        consumerName = commonName.substring(3, commonName.length());
+      }
 
       ArrowheadSystem consumer = new ArrowheadSystem();
       String[] consumerNameParts = consumerName.split("\\.");
