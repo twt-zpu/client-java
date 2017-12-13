@@ -42,7 +42,7 @@ public class ConsumerMain {
     ServiceRequestForm srf = compileSRF();
     System.out.println("Service Request payload: " + Utility.toPrettyJson(null, srf));
 
-    //Sending request to the orchestrator, parsing the response
+    //Sending request to the orche rator, parsing the response
     Response postResponse = Utility.sendRequest(ORCH_URI, "POST", srf);
     OrchestrationResponse orchResponse = postResponse.readEntity(OrchestrationResponse.class);
     System.out.println("Orchestration Response payload: " + Utility.toPrettyJson(null, orchResponse));

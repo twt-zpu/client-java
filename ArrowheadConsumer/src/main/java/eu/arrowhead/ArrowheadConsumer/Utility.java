@@ -98,7 +98,7 @@ final class Utility {
           throw new NotAllowedException("Invalid method type was given to the Utility.sendRequest() method");
       }
     } catch (ProcessingException e) {
-      throw new RuntimeException("Could not get any response from: " + uri);
+      throw new RuntimeException("Could not get any response from: " + uri, e);
     }
     
   //The response body has to be extracted before the stream closes
