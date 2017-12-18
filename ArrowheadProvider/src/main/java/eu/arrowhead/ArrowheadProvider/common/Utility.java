@@ -115,7 +115,7 @@ public final class Utility {
           throw new NotAllowedException("Invalid method type was given to the Utility.sendRequest() method");
       }
     } catch (ProcessingException e) {
-      throw new RuntimeException("Could not get any response from: " + uri);
+      throw new RuntimeException("Could not get any response from: " + uri, e);
     }
 
     //The response body has to be extracted before the stream closes
@@ -177,6 +177,7 @@ public final class Utility {
 
       Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
       cipher.init(Cipher.DECRYPT_MODE, ProviderMain.privateKey);
+      //Check if the provider public key registered in the database is the same as the one used by the provider at the moment
       byte[] byteToken = cipher.doFinal(tokenbytes);
 
       Gson gson = new Gson();
