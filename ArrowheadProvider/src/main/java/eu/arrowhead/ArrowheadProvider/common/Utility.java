@@ -148,7 +148,7 @@ public final class Utility {
     try {
       String commonName = context.getUserPrincipal().getName();
       String consumerName;
-      //TODO create a general common name extracting method
+      //TODO use SecurityUtils.getCertCNFromSubject instead
       if (commonName.contains(" ")) {
         consumerName = commonName.substring(3, commonName.indexOf(" ") - 1);
       } else {
