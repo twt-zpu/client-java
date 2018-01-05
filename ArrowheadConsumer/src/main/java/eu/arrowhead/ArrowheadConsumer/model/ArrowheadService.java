@@ -43,7 +43,7 @@ public class ArrowheadService {
     return interfaces;
   }
 
-  public void setOneInterface(String oneInterface) {
+  public void setInterfaces(String oneInterface) {
     List<String> interfaces = new ArrayList<>();
     interfaces.add(oneInterface);
     this.interfaces = interfaces;
