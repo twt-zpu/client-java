@@ -1,5 +1,7 @@
 package eu.arrowhead.ArrowheadConsumer.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class PreferredProvider {
 
   private ArrowheadSystem providerSystem;
@@ -29,14 +31,17 @@ public class PreferredProvider {
     this.providerCloud = providerCloud;
   }
 
+  @JsonIgnore
   public boolean isValid() {
     return isLocal() || isGlobal();
   }
 
+  @JsonIgnore
   public boolean isLocal() {
     return providerSystem != null && providerSystem.isValid() && providerCloud == null;
   }
 
+  @JsonIgnore
   public boolean isGlobal() {
     return providerCloud != null && providerCloud.isValid();
   }

@@ -1,5 +1,7 @@
 package eu.arrowhead.ArrowheadProvider.common.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class ArrowheadSystem {
 
   private String systemGroup;
@@ -59,6 +61,7 @@ public class ArrowheadSystem {
     this.authenticationInfo = authenticationInfo;
   }
 
+  @JsonIgnore
   public boolean isValid() {
     return systemGroup != null && systemName != null && address != null;
   }
@@ -100,13 +103,10 @@ public class ArrowheadSystem {
       return false;
     }
     if (systemName == null) {
-      if (other.systemName != null) {
-        return false;
-      }
-    } else if (!systemName.equals(other.systemName)) {
-      return false;
+      return other.systemName == null;
+    } else {
+      return systemName.equals(other.systemName);
     }
-    return true;
   }
 
   @Override

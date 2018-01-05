@@ -1,5 +1,6 @@
 package eu.arrowhead.ArrowheadProvider.common.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.List;
 
 public class ServiceRegistryEntry {
@@ -11,7 +12,7 @@ public class ServiceRegistryEntry {
   //non-mandatory fields
   private String serviceURI;
   private int version = 1;
-  private boolean isUDP = false;
+  private boolean UDP = false;
 
   //only for backwards compatibility, non-mandatory fields
   private List<ServiceMetadata> serviceMetadata;
@@ -76,11 +77,11 @@ public class ServiceRegistryEntry {
   }
 
   public boolean isUDP() {
-    return isUDP;
+    return UDP;
   }
 
   public void setUDP(boolean UDP) {
-    isUDP = UDP;
+    this.UDP = UDP;
   }
 
   public String getTSIG_key() {
@@ -91,10 +92,12 @@ public class ServiceRegistryEntry {
     this.TSIG_key = TSIG_key;
   }
 
+  @JsonIgnore
   public boolean isValid() {
     return provider != null && provider.isValid();
   }
 
+  @JsonIgnore
   public boolean isValidFully() {
     return provider != null && provider.isValid() && providedService != null && providedService.isValid();
   }

@@ -1,5 +1,6 @@
 package eu.arrowhead.ArrowheadConsumer.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -60,6 +61,7 @@ public class ArrowheadService {
     this.serviceMetadata = metaData;
   }
 
+  @JsonIgnore
   boolean isValid() {
     return serviceGroup != null && serviceDefinition != null;
   }
@@ -93,13 +95,10 @@ public class ArrowheadService {
       return false;
     }
     if (serviceGroup == null) {
-      if (other.serviceGroup != null) {
-        return false;
-      }
-    } else if (!serviceGroup.equals(other.serviceGroup)) {
-      return false;
+      return other.serviceGroup == null;
+    } else {
+      return serviceGroup.equals(other.serviceGroup);
     }
-    return true;
   }
 
   @Override

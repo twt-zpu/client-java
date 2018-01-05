@@ -1,5 +1,7 @@
 package eu.arrowhead.ArrowheadConsumer.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class ArrowheadCloud {
 
   private String operator;
@@ -69,6 +71,7 @@ public class ArrowheadCloud {
     this.authenticationInfo = authenticationInfo;
   }
 
+  @JsonIgnore
   public boolean isValid() {
     return operator != null && cloudName != null && address != null && gatekeeperServiceURI != null;
   }
