@@ -78,7 +78,7 @@ public class ConsumerMain {
     else{
       long endTime = System.currentTimeMillis();
       System.out.println("The indoor temperature is " + readout.getE().get(0).getV() + " degrees celsius.");
-      System.out.println("Orchestration and Service consumption response time:" + Long.toString(endTime-startTime));
+      System.out.println("Orchestration and Service consumption response time: " + Long.toString(endTime - startTime));
     }
   }
 

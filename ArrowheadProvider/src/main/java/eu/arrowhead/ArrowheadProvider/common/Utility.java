@@ -12,6 +12,7 @@ import eu.arrowhead.ArrowheadProvider.common.security.AuthenticationException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -20,6 +21,7 @@ import java.security.Signature;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.Enumeration;
@@ -288,6 +290,22 @@ public final class Utility {
   public static boolean isCommonNameArrowheadValid(String commonName) {
     String[] cnFields = commonName.split("\\.", 0);
     return cnFields.length == 6;
+  }
+
+  public static KeyStore createKeyStoreFromCert(String filePath, String alias) {
+    try {
+      InputStream is = new FileInputStream(filePath);
+      CertificateFactory cf = CertificateFactory.getInstance("X.509");
+      X509Certificate cert = (X509Certificate) cf.generateCertificate(is);
+
+      KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+      keystore.load(null); // We don't need the KeyStore instance to come from a file.
+      keystore.setCertificateEntry(alias, cert);
+      return keystore;
+    } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e) {
+      e.printStackTrace();
+      throw new ServiceConfigurationError("Keystore creation from cert failed...", e);
+    }
   }
 
   public static String stripEndSlash(String uri) {

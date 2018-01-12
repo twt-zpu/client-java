@@ -32,15 +32,16 @@ import org.glassfish.jersey.server.ResourceConfig;
 
 public class ProviderMain {
 
-  private static Properties prop;
-  public static PrivateKey privateKey = null;
-  public static PublicKey authorizationKey = null;
   private static HttpServer server = null;
   private static HttpServer secureServer = null;
+  private static String PROVIDER_PUBLIC_KEY;
+  private static Properties prop;
   private static final String BASE_URI = getProp().getProperty("base_uri", "http://0.0.0.0:8454/");
   private static final String BASE_URI_SECURED = getProp().getProperty("base_uri_secured", "https://0.0.0.0:8455/");
-  private static final String SR_BASE_URI = getProp().getProperty("sr_base_uri", "http://arrowhead.tmit.bme.hu:8444/serviceregistry");
-  private static String PROVIDER_PUBLIC_KEY;
+  private static final String SR_BASE_URI = getProp().getProperty("sr_base_uri", "http://localhost:8442/serviceregistry");
+
+  public static PublicKey authorizationKey;
+  public static PrivateKey privateKey;
   public static boolean DEBUG_MODE;
 
   public static void main(String[] args) throws IOException {
@@ -116,11 +117,11 @@ public class ProviderMain {
     config.registerClasses(TemperatureResource.class);
     config.packages("eu.arrowhead.ArrowheadProvider.common.filter", "eu.arrowhead.ArrowheadProvider.common.security");
 
-    String keystorePath = getProp().getProperty("ssl.keystore");
-    String keystorePass = getProp().getProperty("ssl.keystorepass");
-    String keyPass = getProp().getProperty("ssl.keypass");
-    String truststorePath = getProp().getProperty("ssl.truststore");
-    String truststorePass = getProp().getProperty("ssl.truststorepass");
+    String keystorePath = getProp().getProperty("keystore");
+    String keystorePass = getProp().getProperty("keystorepass");
+    String keyPass = getProp().getProperty("keypass");
+    String truststorePath = getProp().getProperty("truststore");
+    String truststorePass = getProp().getProperty("truststorepass");
 
     SSLContextConfigurator sslCon = new SSLContextConfigurator();
     sslCon.setKeyStoreFile(keystorePath);
@@ -143,9 +144,9 @@ public class ProviderMain {
     System.out.println("My certificate CN: " + serverCN);
     config.property("server_common_name", serverCN);
 
-    String authKeystorePath = getProp().getProperty("ssl.auth_keystore");
-    String authKeystorePass = getProp().getProperty("ssl.auth_keystorepass");
-    KeyStore authKeyStore = Utility.loadKeyStore(authKeystorePath, authKeystorePass);
+    String authCertPath = getProp().getProperty("authorization_cert");
+    String authAlias = getProp().getProperty("authorization_alias");
+    KeyStore authKeyStore = Utility.createKeyStoreFromCert(authCertPath, authAlias);
     X509Certificate authCert = Utility.getFirstCertFromKeyStore(authKeyStore);
     authorizationKey = authCert.getPublicKey();
     System.out.println("Authorization CN: "+ Utility.getCertCNFromSubject(authCert.getSubjectDN().getName()));
@@ -192,6 +193,8 @@ public class ProviderMain {
           System.out.println("Received DuplicateEntryException from SR, sending delete request and then registering again.");
           unregisterFromServiceRegistry(Collections.singletonList(entry));
           Utility.sendRequest(registerUri, "POST", entry);
+        } else {
+          e.printStackTrace();
         }
       }
       System.out.println("Registering insecure service is successful!");
