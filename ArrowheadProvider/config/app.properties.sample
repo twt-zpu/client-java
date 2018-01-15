@@ -9,4 +9,3 @@ keypass=12345
 truststore=C:\\Users\\Public\\Java\\arrowhead\\certificates\\testcloud1\\testcloud1_cert.jks
 truststorepass=12345
 authorization_cert=C:\\Users\\Public\\Java\\arrowhead\\certificates\\testcloud1\\authorization.testcloud1.crt
-authorization_alias=authorization.testcloud1.arrowhead.eu

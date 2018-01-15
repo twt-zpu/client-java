@@ -145,14 +145,11 @@ public class ProviderMain {
     config.property("server_common_name", serverCN);
 
     String authCertPath = getProp().getProperty("authorization_cert");
-    String authAlias = getProp().getProperty("authorization_alias");
-    KeyStore authKeyStore = Utility.createKeyStoreFromCert(authCertPath, authAlias);
+    KeyStore authKeyStore = Utility.createKeyStoreFromCert(authCertPath);
     X509Certificate authCert = Utility.getFirstCertFromKeyStore(authKeyStore);
     authorizationKey = authCert.getPublicKey();
-    System.out.println("Authorization PublicKey in Base64: " + Base64.getEncoder().encodeToString(authorizationKey.getEncoded()));
-    
     System.out.println("Authorization CN: "+ Utility.getCertCNFromSubject(authCert.getSubjectDN().getName()));
-    //System.out.println("Authorization System PublicKey Base64: " + Base64.getEncoder().encodeToString(authorizationKey.getEncoded()));
+    System.out.println("Authorization System PublicKey Base64: " + Base64.getEncoder().encodeToString(authorizationKey.getEncoded()));
 
     final HttpServer server = GrizzlyHttpServerFactory
         .createHttpServer(uri, config, true, new SSLEngineConfigurator(sslCon).setClientMode(false).setNeedClientAuth(true));

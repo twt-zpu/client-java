@@ -292,11 +292,13 @@ public final class Utility {
     return cnFields.length == 6;
   }
 
-  public static KeyStore createKeyStoreFromCert(String filePath, String alias) {
+  public static KeyStore createKeyStoreFromCert(String filePath) {
     try {
       InputStream is = new FileInputStream(filePath);
       CertificateFactory cf = CertificateFactory.getInstance("X.509");
       X509Certificate cert = (X509Certificate) cf.generateCertificate(is);
+      String alias = getCertCNFromSubject(cert.getSubjectDN().getName());
+      System.out.println("alias: " + alias);
 
       KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
       keystore.load(null); // We don't need the KeyStore instance to come from a file.
