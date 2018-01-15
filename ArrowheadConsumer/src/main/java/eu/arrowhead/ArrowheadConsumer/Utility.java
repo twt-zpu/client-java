@@ -51,14 +51,14 @@ final class Utility {
     Client client;
 
     if (uri.startsWith("https")) {
-      SslConfigurator sslConfig = SslConfigurator.newInstance().trustStoreFile(getProp().getProperty("ssl.truststore"))
-          .trustStorePassword(getProp().getProperty("ssl.truststorepass")).keyStoreFile(getProp().getProperty("ssl.keystore"))
-          .keyStorePassword(getProp().getProperty("ssl.keystorepass")).keyPassword(getProp().getProperty("ssl.keypass"));
+      SslConfigurator sslConfig = SslConfigurator.newInstance().trustStoreFile(getProp().getProperty("truststore"))
+          .trustStorePassword(getProp().getProperty("truststorepass")).keyStoreFile(getProp().getProperty("keystore"))
+          .keyStorePassword(getProp().getProperty("keystorepass")).keyPassword(getProp().getProperty("keypass"));
       SSLContext sslContext = sslConfig.createSSLContext();
 
       X509Certificate clientCert = null;
       try {
-        KeyStore keyStore = loadKeyStore(getProp().getProperty("ssl.keystore"), getProp().getProperty("ssl.keystorepass"));
+        KeyStore keyStore = loadKeyStore(getProp().getProperty("keystore"), getProp().getProperty("keystorepass"));
         clientCert = getFirstCertFromKeyStore(keyStore);
       } catch (Exception ex) {
         ex.printStackTrace();
