@@ -148,17 +148,9 @@ public final class Utility {
 
   public static <T> Response verifyRequester(SecurityContext context, String token, String signature, T responseEntity) {
     try {
-      String commonName = context.getUserPrincipal().getName();
-      String consumerName;
-      //TODO use SecurityUtils.getCertCNFromSubject instead
-      if (commonName.contains(" ")) {
-        consumerName = commonName.substring(3, commonName.indexOf(" ") - 1);
-      } else {
-        consumerName = commonName.substring(3, commonName.length());
-      }
-
-      ArrowheadSystem consumer = new ArrowheadSystem();
+      String consumerName = Utility.getCertCNFromSubject(context.getUserPrincipal().getName());
       String[] consumerNameParts = consumerName.split("\\.");
+      ArrowheadSystem consumer = new ArrowheadSystem();
       consumer.setSystemName(consumerNameParts[0]);
       consumer.setSystemGroup(consumerNameParts[1]);
 
