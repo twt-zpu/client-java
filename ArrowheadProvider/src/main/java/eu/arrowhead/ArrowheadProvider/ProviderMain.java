@@ -149,6 +149,8 @@ public class ProviderMain {
     KeyStore authKeyStore = Utility.createKeyStoreFromCert(authCertPath, authAlias);
     X509Certificate authCert = Utility.getFirstCertFromKeyStore(authKeyStore);
     authorizationKey = authCert.getPublicKey();
+    System.out.println("Authorization PublicKey in Base64: " + Base64.getEncoder().encodeToString(authorizationKey.getEncoded()));
+    
     System.out.println("Authorization CN: "+ Utility.getCertCNFromSubject(authCert.getSubjectDN().getName()));
     //System.out.println("Authorization System PublicKey Base64: " + Base64.getEncoder().encodeToString(authorizationKey.getEncoded()));
 
