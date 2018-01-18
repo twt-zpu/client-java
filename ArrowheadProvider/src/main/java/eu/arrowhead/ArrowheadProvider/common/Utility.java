@@ -5,8 +5,9 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import eu.arrowhead.ArrowheadProvider.ProviderMain;
+import eu.arrowhead.ArrowheadProvider.common.exception.ArrowheadException;
+import eu.arrowhead.ArrowheadProvider.common.exception.ErrorMessage;
 import eu.arrowhead.ArrowheadProvider.common.model.ArrowheadSystem;
-import eu.arrowhead.ArrowheadProvider.common.model.ErrorMessage;
 import eu.arrowhead.ArrowheadProvider.common.model.RawTokenInfo;
 import eu.arrowhead.ArrowheadProvider.common.security.AuthenticationException;
 import java.io.File;
@@ -129,17 +130,16 @@ public final class Utility {
         errorMessage = response.readEntity(ErrorMessage.class);
       } catch (RuntimeException e) {
         System.out.println("Request failed, response status code: " + response.getStatus());
-        System.out.println("Request failed, response body: " + toPrettyJson(null, errorMessageBody));
-        throw new RuntimeException("Unknown error occurred at " + uri);
+        System.out.println("Request failed, response body: " + errorMessageBody);
+        throw new RuntimeException("Unknown error occured at " + uri, e);
       }
       if (errorMessage == null) {
         System.out.println("Request failed, response status code: " + response.getStatus());
-        System.out.println("Request failed, response body: " + toPrettyJson(null, errorMessageBody));
-        throw new RuntimeException("Unknown error occurred at " + uri);
-      } else if (errorMessage.getExceptionType() == null) {
-        throw new RuntimeException(errorMessage.getErrorMessage() + " (This exception was passed from another module)");
+        System.out.println("Request failed, response body: " + errorMessageBody);
+        throw new ArrowheadException("Unknown error occurred at " + uri);
       } else {
-        throw new RuntimeException(errorMessage.getErrorMessage() + " (This " + errorMessage.getExceptionType() + " was passed from another module)");
+        throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
+                                     errorMessage.getOrigin());
       }
     }
 
@@ -165,7 +165,7 @@ public final class Utility {
 
       if (!verifies) {
         //todo find messagebodywriter cause
-        ErrorMessage error = new ErrorMessage("Token validation failed", 401, AuthenticationException.class.toString());
+        ErrorMessage error = new ErrorMessage("Token validation failed", 401, AuthenticationException.class.getName(), Utility.class.toString());
         return Response.status(401).entity(error).build();
       }
 
@@ -190,17 +190,18 @@ public final class Utility {
         if (endTime == 0L || (endTime > currentTime)) {
           return Response.status(200).entity(responseEntity).build();
         }
-        ErrorMessage error = new ErrorMessage("Authorization token has expired", 401, AuthenticationException.class.toString());
+        ErrorMessage error = new ErrorMessage("Authorization token has expired", 401, AuthenticationException.class.getName(),
+                                              Utility.class.toString());
         return Response.status(401).entity(error).build();
 
       } else {
-        ErrorMessage error = new ErrorMessage("Permission denied", 401, AuthenticationException.class.toString());
+        ErrorMessage error = new ErrorMessage("Permission denied", 401, AuthenticationException.class.getName(), Utility.class.toString());
         return Response.status(401).entity(error).build();
       }
 
     } catch (Exception ex) {
       ex.printStackTrace();
-      ErrorMessage error = new ErrorMessage("Internal Server Error: " + ex.getMessage(), 500, null);
+      ErrorMessage error = new ErrorMessage("Internal Server Error: " + ex.getMessage(), 500, null, Utility.class.toString());
       return Response.status(500).entity(error).build();
     }
   }

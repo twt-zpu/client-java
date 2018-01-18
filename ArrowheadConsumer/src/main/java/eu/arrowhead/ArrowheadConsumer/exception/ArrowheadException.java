@@ -1,4 +1,4 @@
-package eu.arrowhead.ArrowheadProvider.common.exception;
+package eu.arrowhead.ArrowheadConsumer.exception;
 
 public class ArrowheadException extends RuntimeException {
 

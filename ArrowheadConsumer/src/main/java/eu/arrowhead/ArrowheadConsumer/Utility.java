@@ -4,7 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import eu.arrowhead.ArrowheadConsumer.model.ErrorMessage;
+import eu.arrowhead.ArrowheadConsumer.exception.ArrowheadException;
+import eu.arrowhead.ArrowheadConsumer.exception.ErrorMessage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -110,17 +111,16 @@ final class Utility {
         errorMessage = response.readEntity(ErrorMessage.class);
       } catch (RuntimeException e) {
         System.out.println("Request failed, response status code: " + response.getStatus());
-        System.out.println("Request failed, response body: " + toPrettyJson(null, errorMessageBody));
-        throw new RuntimeException("Unknown error occurred at " + uri);
+        System.out.println("Request failed, response body: " + errorMessageBody);
+        throw new RuntimeException("Unknown error occured at " + uri, e);
       }
       if (errorMessage == null) {
         System.out.println("Request failed, response status code: " + response.getStatus());
-        System.out.println("Request failed, response body: " + toPrettyJson(null, errorMessageBody));
-        throw new RuntimeException("Unknown error occurred at " + uri);
-      } else if (errorMessage.getExceptionType() == null) {
-        throw new RuntimeException(errorMessage.getErrorMessage() + " (This exception was passed from another module)");
+        System.out.println("Request failed, response body: " + errorMessageBody);
+        throw new ArrowheadException("Unknown error occurred at " + uri);
       } else {
-        throw new RuntimeException(errorMessage.getErrorMessage() + " (This " + errorMessage.getExceptionType() + " was passed from another module)");
+        throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
+                                     errorMessage.getOrigin());
       }
     }
 

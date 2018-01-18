@@ -1,19 +1,21 @@
-package eu.arrowhead.ArrowheadConsumer.model;
+package eu.arrowhead.ArrowheadConsumer.exception;
 
 public class ErrorMessage {
 
-  private String errorMessage;
   private int errorCode;
-  private String documentation = "https://github.com/hegeduscs/arrowhead/tree/master/documentation";
+  private String errorMessage;
   private String exceptionType;
+  private String origin;
+  private String documentation = "https://github.com/hegeduscs/arrowhead/tree/master/documentation";
 
   public ErrorMessage() {
   }
 
-  public ErrorMessage(String errorMessage, int errorCode, String exceptionType) {
+  public ErrorMessage(String errorMessage, int errorCode, String exceptionType, String origin) {
     this.errorMessage = errorMessage;
     this.errorCode = errorCode;
     this.exceptionType = exceptionType;
+    this.origin = origin;
   }
 
   public String getErrorMessage() {
@@ -32,20 +34,28 @@ public class ErrorMessage {
     this.errorCode = errorCode;
   }
 
-  public String getDocumentation() {
-    return documentation;
-  }
-
-  public void setDocumentation(String documentation) {
-    this.documentation = documentation;
-  }
-
   public String getExceptionType() {
     return exceptionType;
   }
 
   public void setExceptionType(String exceptionType) {
     this.exceptionType = exceptionType;
+  }
+
+  public String getOrigin() {
+    return origin;
+  }
+
+  public void setOrigin(String origin) {
+    this.origin = origin;
+  }
+
+  public String getDocumentation() {
+    return documentation;
+  }
+
+  public void setDocumentation(String documentation) {
+    this.documentation = documentation;
   }
 
 }
