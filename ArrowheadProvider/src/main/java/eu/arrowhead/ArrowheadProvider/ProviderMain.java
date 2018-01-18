@@ -1,6 +1,7 @@
 package eu.arrowhead.ArrowheadProvider;
 
 import eu.arrowhead.ArrowheadProvider.common.Utility;
+import eu.arrowhead.ArrowheadProvider.common.exception.ArrowheadException;
 import eu.arrowhead.ArrowheadProvider.common.exception.DuplicateEntryException;
 import eu.arrowhead.ArrowheadProvider.common.model.ArrowheadService;
 import eu.arrowhead.ArrowheadProvider.common.model.ArrowheadSystem;
@@ -149,7 +150,7 @@ public class ProviderMain {
     KeyStore authKeyStore = Utility.createKeyStoreFromCert(authCertPath);
     X509Certificate authCert = Utility.getFirstCertFromKeyStore(authKeyStore);
     authorizationKey = authCert.getPublicKey();
-    System.out.println("Authorization CN: "+ Utility.getCertCNFromSubject(authCert.getSubjectDN().getName()));
+    System.out.println("Authorization CN: " + Utility.getCertCNFromSubject(authCert.getSubjectDN().getName()));
     System.out.println("Authorization System PublicKey Base64: " + Base64.getEncoder().encodeToString(authorizationKey.getEncoded()));
 
     final HttpServer server = GrizzlyHttpServerFactory
@@ -188,10 +189,12 @@ public class ProviderMain {
       System.out.println("Request payload: " + Utility.toPrettyJson(null, entry));
       try {
         Utility.sendRequest(registerUri, "POST", entry);
-      } catch (DuplicateEntryException e) {
-        System.out.println("Received DuplicateEntryException from SR, sending delete request and then registering again.");
-        unregisterFromServiceRegistry(Collections.singletonList(entry));
-        Utility.sendRequest(registerUri, "POST", entry);
+      } catch (ArrowheadException e) {
+        if (e.getExceptionType().contains("DuplicateEntryException")) {
+          System.out.println("Received DuplicateEntryException from SR, sending delete request and then registering again.");
+          unregisterFromServiceRegistry(Collections.singletonList(entry));
+          Utility.sendRequest(registerUri, "POST", entry);
+        }
       }
       System.out.println("Registering insecure service is successful!");
       entries.add(entry);
@@ -217,9 +220,11 @@ public class ProviderMain {
       try {
         Utility.sendRequest(registerUri, "POST", entry);
       } catch (DuplicateEntryException e) {
-        System.out.println("Received DuplicateEntryException from SR, sending delete request and then registering again.");
-        unregisterFromServiceRegistry(Collections.singletonList(entry));
-        Utility.sendRequest(registerUri, "POST", entry);
+        if (e.getExceptionType().contains("DuplicateEntryException")) {
+          System.out.println("Received DuplicateEntryException from SR, sending delete request and then registering again.");
+          unregisterFromServiceRegistry(Collections.singletonList(entry));
+          Utility.sendRequest(registerUri, "POST", entry);
+        }
       }
       System.out.println("Registering secure service is successful!");
       entries.add(entry);
