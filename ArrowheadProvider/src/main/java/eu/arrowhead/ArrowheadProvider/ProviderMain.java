@@ -2,10 +2,10 @@ package eu.arrowhead.ArrowheadProvider;
 
 import eu.arrowhead.ArrowheadProvider.common.Utility;
 import eu.arrowhead.ArrowheadProvider.common.exception.ArrowheadException;
+import eu.arrowhead.ArrowheadProvider.common.exception.AuthenticationException;
 import eu.arrowhead.ArrowheadProvider.common.model.ArrowheadService;
 import eu.arrowhead.ArrowheadProvider.common.model.ArrowheadSystem;
 import eu.arrowhead.ArrowheadProvider.common.model.ServiceRegistryEntry;
-import eu.arrowhead.ArrowheadProvider.common.security.AuthenticationException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
