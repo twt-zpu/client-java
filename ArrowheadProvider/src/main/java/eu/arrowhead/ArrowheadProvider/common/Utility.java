@@ -6,10 +6,14 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import eu.arrowhead.ArrowheadProvider.ProviderMain;
 import eu.arrowhead.ArrowheadProvider.common.exception.ArrowheadException;
+import eu.arrowhead.ArrowheadProvider.common.exception.AuthenticationException;
+import eu.arrowhead.ArrowheadProvider.common.exception.BadPayloadException;
+import eu.arrowhead.ArrowheadProvider.common.exception.DataNotFoundException;
+import eu.arrowhead.ArrowheadProvider.common.exception.DuplicateEntryException;
 import eu.arrowhead.ArrowheadProvider.common.exception.ErrorMessage;
+import eu.arrowhead.ArrowheadProvider.common.exception.UnavailableServerException;
 import eu.arrowhead.ArrowheadProvider.common.model.ArrowheadSystem;
 import eu.arrowhead.ArrowheadProvider.common.model.RawTokenInfo;
-import eu.arrowhead.ArrowheadProvider.common.security.AuthenticationException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -49,6 +53,13 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 
 public final class Utility {
+
+  private static final String ARROWHEAD_EXCEPTION = "eu.arrowhead.common.exception.ArrowheadException";
+  private static final String AUTH_EXCEPTION = "eu.arrowhead.common.exception.AuthenticationException";
+  private static final String BAD_PAYLOAD_EXCEPTION = "eu.arrowhead.common.exception.BadPayloadException";
+  private static final String NOT_FOUND_EXCEPTION = "eu.arrowhead.common.exception.DataNotFoundException";
+  private static final String DUPLICATE_EXCEPTION = "eu.arrowhead.common.exception.DuplicateEntryException";
+  private static final String UNAVAILABLE_EXCEPTION = "eu.arrowhead.common.exception.UnavailableServerException";
 
   public static SSLContext sslContext = null;
   private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -121,26 +132,9 @@ public final class Utility {
       throw new RuntimeException("Could not get any response from: " + uri, e);
     }
 
-    //The response body has to be extracted before the stream closes
-    String errorMessageBody = toPrettyJson(null, response.getEntity());
-    //If the response status code does not start with 2 the request was not successful
+    // If the response status code does not start with 2 the request was not successful
     if (!(response.getStatusInfo().getFamily() == Family.SUCCESSFUL)) {
-      ErrorMessage errorMessage;
-      try {
-        errorMessage = response.readEntity(ErrorMessage.class);
-      } catch (RuntimeException e) {
-        System.out.println("Request failed, response status code: " + response.getStatus());
-        System.out.println("Request failed, response body: " + errorMessageBody);
-        throw new RuntimeException("Unknown error occured at " + uri, e);
-      }
-      if (errorMessage == null) {
-        System.out.println("Request failed, response status code: " + response.getStatus());
-        System.out.println("Request failed, response body: " + errorMessageBody);
-        throw new ArrowheadException("Unknown error occurred at " + uri);
-      } else {
-        throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
-                                     errorMessage.getOrigin());
-      }
+      handleException(response, uri);
     }
 
     return response;
@@ -320,6 +314,43 @@ public final class Utility {
       return gson.toJson(obj);
     }
     return null;
+  }
+
+  private static void handleException(Response response, String uri) {
+    //The response body has to be extracted before the stream closes
+    String errorMessageBody = toPrettyJson(null, response.getEntity());
+    ErrorMessage errorMessage;
+    try {
+      errorMessage = response.readEntity(ErrorMessage.class);
+    } catch (RuntimeException e) {
+      throw new ArrowheadException("Unknown error occurred at " + uri + ". Check log for possibly more information.", e);
+    }
+    if (errorMessage == null) {
+      throw new ArrowheadException("Unknown error occurred at " + uri + ". Check log for possibly more information.");
+    } else {
+      switch (errorMessage.getExceptionType()) {
+        case ARROWHEAD_EXCEPTION:
+          throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
+                                       errorMessage.getOrigin());
+        case AUTH_EXCEPTION:
+          throw new AuthenticationException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
+                                            errorMessage.getOrigin());
+        case BAD_PAYLOAD_EXCEPTION:
+          throw new BadPayloadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
+                                        errorMessage.getOrigin());
+        case NOT_FOUND_EXCEPTION:
+          throw new DataNotFoundException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
+                                          errorMessage.getOrigin());
+        case DUPLICATE_EXCEPTION:
+          throw new DuplicateEntryException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
+                                            errorMessage.getOrigin());
+        case UNAVAILABLE_EXCEPTION:
+          throw new UnavailableServerException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
+                                               errorMessage.getOrigin());
+        default:
+          throw new RuntimeException(errorMessage.getErrorMessage());
+      }
+    }
   }
 
 }
