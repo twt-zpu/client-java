@@ -1,7 +1,7 @@
 package eu.arrowhead.ArrowheadProvider.common.security;
 
 import eu.arrowhead.ArrowheadProvider.common.Utility;
-import java.io.IOException;
+import eu.arrowhead.ArrowheadProvider.common.exception.AuthenticationException;
 import javax.annotation.Priority;
 import javax.inject.Inject;
 import javax.ws.rs.Priorities;
@@ -23,7 +23,7 @@ public class AccessControlFilter implements ContainerRequestFilter {
   private javax.inject.Provider<UriInfo> uriInfo;
 
   @Override
-  public void filter(ContainerRequestContext requestContext) throws IOException {
+  public void filter(ContainerRequestContext requestContext) {
     SecurityContext sc = requestContext.getSecurityContext();
     String requestTarget = Utility.stripEndSlash(requestContext.getUriInfo().getRequestUri().toString());
     if (sc.isSecure()) {

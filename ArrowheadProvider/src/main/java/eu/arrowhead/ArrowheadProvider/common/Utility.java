@@ -146,7 +146,6 @@ public final class Utility {
       String[] consumerNameParts = consumerName.split("\\.");
       ArrowheadSystem consumer = new ArrowheadSystem();
       consumer.setSystemName(consumerNameParts[0]);
-      consumer.setSystemGroup(consumerNameParts[1]);
 
       byte[] tokenbytes = Base64.getDecoder().decode(token);
       byte[] signaturebytes = Base64.getDecoder().decode(signature);
@@ -175,7 +174,6 @@ public final class Utility {
       ArrowheadSystem consumerWithToken = new ArrowheadSystem();
       String[] rawTokenInfoParts = rawTokenInfo.getC().split("\\.");
       consumerWithToken.setSystemName(rawTokenInfoParts[0]);
-      consumerWithToken.setSystemGroup(rawTokenInfoParts[1]);
 
       long endTime = rawTokenInfo.getE();
       long currentTime = System.currentTimeMillis();

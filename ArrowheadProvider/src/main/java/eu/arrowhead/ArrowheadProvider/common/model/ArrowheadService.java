@@ -5,10 +5,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.xml.bind.annotation.XmlTransient;
 
+/**
+ * Entity class for storing Arrowhead Services in the database. The "service_group" and service_definition" columns must be unique together.
+ */
 public class ArrowheadService {
 
-  private String serviceGroup;
+  private int id;
   private String serviceDefinition;
   private List<String> interfaces = new ArrayList<>();
   private Map<String, String> serviceMetadata = new HashMap<>();
@@ -16,19 +20,19 @@ public class ArrowheadService {
   public ArrowheadService() {
   }
 
-  public ArrowheadService(String serviceGroup, String serviceDefinition, List<String> interfaces, Map<String, String> serviceMetadata) {
-    this.serviceGroup = serviceGroup;
+  public ArrowheadService(String serviceDefinition, List<String> interfaces, Map<String, String> serviceMetadata) {
     this.serviceDefinition = serviceDefinition;
     this.interfaces = interfaces;
     this.serviceMetadata = serviceMetadata;
   }
 
-  public String getServiceGroup() {
-    return serviceGroup;
+  @XmlTransient
+  public int getId() {
+    return id;
   }
 
-  public void setServiceGroup(String serviceGroup) {
-    this.serviceGroup = serviceGroup;
+  public void setId(int id) {
+    this.id = id;
   }
 
   public String getServiceDefinition() {
@@ -43,14 +47,13 @@ public class ArrowheadService {
     return interfaces;
   }
 
-  public void setOneInterface(String oneInterface) {
-    List<String> interfaces = new ArrayList<>();
-    interfaces.add(oneInterface);
+  public void setInterfaces(List<String> interfaces) {
     this.interfaces = interfaces;
   }
 
-  public void setInterfaces(List<String> interfaces) {
-    this.interfaces = interfaces;
+  public void setOneInterface(String oneInterface) {
+    this.interfaces.clear();
+    this.interfaces.add(oneInterface);
   }
 
   public Map<String, String> getServiceMetadata() {
@@ -61,49 +64,49 @@ public class ArrowheadService {
     this.serviceMetadata = metaData;
   }
 
+  /*
+   * @note  ArrowheadServices cannot contain the character "_" in any fields.
+   */
   @JsonIgnore
-  boolean isValid() {
-    return serviceGroup != null && serviceDefinition != null;
+  public boolean isValid() {
+
+    boolean areInterfacesClean = true;
+    for (String interf : interfaces) {
+      if (interf.contains("_")) {
+        areInterfacesClean = false;
+      }
+    }
+
+    return (serviceDefinition != null && !interfaces.isEmpty() && !serviceDefinition.contains("_") && areInterfacesClean);
+  }
+
+  @JsonIgnore
+  public boolean isValidForDatabase() {
+    return serviceDefinition != null;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    ArrowheadService that = (ArrowheadService) o;
+
+    return serviceDefinition.equals(that.serviceDefinition);
   }
 
   @Override
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((serviceDefinition == null) ? 0 : serviceDefinition.hashCode());
-    result = prime * result + ((serviceGroup == null) ? 0 : serviceGroup.hashCode());
-    return result;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null) {
-      return false;
-    }
-    if (getClass() != obj.getClass()) {
-      return false;
-    }
-    ArrowheadService other = (ArrowheadService) obj;
-    if (serviceDefinition == null) {
-      if (other.serviceDefinition != null) {
-        return false;
-      }
-    } else if (!serviceDefinition.equals(other.serviceDefinition)) {
-      return false;
-    }
-    if (serviceGroup == null) {
-      return other.serviceGroup == null;
-    } else {
-      return serviceGroup.equals(other.serviceGroup);
-    }
+    return serviceDefinition.hashCode();
   }
 
   @Override
   public String toString() {
-    return "(" + serviceGroup + ":" + serviceDefinition + ")";
+    return "\"" + serviceDefinition + "\"";
   }
 
 }

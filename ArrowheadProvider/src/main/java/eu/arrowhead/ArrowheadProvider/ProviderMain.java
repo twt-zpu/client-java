@@ -171,7 +171,7 @@ public class ProviderMain {
     metadata.put("unit", "celsius");
 
     // create the ArrowheadService object
-    ArrowheadService service = new ArrowheadService("Temperature", "IndoorTemperature", Collections.singletonList("json"), metadata);
+    ArrowheadService service = new ArrowheadService("IndoorTemperature", Collections.singletonList("json"), metadata);
 
     // objects specific to insecure mode
     if (server != null) {
@@ -182,7 +182,7 @@ public class ProviderMain {
         throw new RuntimeException("Parsing the BASE_URI resulted in an error.", e);
       }
       // create the ArrowheadSystem object
-      ArrowheadSystem provider = new ArrowheadSystem("TemperatureSensors", "InsecureTemperatureSensor", baseUri.getHost(), baseUri.getPort(), null);
+      ArrowheadSystem provider = new ArrowheadSystem("InsecureTemperatureSensor", baseUri.getHost(), baseUri.getPort(), null);
       // create the final request payload
       ServiceRegistryEntry entry = new ServiceRegistryEntry(service, provider, "temperature");
       System.out.println("Request payload: " + Utility.toPrettyJson(null, entry));
@@ -211,8 +211,7 @@ public class ProviderMain {
         throw new RuntimeException("Parsing the BASE_URI_SECURED resulted in an error.", e);
       }
       // create the ArrowheadSystem object
-      ArrowheadSystem provider = new ArrowheadSystem("TemperatureSensors", "SecureTemperatureSensor", baseUri.getHost(), baseUri.getPort(),
-                                                     PROVIDER_PUBLIC_KEY);
+      ArrowheadSystem provider = new ArrowheadSystem("SecureTemperatureSensor", baseUri.getHost(), baseUri.getPort(), PROVIDER_PUBLIC_KEY);
       // create the final request payload
       ServiceRegistryEntry entry = new ServiceRegistryEntry(service, provider, "temperature");
       System.out.println("Request payload: " + Utility.toPrettyJson(null, entry));

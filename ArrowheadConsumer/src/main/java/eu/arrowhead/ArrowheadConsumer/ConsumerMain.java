@@ -16,19 +16,19 @@ public class ConsumerMain {
 
   private static final String ORCH_URI = Utility.getProp().getProperty("orch_uri", "http://0.0.0.0:8440/orchestrator/orchestration");
   private static boolean isSecure = false;
+
   public static void main(String[] args) {
 
-    argLoop:
     for (int i = 0; i < args.length; ++i) {
       if (args[i].equals("-m")) {
         ++i;
         switch (args[i]) {
           case "insecure":
             isSecure = false;
-            break argLoop;
+            break;
           case "secure":
             isSecure = true;
-            break argLoop;
+            break;
           default:
             throw new AssertionError("Unknown security level: " + args[i]);
         }
@@ -72,10 +72,9 @@ public class ConsumerMain {
       e.printStackTrace();
       System.out.println("Provider did not send the temperature readout in SenML format.");
     }
-    if(readout.getE().get(0) == null){
+    if (readout.getE().get(0) == null) {
       System.out.println("Provider did not send any MeasurementEntry.");
-    }
-    else{
+    } else {
       long endTime = System.currentTimeMillis();
       System.out.println("The indoor temperature is " + readout.getE().get(0).getV() + " degrees celsius.");
       System.out.println("Orchestration and Service consumption response time: " + Long.toString(endTime - startTime));
@@ -83,7 +82,7 @@ public class ConsumerMain {
   }
 
   private static ServiceRequestForm compileSRF() {
-    ArrowheadSystem consumer = new ArrowheadSystem("group1", "client1", "localhost", 0, "null");
+    ArrowheadSystem consumer = new ArrowheadSystem("client1", "localhost", 0, "null");
 
     List<String> interfaces = new ArrayList<>();
     interfaces.add("json");
@@ -92,7 +91,7 @@ public class ConsumerMain {
     if (isSecure) {
       serviceMetadata.put("security", "token");
     }
-    ArrowheadService service = new ArrowheadService("Temperature", "IndoorTemperature", interfaces, serviceMetadata);
+    ArrowheadService service = new ArrowheadService("IndoorTemperature", interfaces, serviceMetadata);
 
     Map<String, Boolean> orchestrationFlags = new HashMap<>();
     orchestrationFlags.put("overrideStore", true);
