@@ -5,12 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import eu.arrowhead.ArrowheadConsumer.exception.ArrowheadException;
-import eu.arrowhead.ArrowheadConsumer.exception.AuthenticationException;
-import eu.arrowhead.ArrowheadConsumer.exception.BadPayloadException;
-import eu.arrowhead.ArrowheadConsumer.exception.DataNotFoundException;
-import eu.arrowhead.ArrowheadConsumer.exception.DuplicateEntryException;
 import eu.arrowhead.ArrowheadConsumer.exception.ErrorMessage;
-import eu.arrowhead.ArrowheadConsumer.exception.UnavailableServerException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -195,33 +190,19 @@ final class Utility {
     try {
       errorMessage = response.readEntity(ErrorMessage.class);
     } catch (RuntimeException e) {
-      throw new ArrowheadException("Unknown error occurred at " + uri + ". Check log for possibly more information.", e);
+      throw new ArrowheadException("Unknown error occurred at " + uri, e);
     }
-    if (errorMessage == null) {
-      throw new ArrowheadException("Unknown error occurred at " + uri + ". Check log for possibly more information.");
+    if (errorMessage == null || errorMessage.getExceptionType() == null) {
+      System.out.println("Request failed, response status code: " + response.getStatus());
+      System.out.println("Request failed, response body: " + errorMessageBody);
+      throw new ArrowheadException("Unknown error occurred at " + uri);
     } else {
-      switch (errorMessage.getExceptionType()) {
-        case ARROWHEAD_EXCEPTION:
-          throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
-                                       errorMessage.getOrigin());
-        case AUTH_EXCEPTION:
-          throw new AuthenticationException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
-                                            errorMessage.getOrigin());
-        case BAD_PAYLOAD_EXCEPTION:
-          throw new BadPayloadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
-                                        errorMessage.getOrigin());
-        case NOT_FOUND_EXCEPTION:
-          throw new DataNotFoundException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
-                                          errorMessage.getOrigin());
-        case DUPLICATE_EXCEPTION:
-          throw new DuplicateEntryException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
-                                            errorMessage.getOrigin());
-        case UNAVAILABLE_EXCEPTION:
-          throw new UnavailableServerException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
-                                               errorMessage.getOrigin());
-        default:
-          throw new RuntimeException(errorMessage.getErrorMessage());
-      }
+      System.out.println("Request failed, response status code: " + errorMessage.getErrorCode());
+      System.out.println("The returned error message: " + errorMessage.getErrorMessage());
+      System.out.println("Exception type: " + errorMessage.getExceptionType());
+      System.out.println("Origin of the exception:" + errorMessage.getOrigin());
+      throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
+                                   errorMessage.getOrigin());
     }
   }
 

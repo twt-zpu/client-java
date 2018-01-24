@@ -323,10 +323,16 @@ public final class Utility {
     try {
       errorMessage = response.readEntity(ErrorMessage.class);
     } catch (RuntimeException e) {
-      throw new ArrowheadException("Unknown error occurred at " + uri + ". Check log for possibly more information.", e);
+      throw new ArrowheadException("Unknown error occurred at " + uri, e);
     }
     if (errorMessage == null) {
-      throw new ArrowheadException("Unknown error occurred at " + uri + ". Check log for possibly more information.");
+      System.out.println("Request failed, response status code: " + response.getStatus());
+      System.out.println("Request failed, response body: " + errorMessageBody);
+      throw new ArrowheadException("Unknown error occurred at " + uri);
+    } else if (errorMessage.getExceptionType() == null) {
+      System.out.println("Request failed, response status code: " + response.getStatus());
+      System.out.println("Request failed, response body: " + errorMessageBody);
+      throw new ArrowheadException("Unknown error occurred at " + uri);
     } else {
       switch (errorMessage.getExceptionType()) {
         case ARROWHEAD_EXCEPTION:
