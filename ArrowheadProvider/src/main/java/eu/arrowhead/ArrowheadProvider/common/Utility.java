@@ -12,7 +12,6 @@ import eu.arrowhead.ArrowheadProvider.common.exception.DataNotFoundException;
 import eu.arrowhead.ArrowheadProvider.common.exception.DuplicateEntryException;
 import eu.arrowhead.ArrowheadProvider.common.exception.ErrorMessage;
 import eu.arrowhead.ArrowheadProvider.common.exception.UnavailableServerException;
-import eu.arrowhead.ArrowheadProvider.common.model.ArrowheadSystem;
 import eu.arrowhead.ArrowheadProvider.common.model.RawTokenInfo;
 import java.io.File;
 import java.io.FileInputStream;
@@ -142,10 +141,9 @@ public final class Utility {
 
   public static <T> Response verifyRequester(SecurityContext context, String token, String signature, T responseEntity) {
     try {
-      String consumerName = Utility.getCertCNFromSubject(context.getUserPrincipal().getName());
-      String[] consumerNameParts = consumerName.split("\\.");
-      ArrowheadSystem consumer = new ArrowheadSystem();
-      consumer.setSystemName(consumerNameParts[0]);
+      String commonName = Utility.getCertCNFromSubject(context.getUserPrincipal().getName());
+      String[] commonNameParts = commonName.split("\\.");
+      String consumerName = commonNameParts[0];
 
       byte[] tokenbytes = Base64.getDecoder().decode(token);
       byte[] signaturebytes = Base64.getDecoder().decode(signature);
@@ -170,15 +168,13 @@ public final class Utility {
       Gson gson = new Gson();
       String json = new String(byteToken, "UTF-8");
       RawTokenInfo rawTokenInfo = gson.fromJson(json, RawTokenInfo.class);
-
-      ArrowheadSystem consumerWithToken = new ArrowheadSystem();
       String[] rawTokenInfoParts = rawTokenInfo.getC().split("\\.");
-      consumerWithToken.setSystemName(rawTokenInfoParts[0]);
+      String consumerTokenName = rawTokenInfoParts[0];
 
       long endTime = rawTokenInfo.getE();
       long currentTime = System.currentTimeMillis();
 
-      if (consumer.equals(consumerWithToken)) {
+      if (consumerName.equals(consumerTokenName)) {
         if (endTime == 0L || (endTime > currentTime)) {
           return Response.status(200).entity(responseEntity).build();
         }
