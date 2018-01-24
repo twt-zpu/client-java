@@ -2,7 +2,6 @@ package eu.arrowhead.ArrowheadConsumer.model;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,14 +40,6 @@ public class TemperatureReadout implements Serializable
         this.ver = ver;
     }
 
-    /**
-     * 
-     * @param bn
-     * @param e
-     * @param ver
-     * @param bu
-     * @param bt
-     */
     public TemperatureReadout(String bn, double bt, String bu, int ver, List<MeasurementEntry> e) {
         super();
         this.bn = bn;

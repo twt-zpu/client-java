@@ -2,7 +2,6 @@ package eu.arrowhead.ArrowheadConsumer.model;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-
 import java.io.Serializable;
 
 public class MeasurementEntry implements Serializable
@@ -26,12 +25,6 @@ public class MeasurementEntry implements Serializable
     public MeasurementEntry() {
     }
 
-    /**
-     * 
-     * @param v
-     * @param t
-     * @param n
-     */
     public MeasurementEntry(String n, double v, double t) {
         super();
         this.n = n;
