@@ -2,6 +2,7 @@ package eu.arrowhead.ArrowheadConsumer;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import eu.arrowhead.ArrowheadConsumer.exception.ArrowheadException;
@@ -208,9 +209,15 @@ final class Utility {
 
   public static String toPrettyJson(String jsonString, Object obj) {
     if (jsonString != null) {
+      jsonString = jsonString.trim();
       JsonParser parser = new JsonParser();
-      JsonObject json = parser.parse(jsonString).getAsJsonObject();
-      return gson.toJson(json);
+      if (jsonString.startsWith("{")) {
+        JsonObject json = parser.parse(jsonString).getAsJsonObject();
+        return gson.toJson(json);
+      } else {
+        JsonArray json = parser.parse(jsonString).getAsJsonArray();
+        return gson.toJson(json);
+      }
     }
     if (obj != null) {
       return gson.toJson(obj);
