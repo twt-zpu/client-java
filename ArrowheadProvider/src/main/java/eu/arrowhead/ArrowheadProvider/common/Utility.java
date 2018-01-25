@@ -319,11 +319,7 @@ public final class Utility {
     } catch (RuntimeException e) {
       throw new ArrowheadException("Unknown error occurred at " + uri, e);
     }
-    if (errorMessage == null) {
-      System.out.println("Request failed, response status code: " + response.getStatus());
-      System.out.println("Request failed, response body: " + errorMessageBody);
-      throw new ArrowheadException("Unknown error occurred at " + uri);
-    } else if (errorMessage.getExceptionType() == null) {
+    if (errorMessage == null || errorMessage.getExceptionType() == null) {
       System.out.println("Request failed, response status code: " + response.getStatus());
       System.out.println("Request failed, response body: " + errorMessageBody);
       throw new ArrowheadException("Unknown error occurred at " + uri);
