@@ -3,9 +3,9 @@ base_uri_secured=https://0.0.0.0:8455/
 sr_base_uri=http://localhost:8442/serviceregistry
 
 #Certificate properties
-keystore=C:\\Users\\Public\\Java\\arrowhead\\certificates\\testcloud1\\client1\\client1.testcloud1.jks
+keystore=C:/Users/Public/Java/arrowhead/certificates/testcloud1/client/client1.testcloud1.jks
 keystorepass=12345
 keypass=12345
-truststore=C:\\Users\\Public\\Java\\arrowhead\\certificates\\testcloud1\\testcloud1_cert.jks
+truststore=C:/Users/Public/Java/arrowhead/certificates/testcloud1/testcloud1_cert.jks
 truststorepass=12345
-authorization_cert=C:\\Users\\Public\\Java\\arrowhead\\certificates\\testcloud1\\authorization.testcloud1.crt
+authorization_cert=C:/Users/Public/Java/arrowhead/certificates/testcloud1/authorization.testcloud1.crt
