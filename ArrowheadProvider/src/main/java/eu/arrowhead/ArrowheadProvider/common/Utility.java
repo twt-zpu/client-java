@@ -325,9 +325,6 @@ public final class Utility {
       throw new ArrowheadException("Unknown error occurred at " + uri);
     } else {
       switch (errorMessage.getExceptionType()) {
-        case ARROWHEAD_EXCEPTION:
-          throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
-                                       errorMessage.getOrigin());
         case AUTH_EXCEPTION:
           throw new AuthenticationException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
                                             errorMessage.getOrigin());
@@ -344,7 +341,8 @@ public final class Utility {
           throw new UnavailableServerException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
                                                errorMessage.getOrigin());
         default:
-          throw new RuntimeException(errorMessage.getErrorMessage());
+            throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
+                    errorMessage.getOrigin());
       }
     }
   }
