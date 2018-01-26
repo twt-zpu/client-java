@@ -64,12 +64,18 @@ public class ArrowheadService {
     this.serviceMetadata = metaData;
   }
 
-  /*
-   * @note  ArrowheadServices cannot contain the character "_" in any fields.
-   */
   @JsonIgnore
   public boolean isValid() {
+    return (serviceDefinition != null && !interfaces.isEmpty());
+  }
 
+  @JsonIgnore
+  public boolean isValidForDatabase() {
+    return serviceDefinition != null;
+  }
+
+  @JsonIgnore
+  public boolean isValidForDNSSD() {
     boolean areInterfacesClean = true;
     for (String interf : interfaces) {
       if (interf.contains("_")) {
@@ -78,11 +84,6 @@ public class ArrowheadService {
     }
 
     return (serviceDefinition != null && !interfaces.isEmpty() && !serviceDefinition.contains("_") && areInterfacesClean);
-  }
-
-  @JsonIgnore
-  public boolean isValidForDatabase() {
-    return serviceDefinition != null;
   }
 
   @Override

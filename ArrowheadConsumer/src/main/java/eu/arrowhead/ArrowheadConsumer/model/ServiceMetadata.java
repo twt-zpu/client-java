@@ -6,7 +6,6 @@ public class ServiceMetadata {
   private String value;
 
   public ServiceMetadata() {
-
   }
 
   public ServiceMetadata(String key, String value) {
