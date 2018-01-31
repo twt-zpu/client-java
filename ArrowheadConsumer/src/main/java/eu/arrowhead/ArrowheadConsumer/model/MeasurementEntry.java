@@ -1,59 +1,52 @@
+/*
+ * Copyright (c) 2018 AITIA International Inc.
+ *
+ * This work is part of the Productive 4.0 innovation project, which receives grants from the
+ * European Commissions H2020 research and innovation programme, ECSEL Joint Undertaking
+ * (project no. 737459), the free state of Saxony, the German Federal Ministry of Education and
+ * national funding authorities from involved countries.
+ */
+
 package eu.arrowhead.ArrowheadConsumer.model;
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
-import java.io.Serializable;
+//SenML format - expected response from the Provider client
+public class MeasurementEntry {
 
-public class MeasurementEntry implements Serializable
-{
+  private String n;
+  private double v;
+  private double t;
 
-    @SerializedName("n")
-    @Expose
-    private String n;
-    @SerializedName("v")
-    @Expose
-    private double v;
-    @SerializedName("t")
-    @Expose
-    private double t;
-    private final static long serialVersionUID = -5996554298375793293L;
+  public MeasurementEntry() {
+  }
 
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
-    public MeasurementEntry() {
-    }
+  public MeasurementEntry(String n, double v, double t) {
+    this.n = n;
+    this.v = v;
+    this.t = t;
+  }
 
-    public MeasurementEntry(String n, double v, double t) {
-        super();
-        this.n = n;
-        this.v = v;
-        this.t = t;
-    }
+  public String getN() {
+    return n;
+  }
 
-    public String getN() {
-        return n;
-    }
+  public void setN(String n) {
+    this.n = n;
+  }
 
-    public void setN(String n) {
-        this.n = n;
-    }
+  public double getV() {
+    return v;
+  }
 
-    public double getV() {
-        return v;
-    }
+  public void setV(double v) {
+    this.v = v;
+  }
 
-    public void setV(double v) {
-        this.v = v;
-    }
+  public double getT() {
+    return t;
+  }
 
-    public double getT() {
-        return t;
-    }
-
-    public void setT(double t) {
-        this.t = t;
-    }
+  public void setT(double t) {
+    this.t = t;
+  }
 
 }

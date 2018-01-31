@@ -11,13 +11,13 @@ public class ArrowheadSystem {
   private int id;
   private String systemName;
   private String address;
-  private int port;
+  private Integer port;
   private String authenticationInfo;
 
   public ArrowheadSystem() {
   }
 
-  public ArrowheadSystem(String systemName, String address, int port, String authenticationInfo) {
+  public ArrowheadSystem(String systemName, String address, Integer port, String authenticationInfo) {
     this.systemName = systemName;
     this.address = address;
     this.port = port;
@@ -49,11 +49,11 @@ public class ArrowheadSystem {
     this.address = address;
   }
 
-  public int getPort() {
+  public Integer getPort() {
     return port;
   }
 
-  public void setPort(int port) {
+  public void setPort(Integer port) {
     this.port = port;
   }
 
@@ -86,7 +86,7 @@ public class ArrowheadSystem {
 
     ArrowheadSystem that = (ArrowheadSystem) o;
 
-    if (port != that.port) {
+    if (!port.equals(that.port)) {
       return false;
     }
     if (!systemName.equals(that.systemName)) {

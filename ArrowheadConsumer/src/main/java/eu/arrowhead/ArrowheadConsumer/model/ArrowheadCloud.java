@@ -1,7 +1,19 @@
+/*
+ * Copyright (c) 2018 AITIA International Inc.
+ *
+ * This work is part of the Productive 4.0 innovation project, which receives grants from the
+ * European Commissions H2020 research and innovation programme, ECSEL Joint Undertaking
+ * (project no. 737459), the free state of Saxony, the German Federal Ministry of Education and
+ * national funding authorities from involved countries.
+ */
+
 package eu.arrowhead.ArrowheadConsumer.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+/**
+ * Entity class for storing Arrowhead Clouds in the database. The "operator" and "cloud_name" columns must be unique together.
+ */
 public class ArrowheadCloud {
 
   private String operator;
@@ -10,17 +22,20 @@ public class ArrowheadCloud {
   private int port;
   private String gatekeeperServiceURI;
   private String authenticationInfo;
+  private boolean secure;
 
   public ArrowheadCloud() {
   }
 
-  public ArrowheadCloud(String operator, String cloudName, String address, int port, String gatekeeperServiceURI, String authenticationInfo) {
+  public ArrowheadCloud(String operator, String cloudName, String address, int port, String gatekeeperServiceURI, String authenticationInfo,
+                        boolean secure) {
     this.operator = operator;
     this.cloudName = cloudName;
     this.address = address;
     this.port = port;
     this.gatekeeperServiceURI = gatekeeperServiceURI;
     this.authenticationInfo = authenticationInfo;
+    this.secure = secure;
   }
 
   public String getOperator() {
@@ -69,6 +84,14 @@ public class ArrowheadCloud {
 
   public void setAuthenticationInfo(String authenticationInfo) {
     this.authenticationInfo = authenticationInfo;
+  }
+
+  public boolean isSecure() {
+    return secure;
+  }
+
+  public void setSecure(boolean secure) {
+    this.secure = secure;
   }
 
   @JsonIgnore

@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2018 AITIA International Inc.
+ *
+ * This work is part of the Productive 4.0 innovation project, which receives grants from the
+ * European Commissions H2020 research and innovation programme, ECSEL Joint Undertaking
+ * (project no. 737459), the free state of Saxony, the German Federal Ministry of Education and
+ * national funding authorities from involved countries.
+ */
+
 package eu.arrowhead.ArrowheadConsumer.model;
 
 import java.util.ArrayList;
@@ -111,8 +120,7 @@ public class ServiceRequestForm {
    * @return true if the instance is in compliance with all the restrictions, false otherwise
    */
   public boolean isValid() {
-    return requesterSystem != null && requesterSystem.isValid() && (requestedService == null || requestedService.isValid()) && !(
-        orchestrationFlags.get("onlyPreferred") && preferredProviders.isEmpty()) && !(orchestrationFlags.get("enableQoS") && (requestedQoS.isEmpty()
+    return requesterSystem != null && requesterSystem.isValid() && (requestedService == null || requestedService.isValid()) && !(orchestrationFlags.get("onlyPreferred") && preferredProviders.isEmpty()) && !(orchestrationFlags.get("enableQoS") && (requestedQoS.isEmpty()
         || commands.isEmpty()));
   }
 

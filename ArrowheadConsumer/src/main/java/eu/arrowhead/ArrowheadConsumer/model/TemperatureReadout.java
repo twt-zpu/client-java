@@ -1,92 +1,83 @@
+/*
+ * Copyright (c) 2018 AITIA International Inc.
+ *
+ * This work is part of the Productive 4.0 innovation project, which receives grants from the
+ * European Commissions H2020 research and innovation programme, ECSEL Joint Undertaking
+ * (project no. 737459), the free state of Saxony, the German Federal Ministry of Education and
+ * national funding authorities from involved countries.
+ */
+
 package eu.arrowhead.ArrowheadConsumer.model;
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TemperatureReadout implements Serializable
-{
+//SenML format - expected response from the Provider client
+public class TemperatureReadout {
 
-    @SerializedName("bn")
-    @Expose
-    private String bn;
-    @SerializedName("bt")
-    @Expose
-    private double bt;
-    @SerializedName("bu")
-    @Expose
-    private String bu;
-    @SerializedName("ver")
-    @Expose
-    private int ver;
-    @SerializedName("e")
-    @Expose
-    private List<MeasurementEntry> e = new ArrayList<>();
-    private final static long serialVersionUID = 56004740894442796L;
+  private String bn;
+  private double bt;
+  private String bu;
+  private int ver;
+  private List<MeasurementEntry> e = new ArrayList<>();
 
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
-    public TemperatureReadout() {
-    }
+  public TemperatureReadout() {
+  }
 
-    public TemperatureReadout(String bn, double bt, String bu, int ver) {
-        this.bn = bn;
-        this.bt = bt;
-        this.bu = bu;
-        this.ver = ver;
-    }
+  public TemperatureReadout(String bn, double bt, String bu, int ver) {
+    this.bn = bn;
+    this.bt = bt;
+    this.bu = bu;
+    this.ver = ver;
+  }
 
-    public TemperatureReadout(String bn, double bt, String bu, int ver, List<MeasurementEntry> e) {
-        super();
-        this.bn = bn;
-        this.bt = bt;
-        this.bu = bu;
-        this.ver = ver;
-        this.e = e;
-    }
+  public TemperatureReadout(String bn, double bt, String bu, int ver, List<MeasurementEntry> e) {
+    super();
+    this.bn = bn;
+    this.bt = bt;
+    this.bu = bu;
+    this.ver = ver;
+    this.e = e;
+  }
 
-    public String getBn() {
-        return bn;
-    }
+  public String getBn() {
+    return bn;
+  }
 
-    public void setBn(String bn) {
-        this.bn = bn;
-    }
+  public void setBn(String bn) {
+    this.bn = bn;
+  }
 
-    public double getBt() {
-        return bt;
-    }
+  public double getBt() {
+    return bt;
+  }
 
-    public void setBt(double bt) {
-        this.bt = bt;
-    }
+  public void setBt(double bt) {
+    this.bt = bt;
+  }
 
-    public String getBu() {
-        return bu;
-    }
+  public String getBu() {
+    return bu;
+  }
 
-    public void setBu(String bu) {
-        this.bu = bu;
-    }
+  public void setBu(String bu) {
+    this.bu = bu;
+  }
 
-    public int getVer() {
-        return ver;
-    }
+  public int getVer() {
+    return ver;
+  }
 
-    public void setVer(int ver) {
-        this.ver = ver;
-    }
+  public void setVer(int ver) {
+    this.ver = ver;
+  }
 
-    public List<MeasurementEntry> getE() {
-        return e;
-    }
+  public List<MeasurementEntry> getE() {
+    return e;
+  }
 
-    public void setE(List<MeasurementEntry> e) {
-        this.e = e;
-    }
+  public void setE(List<MeasurementEntry> e) {
+    this.e = e;
+  }
 
 }

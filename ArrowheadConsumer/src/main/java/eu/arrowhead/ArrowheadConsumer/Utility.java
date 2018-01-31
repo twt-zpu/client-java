@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2018 AITIA International Inc.
+ *
+ * This work is part of the Productive 4.0 innovation project, which receives grants from the
+ * European Commissions H2020 research and innovation programme, ECSEL Joint Undertaking
+ * (project no. 737459), the free state of Saxony, the German Federal Ministry of Education and
+ * national funding authorities from involved countries.
+ */
+
 package eu.arrowhead.ArrowheadConsumer;
 
 import com.google.gson.Gson;
@@ -7,6 +16,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import eu.arrowhead.ArrowheadConsumer.exception.ArrowheadException;
 import eu.arrowhead.ArrowheadConsumer.exception.ErrorMessage;
+import eu.arrowhead.ArrowheadConsumer.exception.UnavailableServerException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -40,13 +50,6 @@ import org.glassfish.jersey.client.ClientProperties;
 
 final class Utility {
 
-  private static final String ARROWHEAD_EXCEPTION = "eu.arrowhead.common.exception.ArrowheadException";
-  private static final String AUTH_EXCEPTION = "eu.arrowhead.common.exception.AuthenticationException";
-  private static final String BAD_PAYLOAD_EXCEPTION = "eu.arrowhead.common.exception.BadPayloadException";
-  private static final String NOT_FOUND_EXCEPTION = "eu.arrowhead.common.exception.DataNotFoundException";
-  private static final String DUPLICATE_EXCEPTION = "eu.arrowhead.common.exception.DuplicateEntryException";
-  private static final String UNAVAILABLE_EXCEPTION = "eu.arrowhead.common.exception.UnavailableServerException";
-
   private static Properties prop;
   private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
@@ -60,8 +63,7 @@ final class Utility {
     Client client;
 
     if (uri.startsWith("https")) {
-      SslConfigurator sslConfig = SslConfigurator.newInstance().trustStoreFile(getProp().getProperty("truststore"))
-          .trustStorePassword(getProp().getProperty("truststorepass")).keyStoreFile(getProp().getProperty("keystore"))
+      SslConfigurator sslConfig = SslConfigurator.newInstance().trustStoreFile(getProp().getProperty("truststore")).trustStorePassword(getProp().getProperty("truststorepass")).keyStoreFile(getProp().getProperty("keystore"))
           .keyStorePassword(getProp().getProperty("keystorepass")).keyPassword(getProp().getProperty("keypass"));
       SSLContext sslContext = sslConfig.createSSLContext();
 
@@ -107,7 +109,7 @@ final class Utility {
           throw new NotAllowedException("Invalid method type was given to the Utility.sendRequest() method");
       }
     } catch (ProcessingException e) {
-      throw new RuntimeException("Could not get any response from: " + uri, e);
+      throw new UnavailableServerException("Could not get any response from: " + uri, e);
     }
 
     // If the response status code does not start with 2 the request was not successful
@@ -116,6 +118,29 @@ final class Utility {
     }
 
     return response;
+  }
+
+  private static void handleException(Response response, String uri) {
+    //The response body has to be extracted before the stream closes
+    String errorMessageBody = toPrettyJson(null, response.getEntity());
+    ErrorMessage errorMessage;
+    try {
+      errorMessage = response.readEntity(ErrorMessage.class);
+    } catch (RuntimeException e) {
+      throw new ArrowheadException("Unknown error occurred at " + uri, e);
+    }
+    if (errorMessage == null || errorMessage.getExceptionType() == null) {
+      System.out.println("Request failed, response status code: " + response.getStatus());
+      System.out.println("Request failed, response body: " + errorMessageBody);
+      throw new ArrowheadException("Unknown error occurred at " + uri);
+    } else {
+      System.out.println("Request failed, response status code: " + errorMessage.getErrorCode());
+      System.out.println("The returned error message: " + errorMessage.getErrorMessage());
+      System.out.println("Exception type: " + errorMessage.getExceptionType());
+      System.out.println("Origin of the exception:" + errorMessage.getOrigin());
+      throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
+                                   errorMessage.getOrigin());
+    }
   }
 
   static synchronized Properties getProp() {
@@ -131,6 +156,24 @@ final class Utility {
     }
 
     return prop;
+  }
+
+  public static String toPrettyJson(String jsonString, Object obj) {
+    if (jsonString != null) {
+      jsonString = jsonString.trim();
+      JsonParser parser = new JsonParser();
+      if (jsonString.startsWith("{")) {
+        JsonObject json = parser.parse(jsonString).getAsJsonObject();
+        return gson.toJson(json);
+      } else {
+        JsonArray json = parser.parse(jsonString).getAsJsonArray();
+        return gson.toJson(json);
+      }
+    }
+    if (obj != null) {
+      return gson.toJson(obj);
+    }
+    return null;
   }
 
   // Below this comment are non-essential methods for acquiring the common name from the client certificate
@@ -182,47 +225,6 @@ final class Utility {
     }
 
     return cn;
-  }
-
-  private static void handleException(Response response, String uri) {
-    //The response body has to be extracted before the stream closes
-    String errorMessageBody = toPrettyJson(null, response.getEntity());
-    ErrorMessage errorMessage;
-    try {
-      errorMessage = response.readEntity(ErrorMessage.class);
-    } catch (RuntimeException e) {
-      throw new ArrowheadException("Unknown error occurred at " + uri, e);
-    }
-    if (errorMessage == null || errorMessage.getExceptionType() == null) {
-      System.out.println("Request failed, response status code: " + response.getStatus());
-      System.out.println("Request failed, response body: " + errorMessageBody);
-      throw new ArrowheadException("Unknown error occurred at " + uri);
-    } else {
-      System.out.println("Request failed, response status code: " + errorMessage.getErrorCode());
-      System.out.println("The returned error message: " + errorMessage.getErrorMessage());
-      System.out.println("Exception type: " + errorMessage.getExceptionType());
-      System.out.println("Origin of the exception:" + errorMessage.getOrigin());
-      throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
-                                   errorMessage.getOrigin());
-    }
-  }
-
-  public static String toPrettyJson(String jsonString, Object obj) {
-    if (jsonString != null) {
-      jsonString = jsonString.trim();
-      JsonParser parser = new JsonParser();
-      if (jsonString.startsWith("{")) {
-        JsonObject json = parser.parse(jsonString).getAsJsonObject();
-        return gson.toJson(json);
-      } else {
-        JsonArray json = parser.parse(jsonString).getAsJsonArray();
-        return gson.toJson(json);
-      }
-    }
-    if (obj != null) {
-      return gson.toJson(obj);
-    }
-    return null;
   }
 
 }

@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2018 AITIA International Inc.
+ *
+ * This work is part of the Productive 4.0 innovation project, which receives grants from the
+ * European Commissions H2020 research and innovation programme, ECSEL Joint Undertaking
+ * (project no. 737459), the free state of Saxony, the German Federal Ministry of Education and
+ * national funding authorities from involved countries.
+ */
+
 package eu.arrowhead.ArrowheadConsumer;
 
 import eu.arrowhead.ArrowheadConsumer.model.ArrowheadService;
@@ -5,9 +14,8 @@ import eu.arrowhead.ArrowheadConsumer.model.ArrowheadSystem;
 import eu.arrowhead.ArrowheadConsumer.model.OrchestrationResponse;
 import eu.arrowhead.ArrowheadConsumer.model.ServiceRequestForm;
 import eu.arrowhead.ArrowheadConsumer.model.TemperatureReadout;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -57,11 +65,8 @@ public class ConsumerMain {
       ub.scheme("https");
       ub.queryParam("token", orchResponse.getResponse().get(0).getAuthorizationToken());
       ub.queryParam("signature", orchResponse.getResponse().get(0).getSignature());
-    } else {
-      ub.scheme("http");
     }
-
-    System.out.println("Received provider system URL: " + ub.toString() + "\n");
+    System.out.println("Received provider system URL: " + ub.toString());
 
     //Sending request to the provider, parsing the answer
     Response getResponse = Utility.sendRequest(ub.toString(), "GET", null);
@@ -84,14 +89,12 @@ public class ConsumerMain {
   private static ServiceRequestForm compileSRF() {
     ArrowheadSystem consumer = new ArrowheadSystem("client1", "localhost", 0, "null");
 
-    List<String> interfaces = new ArrayList<>();
-    interfaces.add("json");
-    Map<String, String> serviceMetadata = new HashMap<>();
-    serviceMetadata.put("unit", "celsius");
+    Map<String, String> metadata = new HashMap<>();
+    metadata.put("unit", "celsius");
     if (isSecure) {
-      serviceMetadata.put("security", "token");
+      metadata.put("security", "token");
     }
-    ArrowheadService service = new ArrowheadService("IndoorTemperature", interfaces, serviceMetadata);
+    ArrowheadService service = new ArrowheadService("IndoorTemperature", Collections.singletonList("json"), metadata);
 
     Map<String, Boolean> orchestrationFlags = new HashMap<>();
     orchestrationFlags.put("overrideStore", true);
