@@ -9,18 +9,17 @@
 
 package eu.arrowhead.ArrowheadProvider.common.exception;
 
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 @Provider
-public class ArrowheadExceptionMapper implements ExceptionMapper<ArrowheadException> {
+public class BadURIExceptionMapper implements ExceptionMapper<NotFoundException> {
 
-  @Override
-  public Response toResponse(ArrowheadException ex) {
+  public Response toResponse(NotFoundException ex) {
     ex.printStackTrace();
-    ErrorMessage errorMessage = new ErrorMessage(ex.getMessage(), ex.getErrorCode(), ex.getExceptionType(), ex.getOrigin());
-    return Response.status(ex.getErrorCode()).entity(errorMessage).header("Content-type", "application/json").build();
+    ErrorMessage errorMessage = new ErrorMessage("Bad request: requested URI does not exist.", 404, NotFoundException.class.getName(), null);
+    return Response.status(Response.Status.NOT_FOUND).entity(errorMessage).header("Content-type", "application/json").build();
   }
-
 }

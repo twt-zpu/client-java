@@ -1,6 +1,14 @@
+/*
+ * Copyright (c) 2018 AITIA International Inc.
+ *
+ * This work is part of the Productive 4.0 innovation project, which receives grants from the
+ * European Commissions H2020 research and innovation programme, ECSEL Joint Undertaking
+ * (project no. 737459), the free state of Saxony, the German Federal Ministry of Education and
+ * national funding authorities from involved countries.
+ */
+
 package eu.arrowhead.ArrowheadProvider.common.security;
 
-import java.io.IOException;
 import java.security.Principal;
 import java.security.cert.X509Certificate;
 import javax.annotation.Priority;
@@ -18,7 +26,7 @@ public class SecurityFilter implements ContainerRequestFilter {
   private UriInfo uriInfo;
 
   @Override
-  public void filter(ContainerRequestContext context) throws IOException {
+  public void filter(ContainerRequestContext context) {
     uriInfo = context.getUriInfo();
 
     X509Certificate[] chain = (X509Certificate[]) context.getProperty("javax.servlet.request.X509Certificate");

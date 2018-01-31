@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2018 AITIA International Inc.
+ *
+ * This work is part of the Productive 4.0 innovation project, which receives grants from the
+ * European Commissions H2020 research and innovation programme, ECSEL Joint Undertaking
+ * (project no. 737459), the free state of Saxony, the German Federal Ministry of Education and
+ * national funding authorities from involved countries.
+ */
+
 package eu.arrowhead.ArrowheadProvider;
 
 import eu.arrowhead.ArrowheadProvider.common.Utility;
@@ -24,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import javax.net.ssl.SSLContext;
 import javax.ws.rs.core.UriBuilder;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.ssl.SSLContextConfigurator;
@@ -33,20 +43,31 @@ import org.glassfish.jersey.server.ResourceConfig;
 
 public class ProviderMain {
 
-  private static HttpServer server = null;
-  private static HttpServer secureServer = null;
-  private static String PROVIDER_PUBLIC_KEY;
-  private static Properties prop;
-  private static final String BASE_URI = getProp().getProperty("base_uri", "http://0.0.0.0:8454/");
-  private static final String BASE_URI_SECURED = getProp().getProperty("base_uri_secured", "https://0.0.0.0:8455/");
-  private static final String SR_BASE_URI = getProp().getProperty("sr_base_uri", "http://localhost:8442/serviceregistry");
-
+  public static boolean DEBUG_MODE;
   public static PublicKey authorizationKey;
   public static PrivateKey privateKey;
-  public static boolean DEBUG_MODE;
+
+  private static String SR_BASE_URI = getProp().getProperty("sr_base_uri", "http://localhost:8442/serviceregistry");
+  private static HttpServer server;
+  private static HttpServer secureServer;
+  private static String PROVIDER_PUBLIC_KEY;
+  private static Properties prop;
+
+  private static final String BASE_URI = getProp().getProperty("base_uri", "http://localhost:8454/");
+  private static final String BASE_URI_SECURED = getProp().getProperty("base_uri_secured", "https://localhost:8455/");
 
   public static void main(String[] args) throws IOException {
     System.out.println("Working directory: " + System.getProperty("user.dir"));
+    Utility.isUrlValid(BASE_URI, false);
+    Utility.isUrlValid(BASE_URI_SECURED, true);
+    if (SR_BASE_URI.startsWith("https")) {
+      Utility.isUrlValid(SR_BASE_URI, true);
+    } else {
+      Utility.isUrlValid(SR_BASE_URI, false);
+    }
+    if (!SR_BASE_URI.contains("serviceregistry")) {
+      SR_BASE_URI = UriBuilder.fromUri(SR_BASE_URI).path("serviceregistry").build().toString();
+    }
 
     boolean serverModeSet = false;
     argLoop:
@@ -133,7 +154,9 @@ public class ProviderMain {
     if (!sslCon.validateConfiguration(true)) {
       throw new AuthenticationException("SSL Context is not valid, check the certificate files or app.properties!");
     }
-    Utility.sslContext = sslCon.createSSLContext();
+
+    SSLContext sslContext = sslCon.createSSLContext();
+    Utility.setSSLContext(sslContext);
 
     // Getting certificate keys
     KeyStore keyStore = Utility.loadKeyStore(keystorePath, keystorePass);
@@ -152,8 +175,7 @@ public class ProviderMain {
     System.out.println("Authorization CN: " + Utility.getCertCNFromSubject(authCert.getSubjectDN().getName()));
     System.out.println("Authorization System PublicKey Base64: " + Base64.getEncoder().encodeToString(authorizationKey.getEncoded()));
 
-    final HttpServer server = GrizzlyHttpServerFactory
-        .createHttpServer(uri, config, true, new SSLEngineConfigurator(sslCon).setClientMode(false).setNeedClientAuth(true));
+    final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(uri, config, true, new SSLEngineConfigurator(sslCon).setClientMode(false).setNeedClientAuth(true));
     server.getServerConfiguration().setAllowPayloadForUndefinedHttpMethods(true);
     server.start();
     System.out.println("Secure server launched...");
@@ -242,7 +264,7 @@ public class ProviderMain {
     System.out.println("Removing service(s) is successful!");
   }
 
-  public static synchronized Properties getProp() {
+  private static synchronized Properties getProp() {
     try {
       if (prop == null) {
         prop = new Properties();

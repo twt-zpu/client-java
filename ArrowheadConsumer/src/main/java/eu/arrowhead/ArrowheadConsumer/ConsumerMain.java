@@ -22,10 +22,16 @@ import javax.ws.rs.core.UriBuilder;
 
 public class ConsumerMain {
 
-  private static final String ORCH_URI = Utility.getProp().getProperty("orch_uri", "http://0.0.0.0:8440/orchestrator/orchestration");
   private static boolean isSecure = false;
+  private static final String ORCH_URI = Utility.getProp().getProperty("orch_uri", "http://0.0.0.0:8440/orchestrator/orchestration");
 
   public static void main(String[] args) {
+    System.out.println("Working directory: " + System.getProperty("user.dir"));
+    if (ORCH_URI.startsWith("https")) {
+      Utility.isUrlValid(ORCH_URI, true);
+    } else {
+      Utility.isUrlValid(ORCH_URI, false);
+    }
 
     for (int i = 0; i < args.length; ++i) {
       if (args[i].equals("-m")) {
@@ -42,8 +48,6 @@ public class ConsumerMain {
         }
       }
     }
-
-    System.out.println("Working directory: " + System.getProperty("user.dir"));
     long startTime = System.currentTimeMillis();
 
     //Payload compiling

@@ -1,4 +1,5 @@
 /target/
+/config/app.properties
 .classpath
 .project
-/config/app.properties
+ArrowheadProvider.iml

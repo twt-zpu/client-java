@@ -20,6 +20,8 @@ import eu.arrowhead.ArrowheadConsumer.exception.UnavailableServerException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -174,6 +176,26 @@ final class Utility {
       return gson.toJson(obj);
     }
     return null;
+  }
+
+  public static void isUrlValid(String url, boolean isSecure) {
+    String errorMessage = " is not a valid URL to start a HTTP server! Please fix the URL in the properties file.";
+    try {
+      URI uri = new URI(url);
+
+      if ("mailto".equals(uri.getScheme())) {
+        throw new ServiceConfigurationError(url + errorMessage);
+      }
+      if (uri.getHost() == null) {
+        throw new ServiceConfigurationError(url + errorMessage);
+      }
+      if ((isSecure && "http".equals(uri.getScheme())) || (!isSecure && "https".equals(uri.getScheme()))) {
+        throw new ServiceConfigurationError("Secure URIs should use the HTTPS protocol and insecure URIs should use the HTTP protocol. Please fix "
+                                                + "the following URL accordingly in the properties file: " + url);
+      }
+    } catch (URISyntaxException e) {
+      throw new ServiceConfigurationError(url + errorMessage);
+    }
   }
 
   // Below this comment are non-essential methods for acquiring the common name from the client certificate

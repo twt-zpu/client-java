@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2018 AITIA International Inc.
+ *
+ * This work is part of the Productive 4.0 innovation project, which receives grants from the
+ * European Commissions H2020 research and innovation programme, ECSEL Joint Undertaking
+ * (project no. 737459), the free state of Saxony, the German Federal Ministry of Education and
+ * national funding authorities from involved countries.
+ */
+
 package eu.arrowhead.ArrowheadProvider.common;
 
 import com.google.gson.Gson;
@@ -18,6 +27,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -48,47 +59,25 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status.Family;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
-import org.glassfish.grizzly.ssl.SSLContextConfigurator;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 
 public final class Utility {
 
-  private static final String ARROWHEAD_EXCEPTION = "eu.arrowhead.common.exception.ArrowheadException";
   private static final String AUTH_EXCEPTION = "eu.arrowhead.common.exception.AuthenticationException";
   private static final String BAD_PAYLOAD_EXCEPTION = "eu.arrowhead.common.exception.BadPayloadException";
   private static final String NOT_FOUND_EXCEPTION = "eu.arrowhead.common.exception.DataNotFoundException";
   private static final String DUPLICATE_EXCEPTION = "eu.arrowhead.common.exception.DuplicateEntryException";
   private static final String UNAVAILABLE_EXCEPTION = "eu.arrowhead.common.exception.UnavailableServerException";
 
-  public static SSLContext sslContext = null;
+  private static SSLContext sslContext;
   private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
   private Utility() {
   }
 
-  private static SSLContext getSSLContext() {
-    if (sslContext == null) {
-      String keystorePath = ProviderMain.getProp().getProperty("ssl.keystore");
-      String keystorePass = ProviderMain.getProp().getProperty("ssl.keystorepass");
-      String keyPass = ProviderMain.getProp().getProperty("ssl.keypass");
-      String truststorePath = ProviderMain.getProp().getProperty("ssl.truststore");
-      String truststorePass = ProviderMain.getProp().getProperty("ssl.truststorepass");
-
-      SSLContextConfigurator sslCon = new SSLContextConfigurator();
-      sslCon.setKeyStoreFile(keystorePath);
-      sslCon.setKeyStorePass(keystorePass);
-      sslCon.setKeyPass(keyPass);
-      sslCon.setTrustStoreFile(truststorePath);
-      sslCon.setTrustStorePass(truststorePass);
-      if (!sslCon.validateConfiguration(true)) {
-        throw new AuthenticationException("SSL Context is not valid, check the certificate files or app.properties!");
-      }
-
-      sslContext = sslCon.createSSLContext();
-    }
-
-    return sslContext;
+  public static void setSSLContext(SSLContext context) {
+    sslContext = context;
   }
 
   @SuppressWarnings("UnusedReturnValue")
@@ -104,7 +93,7 @@ public final class Utility {
         return true;
       };
 
-      client = ClientBuilder.newBuilder().sslContext(getSSLContext()).withConfig(configuration).hostnameVerifier(allHostsValid).build();
+      client = ClientBuilder.newBuilder().sslContext(sslContext).withConfig(configuration).hostnameVerifier(allHostsValid).build();
     } else {
       client = ClientBuilder.newClient(configuration);
     }
@@ -129,7 +118,7 @@ public final class Utility {
           throw new NotAllowedException("Invalid method type was given to the Utility.sendRequest() method");
       }
     } catch (ProcessingException e) {
-      throw new RuntimeException("Could not get any response from: " + uri, e);
+      throw new UnavailableServerException("Could not get any response from: " + uri, e);
     }
 
     // If the response status code does not start with 2 the request was not successful
@@ -138,6 +127,43 @@ public final class Utility {
     }
 
     return response;
+  }
+
+  private static void handleException(Response response, String uri) {
+    //The response body has to be extracted before the stream closes
+    String errorMessageBody = toPrettyJson(null, response.getEntity());
+    ErrorMessage errorMessage;
+    try {
+      errorMessage = response.readEntity(ErrorMessage.class);
+    } catch (RuntimeException e) {
+      throw new ArrowheadException("Unknown error occurred at " + uri, e);
+    }
+    if (errorMessage == null || errorMessage.getExceptionType() == null) {
+      System.out.println("Request failed, response status code: " + response.getStatus());
+      System.out.println("Request failed, response body: " + errorMessageBody);
+      throw new ArrowheadException("Unknown error occurred at " + uri);
+    } else {
+      switch (errorMessage.getExceptionType()) {
+        case AUTH_EXCEPTION:
+          throw new AuthenticationException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
+                                            errorMessage.getOrigin());
+        case BAD_PAYLOAD_EXCEPTION:
+          throw new BadPayloadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
+                                        errorMessage.getOrigin());
+        case NOT_FOUND_EXCEPTION:
+          throw new DataNotFoundException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
+                                          errorMessage.getOrigin());
+        case DUPLICATE_EXCEPTION:
+          throw new DuplicateEntryException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
+                                            errorMessage.getOrigin());
+        case UNAVAILABLE_EXCEPTION:
+          throw new UnavailableServerException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
+                                               errorMessage.getOrigin());
+        default:
+          throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
+                                       errorMessage.getOrigin());
+      }
+    }
   }
 
   public static <T> Response verifyRequester(SecurityContext context, String token, String signature, T responseEntity) {
@@ -179,8 +205,8 @@ public final class Utility {
         if (endTime == 0L || (endTime > currentTime)) {
           return Response.status(200).entity(responseEntity).build();
         }
-        ErrorMessage error = new ErrorMessage("Authorization token has expired", 401, AuthenticationException.class.getName(),
-                                              Utility.class.toString());
+        ErrorMessage error = new ErrorMessage("Authorization token has expired", 401, AuthenticationException.class.getName(), Utility.class
+            .toString());
         return Response.status(401).entity(error).build();
 
       } else {
@@ -268,10 +294,9 @@ public final class Utility {
     return privatekey;
   }
 
-  //TODO dont forget to modify this, if we migrate to a version without systemgroup
   public static boolean isCommonNameArrowheadValid(String commonName) {
     String[] cnFields = commonName.split("\\.", 0);
-    return cnFields.length == 6;
+    return cnFields.length == 5 && cnFields[3].equals("arrowhead") && cnFields[4].equals("eu");
   }
 
   public static KeyStore createKeyStoreFromCert(String filePath) {
@@ -317,40 +342,23 @@ public final class Utility {
     return null;
   }
 
-  private static void handleException(Response response, String uri) {
-    //The response body has to be extracted before the stream closes
-    String errorMessageBody = toPrettyJson(null, response.getEntity());
-    ErrorMessage errorMessage;
+  public static void isUrlValid(String url, boolean isSecure) {
+    String errorMessage = " is not a valid URL to start a HTTP server! Please fix the URL in the properties file.";
     try {
-      errorMessage = response.readEntity(ErrorMessage.class);
-    } catch (RuntimeException e) {
-      throw new ArrowheadException("Unknown error occurred at " + uri, e);
-    }
-    if (errorMessage == null || errorMessage.getExceptionType() == null) {
-      System.out.println("Request failed, response status code: " + response.getStatus());
-      System.out.println("Request failed, response body: " + errorMessageBody);
-      throw new ArrowheadException("Unknown error occurred at " + uri);
-    } else {
-      switch (errorMessage.getExceptionType()) {
-        case AUTH_EXCEPTION:
-          throw new AuthenticationException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
-                                            errorMessage.getOrigin());
-        case BAD_PAYLOAD_EXCEPTION:
-          throw new BadPayloadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
-                                        errorMessage.getOrigin());
-        case NOT_FOUND_EXCEPTION:
-          throw new DataNotFoundException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
-                                          errorMessage.getOrigin());
-        case DUPLICATE_EXCEPTION:
-          throw new DuplicateEntryException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
-                                            errorMessage.getOrigin());
-        case UNAVAILABLE_EXCEPTION:
-          throw new UnavailableServerException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
-                                               errorMessage.getOrigin());
-        default:
-            throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
-                    errorMessage.getOrigin());
+      URI uri = new URI(url);
+
+      if ("mailto".equals(uri.getScheme())) {
+        throw new ServiceConfigurationError(url + errorMessage);
       }
+      if (uri.getHost() == null) {
+        throw new ServiceConfigurationError(url + errorMessage);
+      }
+      if ((isSecure && "http".equals(uri.getScheme())) || (!isSecure && "https".equals(uri.getScheme()))) {
+        throw new ServiceConfigurationError("Secure URIs should use the HTTPS protocol and insecure URIs should use the HTTP protocol. Please fix "
+                                                + "the following URL accordingly in the properties file: " + url);
+      }
+    } catch (URISyntaxException e) {
+      throw new ServiceConfigurationError(url + errorMessage);
     }
   }
 
