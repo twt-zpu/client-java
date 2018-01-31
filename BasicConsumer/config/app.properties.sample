@@ -1,1 +1,1 @@
-orch_uri=http://arrowhead.tmit.bme.hu:8440/orchestrator/orchestration
+orch_uri=http://localhost:8440/orchestrator/orchestration
