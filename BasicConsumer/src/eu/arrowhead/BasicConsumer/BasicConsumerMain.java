@@ -7,6 +7,7 @@ import eu.arrowhead.BasicConsumer.model.TemperatureReadout;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
@@ -16,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.ServiceConfigurationError;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -157,6 +159,9 @@ public class BasicConsumerMain {
         FileInputStream inputStream = new FileInputStream(file);
         prop.load(inputStream);
       }
+    } catch (FileNotFoundException ex) {
+      throw new ServiceConfigurationError("App.properties file not found, make sure you have the correct working directory set! (directory where "
+                                              + "the config folder can be found)", ex);
     } catch (Exception ex) {
       ex.printStackTrace();
     }

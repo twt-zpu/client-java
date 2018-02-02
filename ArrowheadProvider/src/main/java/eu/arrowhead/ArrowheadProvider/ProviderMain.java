@@ -8,6 +8,7 @@ import eu.arrowhead.ArrowheadProvider.common.security.AuthenticationException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
@@ -23,6 +24,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.ServiceConfigurationError;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.UriBuilder;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.ssl.SSLContextConfigurator;
@@ -103,14 +106,19 @@ public class ProviderMain {
     config.registerClasses(TemperatureResource.class);
     config.packages("eu.arrowhead.ArrowheadProvider.common.filter");
 
-    final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(uri, config);
-    server.getServerConfiguration().setAllowPayloadForUndefinedHttpMethods(true);
-    server.start();
-    System.out.println("Insecure server launched...");
-    return server;
+    try {
+      final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(uri, config);
+      server.getServerConfiguration().setAllowPayloadForUndefinedHttpMethods(true);
+      server.start();
+      System.out.println("Insecure server launched...");
+      return server;
+    } catch (ProcessingException e) {
+      throw new ServiceConfigurationError(
+          "Make sure you gave a valid address in the app.properties file! (Assignable to this JVM and not in use already)", e);
+    }
   }
 
-  private static HttpServer startSecureServer() throws IOException {
+  private static HttpServer startSecureServer() {
     URI uri = UriBuilder.fromUri(BASE_URI_SECURED).build();
     final ResourceConfig config = new ResourceConfig();
     config.registerClasses(TemperatureResource.class);
@@ -148,15 +156,20 @@ public class ProviderMain {
     KeyStore authKeyStore = Utility.loadKeyStore(authKeystorePath, authKeystorePass);
     X509Certificate authCert = Utility.getFirstCertFromKeyStore(authKeyStore);
     authorizationKey = authCert.getPublicKey();
-    System.out.println("Authorization CN: "+ Utility.getCertCNFromSubject(authCert.getSubjectDN().getName()));
+    System.out.println("Authorization CN: " + Utility.getCertCNFromSubject(authCert.getSubjectDN().getName()));
     //System.out.println("Authorization System PublicKey Base64: " + Base64.getEncoder().encodeToString(authorizationKey.getEncoded()));
 
-    final HttpServer server = GrizzlyHttpServerFactory
-        .createHttpServer(uri, config, true, new SSLEngineConfigurator(sslCon).setClientMode(false).setNeedClientAuth(true));
-    server.getServerConfiguration().setAllowPayloadForUndefinedHttpMethods(true);
-    server.start();
-    System.out.println("Secure server launched...");
-    return server;
+    try {
+      final HttpServer server = GrizzlyHttpServerFactory
+          .createHttpServer(uri, config, true, new SSLEngineConfigurator(sslCon).setClientMode(false).setNeedClientAuth(true));
+      server.getServerConfiguration().setAllowPayloadForUndefinedHttpMethods(true);
+      server.start();
+      System.out.println("Secure server launched...");
+      return server;
+    } catch (IOException e) {
+      throw new ServiceConfigurationError(
+          "Make sure you gave a valid address in the app.properties file! (Assignable to this JVM and not in use already)", e);
+    }
   }
 
   private static List<ServiceRegistryEntry> registerToServiceRegistry() {
@@ -252,6 +265,9 @@ public class ProviderMain {
         FileInputStream inputStream = new FileInputStream(file);
         prop.load(inputStream);
       }
+    } catch (FileNotFoundException ex) {
+      throw new ServiceConfigurationError("App.properties file not found, make sure you have the correct working directory set! (directory where "
+                                              + "the config folder can be found)", ex);
     } catch (Exception ex) {
       ex.printStackTrace();
     }

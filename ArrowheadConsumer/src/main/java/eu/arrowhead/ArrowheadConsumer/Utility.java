@@ -7,6 +7,7 @@ import com.google.gson.JsonParser;
 import eu.arrowhead.ArrowheadConsumer.model.ErrorMessage;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -100,8 +101,8 @@ final class Utility {
     } catch (ProcessingException e) {
       throw new RuntimeException("Could not get any response from: " + uri, e);
     }
-    
-  //The response body has to be extracted before the stream closes
+
+    //The response body has to be extracted before the stream closes
     String errorMessageBody = toPrettyJson(null, response.getEntity());
     //If the response status code does not start with 2 the request was not successful
     if (!(response.getStatusInfo().getFamily() == Family.SUCCESSFUL)) {
@@ -135,6 +136,9 @@ final class Utility {
         FileInputStream inputStream = new FileInputStream(file);
         prop.load(inputStream);
       }
+    } catch (FileNotFoundException ex) {
+      throw new ServiceConfigurationError("App.properties file not found, make sure you have the correct working directory set! (directory where "
+                                              + "the config folder can be found)", ex);
     } catch (Exception ex) {
       ex.printStackTrace();
     }
