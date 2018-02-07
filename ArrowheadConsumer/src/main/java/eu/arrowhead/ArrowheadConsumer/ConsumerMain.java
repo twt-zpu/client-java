@@ -91,7 +91,7 @@ public class ConsumerMain {
   }
 
   private static ServiceRequestForm compileSRF() {
-    ArrowheadSystem consumer = new ArrowheadSystem("client2", "localhost", 0, "null");
+    ArrowheadSystem consumer = new ArrowheadSystem("client1", "localhost", 0, "null");
 
     Map<String, String> metadata = new HashMap<>();
     metadata.put("unit", "celsius");
