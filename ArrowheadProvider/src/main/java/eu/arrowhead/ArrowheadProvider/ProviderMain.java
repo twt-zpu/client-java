@@ -245,6 +245,9 @@ public class ProviderMain {
           unregisterFromServiceRegistry(Collections.singletonList(entry));
           Utility.sendRequest(registerUri, "POST", entry);
         }
+        else{
+          throw e;
+        }
       }
       System.out.println("Registering secure service is successful!");
       entries.add(entry);
