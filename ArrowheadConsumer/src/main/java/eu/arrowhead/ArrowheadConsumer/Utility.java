@@ -44,6 +44,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.Response.Status.Family;
 import javax.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.SslConfigurator;
@@ -65,7 +66,8 @@ final class Utility {
     Client client;
 
     if (uri.startsWith("https")) {
-      SslConfigurator sslConfig = SslConfigurator.newInstance().trustStoreFile(getProp().getProperty("truststore")).trustStorePassword(getProp().getProperty("truststorepass")).keyStoreFile(getProp().getProperty("keystore"))
+      SslConfigurator sslConfig = SslConfigurator.newInstance().trustStoreFile(getProp().getProperty("truststore"))
+          .trustStorePassword(getProp().getProperty("truststorepass")).keyStoreFile(getProp().getProperty("keystore"))
           .keyStorePassword(getProp().getProperty("keystorepass")).keyPassword(getProp().getProperty("keypass"));
       SSLContext sslContext = sslConfig.createSSLContext();
 
@@ -111,7 +113,8 @@ final class Utility {
           throw new NotAllowedException("Invalid method type was given to the Utility.sendRequest() method");
       }
     } catch (ProcessingException e) {
-      throw new UnavailableServerException("Could not get any response from: " + uri, e);
+      throw new UnavailableServerException("Could not get any response from: " + uri, Status.SERVICE_UNAVAILABLE.getStatusCode(),
+          UnavailableServerException.class.getName(), null, e);
     }
 
     // If the response status code does not start with 2 the request was not successful
@@ -141,7 +144,7 @@ final class Utility {
       System.out.println("Exception type: " + errorMessage.getExceptionType());
       System.out.println("Origin of the exception:" + errorMessage.getOrigin());
       throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
-                                   errorMessage.getOrigin());
+          errorMessage.getOrigin());
     }
   }
 
@@ -191,7 +194,7 @@ final class Utility {
       }
       if ((isSecure && "http".equals(uri.getScheme())) || (!isSecure && "https".equals(uri.getScheme()))) {
         throw new ServiceConfigurationError("Secure URIs should use the HTTPS protocol and insecure URIs should use the HTTP protocol. Please fix "
-                                                + "the following URL accordingly in the properties file: " + url);
+            + "the following URL accordingly in the properties file: " + url);
       }
     } catch (URISyntaxException e) {
       throw new ServiceConfigurationError(url + errorMessage);
