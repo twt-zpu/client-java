@@ -1,1 +1,1 @@
-orch_uri=http://localhost:8440/orchestrator/orchestration
+orch_uri=http://127.0.0.1:8440/orchestrator/orchestration

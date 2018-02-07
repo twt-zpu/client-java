@@ -1,6 +1,6 @@
-base_uri=http://0.0.0.0:8454/
-base_uri_secured=https://0.0.0.0:8455/
-sr_base_uri=http://localhost:8442/serviceregistry
+base_uri=http://127.0.0.1:8454/
+base_uri_secured=https://127.0.0.1:8455/
+sr_base_uri=http://127.0.0.1:8442/serviceregistry
 
 #Certificate properties
 keystore=config/certificates/testcloud1/tempsensor.testcloud1.jks

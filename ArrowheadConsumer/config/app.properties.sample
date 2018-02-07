@@ -1,4 +1,4 @@
-orch_uri=http://0.0.0.0:8440/orchestrator/orchestration
+orch_uri=http://127.0.0.1:8440/orchestrator/orchestration
 
 #Certificate properties
 keystore=config/certificates/testcloud1/client1.testcloud1.jks
