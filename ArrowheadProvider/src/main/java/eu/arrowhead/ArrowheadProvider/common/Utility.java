@@ -134,6 +134,10 @@ public final class Utility {
   private static void handleException(Response response, String uri) {
     //The response body has to be extracted before the stream closes
     String errorMessageBody = toPrettyJson(null, response.getEntity());
+    if(errorMessageBody == null){
+      response.bufferEntity();
+      errorMessageBody = response.readEntity(String.class);
+    }
     ErrorMessage errorMessage;
     try {
       errorMessage = response.readEntity(ErrorMessage.class);
@@ -184,7 +188,6 @@ public final class Utility {
       boolean verifies = signatureInstance.verify(signaturebytes);
 
       if (!verifies) {
-        //todo find messagebodywriter cause
         ErrorMessage error = new ErrorMessage("Token validation failed", 401, AuthenticationException.class.getName(), Utility.class.toString());
         return Response.status(401).entity(error).build();
       }

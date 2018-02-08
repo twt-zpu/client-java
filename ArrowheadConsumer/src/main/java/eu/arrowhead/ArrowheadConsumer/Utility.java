@@ -128,6 +128,10 @@ final class Utility {
   private static void handleException(Response response, String uri) {
     //The response body has to be extracted before the stream closes
     String errorMessageBody = toPrettyJson(null, response.getEntity());
+    if(errorMessageBody == null){
+      response.bufferEntity();
+      errorMessageBody = response.readEntity(String.class);
+    }
     ErrorMessage errorMessage;
     try {
       errorMessage = response.readEntity(ErrorMessage.class);
