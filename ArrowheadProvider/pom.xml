@@ -15,7 +15,7 @@
   <groupId>eu.arrowhead</groupId>
   <artifactId>ArrowheadProvider</artifactId>
   <packaging>jar</packaging>
-  <version>M2</version>
+  <version>M3</version>
   <name>ArrowheadProvider</name>
 
   <dependencyManagement>

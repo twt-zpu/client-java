@@ -187,7 +187,6 @@ public final class Utility {
       signatureInstance.update(tokenbytes);
 
       boolean verifies = signatureInstance.verify(signaturebytes);
-
       if (!verifies) {
         ErrorMessage error = new ErrorMessage("Token validation failed", 401, AuthenticationException.class.getName(), Utility.class.toString());
         return Response.status(401).entity(error).build();
