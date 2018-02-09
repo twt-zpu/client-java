@@ -69,30 +69,35 @@ public class ProviderMain {
       SR_BASE_URI = UriBuilder.fromUri(SR_BASE_URI).path("serviceregistry").build().toString();
     }
 
+    boolean daemon = false;
     boolean serverModeSet = false;
-    argLoop:
     for (int i = 0; i < args.length; ++i) {
-      if (args[i].equals("-m")) {
-        serverModeSet = true;
-        ++i;
-        switch (args[i]) {
-          case "insecure":
-            server = startServer();
-            break argLoop;
-          case "secure":
-            secureServer = startSecureServer();
-            break argLoop;
-          case "both":
-            server = startServer();
-            secureServer = startSecureServer();
-            break argLoop;
-          default:
-            throw new AssertionError("Unknown server mode: " + args[i]);
-        }
-      }
-      if (args[i].equals("-d")) {
-        DEBUG_MODE = true;
-        System.out.println("Starting server in debug mode!");
+      switch (args[i]) {
+        case "-daemon":
+          daemon = true;
+          System.out.println("Starting server as daemon!");
+          break;
+        case "-d":
+          DEBUG_MODE = true;
+          System.out.println("Starting server in debug mode!");
+          break;
+        case "-m":
+          serverModeSet = true;
+          ++i;
+          switch (args[i]) {
+            case "insecure":
+              server = startServer();
+              break;
+            case "secure":
+              secureServer = startSecureServer();
+              break;
+            case "both":
+              server = startServer();
+              secureServer = startSecureServer();
+              break;
+            default:
+              throw new AssertionError("Unknown server mode: " + args[i]);
+          }
       }
     }
     if (!serverModeSet) {
@@ -101,23 +106,22 @@ public class ProviderMain {
 
     List<ServiceRegistryEntry> registeredEntries = registerToServiceRegistry();
 
-    System.out.println("Type \"stop\" to shutdown the Provider Server(s)...");
-    BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-    String input = "";
-    while (!input.equals("stop")) {
-      input = br.readLine();
+    if (daemon) {
+      System.out.println("In daemon mode, process will terminate for TERM signal...");
+      Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+        System.out.println("Received TERM signal, shutting down...");
+        shutdown(registeredEntries);
+      }));
+    } else {
+      System.out.println("Type \"stop\" to shutdown Authorization Server(s)...");
+      BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+      String input = "";
+      while (!input.equals("stop")) {
+        input = br.readLine();
+      }
+      br.close();
+      shutdown(registeredEntries);
     }
-    br.close();
-
-    unregisterFromServiceRegistry(registeredEntries);
-    if (server != null) {
-      server.shutdownNow();
-    }
-    if (secureServer != null) {
-      secureServer.shutdownNow();
-    }
-
-    System.out.println("Temperature Provider Server(s) stopped.");
   }
 
   private static HttpServer startServer() throws IOException {
@@ -180,6 +184,18 @@ public class ProviderMain {
     server.start();
     System.out.println("Secure server launched...");
     return server;
+  }
+
+  private static void shutdown(List<ServiceRegistryEntry> registeredEntries) {
+    unregisterFromServiceRegistry(registeredEntries);
+    if (server != null) {
+      server.shutdownNow();
+    }
+    if (secureServer != null) {
+      secureServer.shutdownNow();
+    }
+
+    System.out.println("Temperature Provider Server(s) stopped.");
   }
 
   private static List<ServiceRegistryEntry> registerToServiceRegistry() {
