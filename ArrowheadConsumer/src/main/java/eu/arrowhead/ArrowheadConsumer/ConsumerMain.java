@@ -103,7 +103,7 @@ public class ConsumerMain {
     Map<String, Boolean> orchestrationFlags = new HashMap<>();
     orchestrationFlags.put("overrideStore", true);
     orchestrationFlags.put("pingProviders", false);
-    orchestrationFlags.put("metadataSearch", false);
+    orchestrationFlags.put("metadataSearch", true);
     orchestrationFlags.put("enableInterCloud", true);
 
     return new ServiceRequestForm.Builder(consumer).requestedService(service).orchestrationFlags(orchestrationFlags).build();
