@@ -33,6 +33,7 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.Security;
 import java.security.Signature;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
@@ -60,6 +61,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.Response.Status.Family;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 
@@ -182,7 +184,8 @@ public final class Utility {
       byte[] tokenbytes = Base64.getDecoder().decode(token);
       byte[] signaturebytes = Base64.getDecoder().decode(signature);
 
-      Signature signatureInstance = Signature.getInstance("SHA1withRSA");
+      Security.addProvider(new BouncyCastleProvider());
+      Signature signatureInstance = Signature.getInstance("SHA256withRSA");
       signatureInstance.initVerify(ProviderMain.authorizationKey);
       signatureInstance.update(tokenbytes);
 
