@@ -185,7 +185,7 @@ public final class Utility {
       byte[] signaturebytes = Base64.getDecoder().decode(signature);
 
       Security.addProvider(new BouncyCastleProvider());
-      Signature signatureInstance = Signature.getInstance("SHA256withRSA");
+      Signature signatureInstance = Signature.getInstance("SHA256withRSA", "BC");
       signatureInstance.initVerify(ProviderMain.authorizationKey);
       signatureInstance.update(tokenbytes);
 
@@ -195,7 +195,7 @@ public final class Utility {
         return Response.status(401).entity(error).build();
       }
 
-      Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+      Cipher cipher = Cipher.getInstance("RSA/NONE/PKCS1Padding", "BC");
       cipher.init(Cipher.DECRYPT_MODE, ProviderMain.privateKey);
       //Check if the provider public key registered in the database is the same as the one used by the provider at the moment
       byte[] byteToken = cipher.doFinal(tokenbytes);
