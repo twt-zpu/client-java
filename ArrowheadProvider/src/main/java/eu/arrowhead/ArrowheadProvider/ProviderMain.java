@@ -179,7 +179,8 @@ public class ProviderMain {
     System.out.println("Authorization CN: " + Utility.getCertCNFromSubject(authCert.getSubjectDN().getName()));
     System.out.println("Authorization System PublicKey Base64: " + Base64.getEncoder().encodeToString(authorizationKey.getEncoded()));
 
-    final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(uri, config, true, new SSLEngineConfigurator(sslCon).setClientMode(false).setNeedClientAuth(true));
+    final HttpServer server = GrizzlyHttpServerFactory
+        .createHttpServer(uri, config, true, new SSLEngineConfigurator(sslCon).setClientMode(false).setNeedClientAuth(true));
     server.getServerConfiguration().setAllowPayloadForUndefinedHttpMethods(true);
     server.start();
     System.out.println("Secure server launched...");
@@ -231,6 +232,8 @@ public class ProviderMain {
           System.out.println("Received DuplicateEntryException from SR, sending delete request and then registering again.");
           unregisterFromServiceRegistry(Collections.singletonList(entry));
           Utility.sendRequest(registerUri, "POST", entry);
+        } else {
+          throw e;
         }
       }
       System.out.println("Registering insecure service is successful!");
@@ -260,8 +263,7 @@ public class ProviderMain {
           System.out.println("Received DuplicateEntryException from SR, sending delete request and then registering again.");
           unregisterFromServiceRegistry(Collections.singletonList(entry));
           Utility.sendRequest(registerUri, "POST", entry);
-        }
-        else{
+        } else {
           throw e;
         }
       }
