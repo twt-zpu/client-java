@@ -52,6 +52,7 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.ws.rs.NotAllowedException;
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -95,7 +96,10 @@ public final class Utility {
         // Decide whether to allow the connection...
         return true;
       };
-
+      if (sslContext == null) {
+        throw new ServiceConfigurationError(
+            "SSL Context is not set, but secure request sending was invoked. An insecure module can not send requests to secure modules.");
+      }
       client = ClientBuilder.newBuilder().sslContext(sslContext).withConfig(configuration).hostnameVerifier(allHostsValid).build();
     } else {
       client = ClientBuilder.newClient(configuration);
@@ -122,7 +126,7 @@ public final class Utility {
       }
     } catch (ProcessingException e) {
       throw new UnavailableServerException("Could not get any response from: " + uri, Status.SERVICE_UNAVAILABLE.getStatusCode(),
-          UnavailableServerException.class.getName(), null, e);
+                                           UnavailableServerException.class.getName(), null, e);
     }
 
     // If the response status code does not start with 2 the request was not successful

@@ -113,7 +113,7 @@ public class ProviderMain {
         shutdown(registeredEntries);
       }));
     } else {
-      System.out.println("Type \"stop\" to shutdown Authorization Server(s)...");
+      System.out.println("Type \"stop\" to shutdown ArrowheadProvider Server(s)...");
       BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
       String input = "";
       while (!input.equals("stop")) {
