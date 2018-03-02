@@ -11,7 +11,8 @@ package eu.arrowhead.ArrowheadProvider;
 
 import eu.arrowhead.ArrowheadProvider.common.Utility;
 import eu.arrowhead.ArrowheadProvider.common.exception.ArrowheadException;
-import eu.arrowhead.ArrowheadProvider.common.exception.AuthenticationException;
+import eu.arrowhead.ArrowheadProvider.common.exception.AuthException;
+import eu.arrowhead.ArrowheadProvider.common.exception.ExceptionType;
 import eu.arrowhead.ArrowheadProvider.common.model.ArrowheadService;
 import eu.arrowhead.ArrowheadProvider.common.model.ArrowheadSystem;
 import eu.arrowhead.ArrowheadProvider.common.model.ServiceRegistryEntry;
@@ -156,7 +157,7 @@ public class ProviderMain {
     sslCon.setTrustStoreFile(truststorePath);
     sslCon.setTrustStorePass(truststorePass);
     if (!sslCon.validateConfiguration(true)) {
-      throw new AuthenticationException("SSL Context is not valid, check the certificate files or app.properties!");
+      throw new AuthException("SSL Context is not valid, check the certificate files or app.properties!");
     }
 
     SSLContext sslContext = sslCon.createSSLContext();
@@ -228,7 +229,7 @@ public class ProviderMain {
       try {
         Utility.sendRequest(registerUri, "POST", entry);
       } catch (ArrowheadException e) {
-        if (e.getExceptionType().contains("DuplicateEntryException")) {
+        if (e.getExceptionType() == ExceptionType.DUPLICATE_ENTRY) {
           System.out.println("Received DuplicateEntryException from SR, sending delete request and then registering again.");
           unregisterFromServiceRegistry(Collections.singletonList(entry));
           Utility.sendRequest(registerUri, "POST", entry);
@@ -259,7 +260,7 @@ public class ProviderMain {
       try {
         Utility.sendRequest(registerUri, "POST", entry);
       } catch (ArrowheadException e) {
-        if (e.getExceptionType().contains("DuplicateEntryException")) {
+        if (e.getExceptionType() == ExceptionType.DUPLICATE_ENTRY) {
           System.out.println("Received DuplicateEntryException from SR, sending delete request and then registering again.");
           unregisterFromServiceRegistry(Collections.singletonList(entry));
           Utility.sendRequest(registerUri, "POST", entry);

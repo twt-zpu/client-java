@@ -10,7 +10,7 @@
 package eu.arrowhead.ArrowheadProvider.common.security;
 
 import eu.arrowhead.ArrowheadProvider.common.Utility;
-import eu.arrowhead.ArrowheadProvider.common.exception.AuthenticationException;
+import eu.arrowhead.ArrowheadProvider.common.exception.AuthException;
 import javax.annotation.Priority;
 import javax.inject.Inject;
 import javax.ws.rs.Priorities;
@@ -41,7 +41,7 @@ public class AccessControlFilter implements ContainerRequestFilter {
         System.out.println("SSL identification is successful! Cert: " + subjectName);
       } else {
         System.out.println(Utility.getCertCNFromSubject(subjectName) + " is unauthorized to access " + requestTarget);
-        throw new AuthenticationException(Utility.getCertCNFromSubject(subjectName) + " is unauthorized to access " + requestTarget);
+        throw new AuthException(Utility.getCertCNFromSubject(subjectName) + " is unauthorized to access " + requestTarget);
       }
     }
   }

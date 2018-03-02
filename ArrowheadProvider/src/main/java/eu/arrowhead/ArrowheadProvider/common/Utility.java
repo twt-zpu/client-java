@@ -16,11 +16,12 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import eu.arrowhead.ArrowheadProvider.ProviderMain;
 import eu.arrowhead.ArrowheadProvider.common.exception.ArrowheadException;
-import eu.arrowhead.ArrowheadProvider.common.exception.AuthenticationException;
+import eu.arrowhead.ArrowheadProvider.common.exception.AuthException;
 import eu.arrowhead.ArrowheadProvider.common.exception.BadPayloadException;
 import eu.arrowhead.ArrowheadProvider.common.exception.DataNotFoundException;
 import eu.arrowhead.ArrowheadProvider.common.exception.DuplicateEntryException;
 import eu.arrowhead.ArrowheadProvider.common.exception.ErrorMessage;
+import eu.arrowhead.ArrowheadProvider.common.exception.ExceptionType;
 import eu.arrowhead.ArrowheadProvider.common.exception.UnavailableServerException;
 import eu.arrowhead.ArrowheadProvider.common.model.RawTokenInfo;
 import java.io.File;
@@ -66,12 +67,6 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 
 public final class Utility {
-
-  private static final String AUTH_EXCEPTION = "eu.arrowhead.common.exception.AuthenticationException";
-  private static final String BAD_PAYLOAD_EXCEPTION = "eu.arrowhead.common.exception.BadPayloadException";
-  private static final String NOT_FOUND_EXCEPTION = "eu.arrowhead.common.exception.DataNotFoundException";
-  private static final String DUPLICATE_EXCEPTION = "eu.arrowhead.common.exception.DuplicateEntryException";
-  private static final String UNAVAILABLE_EXCEPTION = "eu.arrowhead.common.exception.UnavailableServerException";
 
   private static SSLContext sslContext;
   private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -124,8 +119,7 @@ public final class Utility {
           throw new NotAllowedException("Invalid method type was given to the Utility.sendRequest() method");
       }
     } catch (ProcessingException e) {
-      throw new UnavailableServerException("Could not get any response from: " + uri, Status.SERVICE_UNAVAILABLE.getStatusCode(),
-                                           UnavailableServerException.class.getName(), null, e);
+      throw new UnavailableServerException("Could not get any response from: " + uri, Status.SERVICE_UNAVAILABLE.getStatusCode(), e);
     }
 
     // If the response status code does not start with 2 the request was not successful
@@ -156,24 +150,26 @@ public final class Utility {
       throw new ArrowheadException("Unknown error occurred at " + uri);
     } else {
       switch (errorMessage.getExceptionType()) {
-        case AUTH_EXCEPTION:
-          throw new AuthenticationException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
-                                            errorMessage.getOrigin());
-        case BAD_PAYLOAD_EXCEPTION:
-          throw new BadPayloadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
-                                        errorMessage.getOrigin());
-        case NOT_FOUND_EXCEPTION:
-          throw new DataNotFoundException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
-                                          errorMessage.getOrigin());
-        case DUPLICATE_EXCEPTION:
-          throw new DuplicateEntryException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
-                                            errorMessage.getOrigin());
-        case UNAVAILABLE_EXCEPTION:
-          throw new UnavailableServerException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
-                                               errorMessage.getOrigin());
-        default:
-          throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
-                                       errorMessage.getOrigin());
+        case ARROWHEAD:
+          throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case AUTH:
+          throw new AuthException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case BAD_METHOD:
+          throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case BAD_PAYLOAD:
+          throw new BadPayloadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case BAD_URI:
+          throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case DATA_NOT_FOUND:
+          throw new DataNotFoundException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case DUPLICATE_ENTRY:
+          throw new DuplicateEntryException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case GENERIC:
+          throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case JSON_MAPPING:
+          throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case UNAVAILABLE:
+          throw new UnavailableServerException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
       }
     }
   }
@@ -194,7 +190,7 @@ public final class Utility {
 
       boolean verifies = signatureInstance.verify(signaturebytes);
       if (!verifies) {
-        ErrorMessage error = new ErrorMessage("Token validation failed", 401, AuthenticationException.class.getName(), Utility.class.toString());
+        ErrorMessage error = new ErrorMessage("Token validation failed", 401, ExceptionType.AUTH, Utility.class.toString());
         return Response.status(401).entity(error).build();
       }
 
@@ -216,12 +212,12 @@ public final class Utility {
         if (endTime == 0L || (endTime > currentTime)) {
           return Response.status(200).entity(responseEntity).build();
         }
-        ErrorMessage error = new ErrorMessage("Authorization token has expired", 401, AuthenticationException.class.getName(), Utility.class
+        ErrorMessage error = new ErrorMessage("Authorization token has expired", 401, ExceptionType.AUTH, Utility.class
             .toString());
         return Response.status(401).entity(error).build();
 
       } else {
-        ErrorMessage error = new ErrorMessage("Permission denied", 401, AuthenticationException.class.getName(), Utility.class.toString());
+        ErrorMessage error = new ErrorMessage("Permission denied", 401, ExceptionType.AUTH, Utility.class.toString());
         return Response.status(401).entity(error).build();
       }
 

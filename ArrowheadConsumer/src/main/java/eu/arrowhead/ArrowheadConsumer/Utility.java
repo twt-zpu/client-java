@@ -15,6 +15,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import eu.arrowhead.ArrowheadConsumer.exception.ArrowheadException;
+import eu.arrowhead.ArrowheadConsumer.exception.AuthException;
+import eu.arrowhead.ArrowheadConsumer.exception.BadPayloadException;
+import eu.arrowhead.ArrowheadConsumer.exception.DataNotFoundException;
+import eu.arrowhead.ArrowheadConsumer.exception.DuplicateEntryException;
 import eu.arrowhead.ArrowheadConsumer.exception.ErrorMessage;
 import eu.arrowhead.ArrowheadConsumer.exception.UnavailableServerException;
 import java.io.File;
@@ -113,8 +117,7 @@ final class Utility {
           throw new NotAllowedException("Invalid method type was given to the Utility.sendRequest() method");
       }
     } catch (ProcessingException e) {
-      throw new UnavailableServerException("Could not get any response from: " + uri, Status.SERVICE_UNAVAILABLE.getStatusCode(),
-          UnavailableServerException.class.getName(), null, e);
+      throw new UnavailableServerException("Could not get any response from: " + uri, Status.SERVICE_UNAVAILABLE.getStatusCode(), e);
     }
 
     // If the response status code does not start with 2 the request was not successful
@@ -137,19 +140,39 @@ final class Utility {
     try {
       errorMessage = response.readEntity(ErrorMessage.class);
     } catch (RuntimeException e) {
-      throw new ArrowheadException("Unknown error occurred at " + uri, e);
+      throw new RuntimeException("Unknown error occurred at " + uri, e);
     }
     if (errorMessage == null || errorMessage.getExceptionType() == null) {
       System.out.println("Request failed, response status code: " + response.getStatus());
       System.out.println("Request failed, response body: " + errorMessageBody);
-      throw new ArrowheadException("Unknown error occurred at " + uri);
+      throw new RuntimeException("Unknown error occurred at " + uri);
     } else {
       System.out.println("Request failed, response status code: " + errorMessage.getErrorCode());
       System.out.println("The returned error message: " + errorMessage.getErrorMessage());
       System.out.println("Exception type: " + errorMessage.getExceptionType());
       System.out.println("Origin of the exception:" + errorMessage.getOrigin());
-      throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getExceptionType(),
-          errorMessage.getOrigin());
+      switch (errorMessage.getExceptionType()) {
+        case ARROWHEAD:
+          throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case AUTH:
+          throw new AuthException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case BAD_METHOD:
+          throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case BAD_PAYLOAD:
+          throw new BadPayloadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case BAD_URI:
+          throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case DATA_NOT_FOUND:
+          throw new DataNotFoundException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case DUPLICATE_ENTRY:
+          throw new DuplicateEntryException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case GENERIC:
+          throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case JSON_MAPPING:
+          throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case UNAVAILABLE:
+          throw new UnavailableServerException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+      }
     }
   }
 

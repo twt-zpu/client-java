@@ -11,20 +11,30 @@ package eu.arrowhead.ArrowheadProvider.common.exception;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.Provider;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 
+@Provider
 public class GenericExceptionMapper implements ExceptionMapper<RuntimeException> {
 
+  @Inject
+  private javax.inject.Provider<ContainerRequest> requestContext;
   @Inject
   private javax.inject.Provider<ContainerResponse> responseContext;
 
   @Override
   public Response toResponse(RuntimeException ex) {
     ex.printStackTrace();
-    ErrorMessage errorMessage = new ErrorMessage(ex.getMessage(), responseContext.get().getStatus(), ex.getClass().getName(),
-                                                 responseContext.get().getRequestContext().getAbsolutePath().toString());
-    return Response.status(Status.INTERNAL_SERVER_ERROR).entity(errorMessage).header("Content-type", "application/json").build();
+    int errorCode = 500; //Internal Server Error
+    String origin = requestContext.get() != null ? requestContext.get().getAbsolutePath().toString() : "unknown";
+    if (responseContext.get() != null && responseContext.get().getStatus() > 100 && responseContext.get().getStatus() < 599) {
+      errorCode = responseContext.get().getStatus();
+    }
+
+    ErrorMessage errorMessage = new ErrorMessage("RuntimeException: " + ex.getMessage(), errorCode, ExceptionType.GENERIC, origin);
+    return Response.status(errorCode).entity(errorMessage).header("Content-type", "application/json").build();
   }
+
 }
