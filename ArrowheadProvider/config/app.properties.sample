@@ -1,5 +1,5 @@
-base_uri=http://127.0.0.1:8454/
-base_uri_secured=https://127.0.0.1:8455/
+base_uri=http://127.0.0.1:8460/
+base_uri_secured=https://127.0.0.1:8461/
 sr_base_uri=http://127.0.0.1:8442/serviceregistry
 
 #Certificate properties
