@@ -222,7 +222,7 @@ final class Utility {
       }
       if ((isSecure && "http".equals(uri.getScheme())) || (!isSecure && "https".equals(uri.getScheme()))) {
         throw new ServiceConfigurationError("Secure URIs should use the HTTPS protocol and insecure URIs should use the HTTP protocol. Please fix "
-            + "the following URL accordingly in the properties file: " + url);
+                                                + "the following URL accordingly in the properties file: " + url);
       }
     } catch (URISyntaxException e) {
       throw new ServiceConfigurationError(url + errorMessage);

@@ -212,8 +212,7 @@ public final class Utility {
         if (endTime == 0L || (endTime > currentTime)) {
           return Response.status(200).entity(responseEntity).build();
         }
-        ErrorMessage error = new ErrorMessage("Authorization token has expired", 401, ExceptionType.AUTH, Utility.class
-            .toString());
+        ErrorMessage error = new ErrorMessage("Authorization token has expired", 401, ExceptionType.AUTH, Utility.class.toString());
         return Response.status(401).entity(error).build();
 
       } else {
