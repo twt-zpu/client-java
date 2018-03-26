@@ -22,30 +22,25 @@ import javax.ws.rs.core.UriBuilder;
 
 public class ConsumerMain {
 
-  private static boolean isSecure = false;
-  private static final String ORCH_URI = Utility.getProp().getProperty("orch_uri", "http://0.0.0.0:8440/orchestrator/orchestration");
+  private static boolean isSecure;
 
   public static void main(String[] args) {
     System.out.println("Working directory: " + System.getProperty("user.dir"));
-    if (ORCH_URI.startsWith("https")) {
-      Utility.isUrlValid(ORCH_URI, true);
+
+    String orchAddress = Utility.getProp().getProperty("orch_address", "0.0.0.0");
+    int orchInsecurePort = Utility.getProp().getIntProperty("orch_insecure_port", 8440);
+    int orchSecurePort = Utility.getProp().getIntProperty("orch_secure_port", 8441);
+
+    String ORCH_URI;
+    if (isSecure) {
+      ORCH_URI = Utility.getUri(orchAddress, orchSecurePort, "orchestrator/orchestration", true);
     } else {
-      Utility.isUrlValid(ORCH_URI, false);
+      ORCH_URI = Utility.getUri(orchAddress, orchInsecurePort, "orchestrator/orchestration", false);
     }
 
-    for (int i = 0; i < args.length; ++i) {
-      if (args[i].equals("-m")) {
-        ++i;
-        switch (args[i]) {
-          case "insecure":
-            isSecure = false;
-            break;
-          case "secure":
-            isSecure = true;
-            break;
-          default:
-            throw new AssertionError("Unknown security level: " + args[i]);
-        }
+    for (String arg : args) {
+      if (arg.equals("-tls")) {
+        isSecure = true;
       }
     }
     long startTime = System.currentTimeMillis();

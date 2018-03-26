@@ -10,7 +10,7 @@
 package eu.arrowhead.ArrowheadProvider.common.filter;
 
 import eu.arrowhead.ArrowheadProvider.ProviderMain;
-import eu.arrowhead.ArrowheadProvider.common.Utility;
+import eu.arrowhead.ArrowheadProvider.Utility;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

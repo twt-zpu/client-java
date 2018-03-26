@@ -9,7 +9,7 @@
 
 package eu.arrowhead.ArrowheadProvider.common.security;
 
-import eu.arrowhead.ArrowheadProvider.common.Utility;
+import eu.arrowhead.ArrowheadProvider.Utility;
 import eu.arrowhead.ArrowheadProvider.common.exception.AuthException;
 import javax.annotation.Priority;
 import javax.inject.Inject;

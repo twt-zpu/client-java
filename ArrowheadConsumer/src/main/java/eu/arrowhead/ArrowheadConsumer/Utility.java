@@ -34,7 +34,6 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Enumeration;
 import java.util.NoSuchElementException;
-import java.util.Properties;
 import java.util.ServiceConfigurationError;
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
@@ -57,7 +56,7 @@ import org.glassfish.jersey.client.ClientProperties;
 
 final class Utility {
 
-  private static Properties prop;
+  private static TypeSafeProperties prop;
   private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
   private Utility() {
@@ -176,10 +175,10 @@ final class Utility {
     }
   }
 
-  static synchronized Properties getProp() {
+  static synchronized TypeSafeProperties getProp() {
     try {
       if (prop == null) {
-        prop = new Properties();
+        prop = new TypeSafeProperties();
         File file = new File("config" + File.separator + "app.properties");
         FileInputStream inputStream = new FileInputStream(file);
         prop.load(inputStream);
@@ -209,24 +208,32 @@ final class Utility {
     return null;
   }
 
-  public static void isUrlValid(String url, boolean isSecure) {
-    String errorMessage = " is not a valid URL to start a HTTP server! Please fix the URL in the properties file.";
-    try {
-      URI uri = new URI(url);
-
-      if ("mailto".equals(uri.getScheme())) {
-        throw new ServiceConfigurationError(url + errorMessage);
-      }
-      if (uri.getHost() == null) {
-        throw new ServiceConfigurationError(url + errorMessage);
-      }
-      if ((isSecure && "http".equals(uri.getScheme())) || (!isSecure && "https".equals(uri.getScheme()))) {
-        throw new ServiceConfigurationError("Secure URIs should use the HTTPS protocol and insecure URIs should use the HTTP protocol. Please fix "
-                                                + "the following URL accordingly in the properties file: " + url);
-      }
-    } catch (URISyntaxException e) {
-      throw new ServiceConfigurationError(url + errorMessage);
+  public static String getUri(String address, int port, String serviceUri, boolean isSecure) {
+    if (address == null) {
+      throw new NullPointerException("Address can not be null (Utility:getUri throws NPE)");
     }
+
+    UriBuilder ub = UriBuilder.fromPath("").host(address);
+    if (isSecure) {
+      ub.scheme("https");
+    } else {
+      ub.scheme("http");
+    }
+    if (port > 0) {
+      ub.port(port);
+    }
+    if (serviceUri != null) {
+      ub.path(serviceUri);
+    }
+
+    String url = ub.toString();
+    try {
+      new URI(url);
+    } catch (URISyntaxException e) {
+      throw new ServiceConfigurationError(url + " is not a valid URL to start a HTTP server! Please fix the address field in the properties file.");
+    }
+
+    return url;
   }
 
   // Below this comment are non-essential methods for acquiring the common name from the client certificate

@@ -7,14 +7,13 @@
  * national funding authorities from involved countries.
  */
 
-package eu.arrowhead.ArrowheadProvider.common;
+package eu.arrowhead.ArrowheadProvider;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import eu.arrowhead.ArrowheadProvider.ProviderMain;
 import eu.arrowhead.ArrowheadProvider.common.exception.ArrowheadException;
 import eu.arrowhead.ArrowheadProvider.common.exception.AuthException;
 import eu.arrowhead.ArrowheadProvider.common.exception.BadPayloadException;
@@ -41,10 +40,13 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.ServiceConfigurationError;
+import java.util.Set;
 import javax.crypto.Cipher;
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
@@ -348,23 +350,43 @@ public final class Utility {
     return null;
   }
 
-  public static void isUrlValid(String url, boolean isSecure) {
-    String errorMessage = " is not a valid URL to start a HTTP server! Please fix the URL in the properties file.";
-    try {
-      URI uri = new URI(url);
+  public static String getUri(String address, int port, String serviceUri, boolean isSecure) {
+    if (address == null) {
+      throw new NullPointerException("Address can not be null (Utility:getUri throws NPE)");
+    }
 
-      if ("mailto".equals(uri.getScheme())) {
-        throw new ServiceConfigurationError(url + errorMessage);
-      }
-      if (uri.getHost() == null) {
-        throw new ServiceConfigurationError(url + errorMessage);
-      }
-      if ((isSecure && "http".equals(uri.getScheme())) || (!isSecure && "https".equals(uri.getScheme()))) {
-        throw new ServiceConfigurationError("Secure URIs should use the HTTPS protocol and insecure URIs should use the HTTP protocol. Please fix "
-                                                + "the following URL accordingly in the properties file: " + url);
-      }
+    UriBuilder ub = UriBuilder.fromPath("").host(address);
+    if (isSecure) {
+      ub.scheme("https");
+    } else {
+      ub.scheme("http");
+    }
+    if (port > 0) {
+      ub.port(port);
+    }
+    if (serviceUri != null) {
+      ub.path(serviceUri);
+    }
+
+    String url = ub.toString();
+    try {
+      new URI(url);
     } catch (URISyntaxException e) {
-      throw new ServiceConfigurationError(url + errorMessage);
+      throw new ServiceConfigurationError(url + " is not a valid URL to start a HTTP server! Please fix the address field in the properties file.");
+    }
+
+    return url;
+  }
+
+  public static void checkProperties(Set<String> propertyNames, List<String> mandatoryProperties) {
+    if (mandatoryProperties == null || mandatoryProperties.isEmpty()) {
+      return;
+    }
+    //Arrays.asList() returns immutable lists, so we have to copy it first
+    List<String> properties = new ArrayList<>(mandatoryProperties);
+    if (!propertyNames.containsAll(mandatoryProperties)) {
+      properties.removeIf(propertyNames::contains);
+      throw new ServiceConfigurationError("Missing field(s) from app.properties file: " + properties.toString());
     }
   }
 

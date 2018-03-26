@@ -9,7 +9,6 @@
 
 package eu.arrowhead.ArrowheadProvider;
 
-import eu.arrowhead.ArrowheadProvider.common.Utility;
 import eu.arrowhead.ArrowheadProvider.common.model.MeasurementEntry;
 import eu.arrowhead.ArrowheadProvider.common.model.TemperatureReadout;
 import javax.ws.rs.GET;
