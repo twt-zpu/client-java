@@ -9,11 +9,8 @@
 
 package eu.arrowhead.ArrowheadConsumer;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import eu.arrowhead.ArrowheadConsumer.exception.ArrowheadException;
 import eu.arrowhead.ArrowheadConsumer.exception.AuthException;
 import eu.arrowhead.ArrowheadConsumer.exception.BadPayloadException;
@@ -57,7 +54,11 @@ import org.glassfish.jersey.client.ClientProperties;
 final class Utility {
 
   private static TypeSafeProperties prop;
-  private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+  private static final ObjectMapper mapper = new ObjectMapper();
+
+  static {
+    mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+  }
 
   private Utility() {
   }
@@ -191,19 +192,22 @@ final class Utility {
   }
 
   public static String toPrettyJson(String jsonString, Object obj) {
-    if (jsonString != null) {
-      jsonString = jsonString.trim();
-      JsonParser parser = new JsonParser();
-      if (jsonString.startsWith("{")) {
-        JsonObject json = parser.parse(jsonString).getAsJsonObject();
-        return gson.toJson(json);
-      } else {
-        JsonArray json = parser.parse(jsonString).getAsJsonArray();
-        return gson.toJson(json);
+    try {
+      if (jsonString != null) {
+        jsonString = jsonString.trim();
+        if (jsonString.startsWith("{")) {
+          Object tempObj = mapper.readValue(jsonString, Object.class);
+          return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(tempObj);
+        } else {
+          Object[] tempObj = mapper.readValue(jsonString, Object[].class);
+          return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(tempObj);
+        }
       }
-    }
-    if (obj != null) {
-      return gson.toJson(obj);
+      if (obj != null) {
+        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(obj);
+      }
+    } catch (IOException e) {
+      throw new ArrowheadException("Jackson library threw exception during JSON serialization!", e);
     }
     return null;
   }
