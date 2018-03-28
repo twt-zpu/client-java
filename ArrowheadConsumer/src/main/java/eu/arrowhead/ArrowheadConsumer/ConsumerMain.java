@@ -31,6 +31,12 @@ public class ConsumerMain {
     int orchInsecurePort = Utility.getProp().getIntProperty("orch_insecure_port", 8440);
     int orchSecurePort = Utility.getProp().getIntProperty("orch_secure_port", 8441);
 
+    for (String arg : args) {
+      if (arg.equals("-tls")) {
+        isSecure = true;
+      }
+    }
+
     String ORCH_URI;
     if (isSecure) {
       ORCH_URI = Utility.getUri(orchAddress, orchSecurePort, "orchestrator/orchestration", true);
@@ -38,11 +44,6 @@ public class ConsumerMain {
       ORCH_URI = Utility.getUri(orchAddress, orchInsecurePort, "orchestrator/orchestration", false);
     }
 
-    for (String arg : args) {
-      if (arg.equals("-tls")) {
-        isSecure = true;
-      }
-    }
     long startTime = System.currentTimeMillis();
 
     //Payload compiling
