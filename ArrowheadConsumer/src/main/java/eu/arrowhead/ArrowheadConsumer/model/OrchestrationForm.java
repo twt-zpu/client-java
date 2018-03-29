@@ -9,6 +9,9 @@
 
 package eu.arrowhead.ArrowheadConsumer.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class OrchestrationForm {
 
   private ArrowheadService service;

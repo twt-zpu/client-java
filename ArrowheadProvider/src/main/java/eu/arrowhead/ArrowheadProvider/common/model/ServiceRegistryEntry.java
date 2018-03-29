@@ -10,7 +10,9 @@
 package eu.arrowhead.ArrowheadProvider.common.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ServiceRegistryEntry {
 
   //mandatory fields for JSON
@@ -48,8 +50,8 @@ public class ServiceRegistryEntry {
     this.serviceURI = serviceURI;
   }
 
-  public ServiceRegistryEntry(ArrowheadService providedService, ArrowheadSystem provider, Integer port, String serviceURI, Integer version,
-                              boolean UDP, int ttl) {
+  public ServiceRegistryEntry(ArrowheadService providedService, ArrowheadSystem provider, Integer port, String serviceURI, Integer version, boolean
+      UDP, int ttl) {
     this.providedService = providedService;
     this.provider = provider;
     this.port = port;
