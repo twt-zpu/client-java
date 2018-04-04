@@ -57,7 +57,7 @@ public class AccessControlFilter implements ContainerRequestFilter {
     // All requests from the local cloud are allowed, so omit the first part of the common names (systemName)
     String[] serverFields = serverCN.split("\\.", 2);
     String[] clientFields = clientCN.split("\\.", 2);
-    // serverFields contains: coreSystemName, cloudName.operator.arrowhead.eu
+    // serverFields contains: systemName, cloudName.operator.arrowhead.eu
 
     // If this is true, then the certificates are from the same cloud
     return serverFields[1].equalsIgnoreCase(clientFields[1]);
