@@ -184,6 +184,15 @@ public final class Utility {
       String[] commonNameParts = commonName.split("\\.");
       String consumerName = commonNameParts[0];
 
+      /*System.out.println(token);
+      System.out.println(signature);*/
+      if (token.contains(" ")) {
+        token = token.replaceAll("\\s", "+");
+      }
+      if (signature.contains(" ")) {
+        signature = signature.replaceAll("\\s", "+");
+      }
+
       byte[] tokenbytes = Base64.getDecoder().decode(token);
       byte[] signaturebytes = Base64.getDecoder().decode(signature);
 
