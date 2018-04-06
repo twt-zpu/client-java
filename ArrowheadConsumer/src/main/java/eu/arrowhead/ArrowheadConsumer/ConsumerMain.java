@@ -9,6 +9,7 @@
 
 package eu.arrowhead.ArrowheadConsumer;
 
+import eu.arrowhead.ArrowheadConsumer.exception.ArrowheadException;
 import eu.arrowhead.ArrowheadConsumer.model.ArrowheadService;
 import eu.arrowhead.ArrowheadConsumer.model.ArrowheadSystem;
 import eu.arrowhead.ArrowheadConsumer.model.OrchestrationResponse;
@@ -55,6 +56,9 @@ public class ConsumerMain {
     OrchestrationResponse orchResponse = postResponse.readEntity(OrchestrationResponse.class);
     System.out.println("Orchestration Response payload: " + Utility.toPrettyJson(null, orchResponse));
 
+    if (orchResponse.getResponse().isEmpty()) {
+      throw new ArrowheadException("Orchestrator returned with 0 Orchestration Forms!");
+    }
     ArrowheadSystem provider = orchResponse.getResponse().get(0).getProvider();
     String serviceURI = orchResponse.getResponse().get(0).getServiceURI();
     UriBuilder ub = UriBuilder.fromPath("").host(provider.getAddress()).path(serviceURI).scheme("http");
