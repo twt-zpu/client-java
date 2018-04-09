@@ -100,41 +100,9 @@ void SensorHandler::processProvider(std::string pJsonSenML, bool _bProviderIsSec
 	}
 }
 
+
 void SensorHandler::processProviderMQTT(std::string pJsonSenML){
 	printf("Process ProviderMQTT, MQTT translation\n");
-	json jsonSenML;
-
-	printf("\nreceived jsonString: %s\n\n", pJsonSenML.c_str());
-
-	try{
-		jsonSenML = json::parse(pJsonSenML.c_str());
-	}
-	catch(exception &e){
-		printf("Error: could not parse json:  %s\n", e.what());
-		return;
-	}
-
-	std::string baseName;
-	std::string unit;
-
-	try{
-		baseName = jsonSenML.at("\"bn\"").get<std::string>();
-		unit     = jsonSenML.at("\"bu\"").get<std::string>();
-	}
-	catch(exception &e){
-		printf("Error: could not parse bn or bu:  %s\n", e.what());
-		return;
-	}
-
-	std::replace(baseName.begin(), baseName.end(), ':', '/');
-
-	std::string command = (std::string)("/home/tottthy/MQTT/mosquitto-1.4.14/client/mosquitto_pub -t ") + baseName;
-
-	command += (std::string)(" -q 1 -m \"") + pJsonSenML + (std::string)("\"");
-
-	printf("\ncommand: %s\n\n", command.c_str());
-
-	system(command.c_str());
 }
 
 /*
