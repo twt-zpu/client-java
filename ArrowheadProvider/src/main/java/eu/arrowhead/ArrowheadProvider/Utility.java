@@ -10,8 +10,6 @@
 package eu.arrowhead.ArrowheadProvider;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.google.gson.Gson;
 import eu.arrowhead.ArrowheadProvider.common.exception.ArrowheadException;
 import eu.arrowhead.ArrowheadProvider.common.exception.AuthException;
 import eu.arrowhead.ArrowheadProvider.common.exception.BadPayloadException;
@@ -20,6 +18,7 @@ import eu.arrowhead.ArrowheadProvider.common.exception.DuplicateEntryException;
 import eu.arrowhead.ArrowheadProvider.common.exception.ErrorMessage;
 import eu.arrowhead.ArrowheadProvider.common.exception.ExceptionType;
 import eu.arrowhead.ArrowheadProvider.common.exception.UnavailableServerException;
+import eu.arrowhead.ArrowheadProvider.common.json.JacksonJsonProviderAtRest;
 import eu.arrowhead.ArrowheadProvider.common.model.RawTokenInfo;
 import java.io.File;
 import java.io.FileInputStream;
@@ -69,21 +68,17 @@ import org.glassfish.jersey.client.ClientProperties;
 public final class Utility {
 
   private static SSLContext sslContext;
-  private static final ObjectMapper mapper = new ObjectMapper();
-
-  static {
-    mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-  }
+  private static final ObjectMapper mapper = JacksonJsonProviderAtRest.getMapper();
 
   private Utility() {
   }
 
-  public static void setSSLContext(SSLContext context) {
+  static void setSSLContext(SSLContext context) {
     sslContext = context;
   }
 
   @SuppressWarnings("UnusedReturnValue")
-  public static <T> Response sendRequest(String uri, String method, T payload) {
+  static <T> Response sendRequest(String uri, String method, T payload) {
     ClientConfig configuration = new ClientConfig();
     configuration.property(ClientProperties.CONNECT_TIMEOUT, 30000);
     configuration.property(ClientProperties.READ_TIMEOUT, 30000);
@@ -102,6 +97,7 @@ public final class Utility {
     } else {
       client = ClientBuilder.newClient(configuration);
     }
+    client.register(JacksonJsonProviderAtRest.class);
 
     Response response;
     try {
@@ -178,7 +174,7 @@ public final class Utility {
     }
   }
 
-  public static <T> Response verifyRequester(SecurityContext context, String token, String signature, T responseEntity) {
+  static <T> Response verifyRequester(SecurityContext context, String token, String signature, T responseEntity) {
     try {
       String commonName = Utility.getCertCNFromSubject(context.getUserPrincipal().getName());
       String[] commonNameParts = commonName.split("\\.");
@@ -212,9 +208,8 @@ public final class Utility {
       //Check if the provider public key registered in the database is the same as the one used by the provider at the moment
       byte[] byteToken = cipher.doFinal(tokenbytes);
 
-      Gson gson = new Gson();
       String json = new String(byteToken, "UTF-8");
-      RawTokenInfo rawTokenInfo = gson.fromJson(json, RawTokenInfo.class);
+      RawTokenInfo rawTokenInfo = fromJson(json, RawTokenInfo.class);
       String[] rawTokenInfoParts = rawTokenInfo.getC().split("\\.");
       String consumerTokenName = rawTokenInfoParts[0];
 
@@ -349,19 +344,28 @@ public final class Utility {
         jsonString = jsonString.trim();
         if (jsonString.startsWith("{")) {
           Object tempObj = mapper.readValue(jsonString, Object.class);
-          return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(tempObj);
+          return mapper.writeValueAsString(tempObj);
         } else {
           Object[] tempObj = mapper.readValue(jsonString, Object[].class);
-          return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(tempObj);
+          return mapper.writeValueAsString(tempObj);
         }
       }
       if (obj != null) {
-        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(obj);
+        return mapper.writeValueAsString(obj);
       }
     } catch (IOException e) {
-      throw new ArrowheadException("Jackson library threw exception during JSON serialization!", e);
+      throw new ArrowheadException(
+          "Jackson library threw IOException during JSON serialization! Wrapping it in RuntimeException. Exception message: " + e.getMessage(), e);
     }
     return null;
+  }
+
+  public static <T> T fromJson(String json, Class<T> parsedClass) {
+    try {
+      return mapper.readValue(json, parsedClass);
+    } catch (IOException e) {
+      throw new ArrowheadException("Jackson library threw exception during JSON parsing!", e);
+    }
   }
 
   public static String getUri(String address, int port, String serviceUri, boolean isSecure) {

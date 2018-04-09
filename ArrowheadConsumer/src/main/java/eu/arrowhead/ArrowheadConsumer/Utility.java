@@ -10,7 +10,6 @@
 package eu.arrowhead.ArrowheadConsumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import eu.arrowhead.ArrowheadConsumer.exception.ArrowheadException;
 import eu.arrowhead.ArrowheadConsumer.exception.AuthException;
 import eu.arrowhead.ArrowheadConsumer.exception.BadPayloadException;
@@ -18,6 +17,7 @@ import eu.arrowhead.ArrowheadConsumer.exception.DataNotFoundException;
 import eu.arrowhead.ArrowheadConsumer.exception.DuplicateEntryException;
 import eu.arrowhead.ArrowheadConsumer.exception.ErrorMessage;
 import eu.arrowhead.ArrowheadConsumer.exception.UnavailableServerException;
+import eu.arrowhead.ArrowheadConsumer.json.JacksonJsonProviderAtRest;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -54,11 +54,7 @@ import org.glassfish.jersey.client.ClientProperties;
 final class Utility {
 
   private static TypeSafeProperties prop;
-  private static final ObjectMapper mapper = new ObjectMapper();
-
-  static {
-    mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-  }
+  private static final ObjectMapper mapper = JacksonJsonProviderAtRest.getMapper();
 
   private Utility() {
   }
@@ -96,6 +92,7 @@ final class Utility {
     } else {
       client = ClientBuilder.newClient(configuration);
     }
+    client.register(JacksonJsonProviderAtRest.class);
 
     Response response;
     try {
@@ -197,17 +194,18 @@ final class Utility {
         jsonString = jsonString.trim();
         if (jsonString.startsWith("{")) {
           Object tempObj = mapper.readValue(jsonString, Object.class);
-          return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(tempObj);
+          return mapper.writeValueAsString(tempObj);
         } else {
           Object[] tempObj = mapper.readValue(jsonString, Object[].class);
-          return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(tempObj);
+          return mapper.writeValueAsString(tempObj);
         }
       }
       if (obj != null) {
-        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(obj);
+        return mapper.writeValueAsString(obj);
       }
     } catch (IOException e) {
-      throw new ArrowheadException("Jackson library threw exception during JSON serialization!", e);
+      throw new ArrowheadException(
+          "Jackson library threw IOException during JSON serialization! Wrapping it in RuntimeException. Exception message: " + e.getMessage(), e);
     }
     return null;
   }
