@@ -9,8 +9,6 @@
 
 package eu.arrowhead.ArrowheadProvider.common.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 public class ServiceRegistryEntry {
 
   //mandatory fields for JSON
@@ -115,7 +113,6 @@ public class ServiceRegistryEntry {
     this.ttl = ttl;
   }
 
-  @JsonIgnore
   public boolean isValid() {
     return provider != null && provider.isValid() && providedService != null && providedService.isValid();
   }

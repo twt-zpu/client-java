@@ -9,7 +9,6 @@
 
 package eu.arrowhead.ArrowheadProvider.common.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -62,17 +61,14 @@ public class ArrowheadService {
     this.serviceMetadata = metaData;
   }
 
-  @JsonIgnore
   public boolean isValid() {
     return (serviceDefinition != null && !interfaces.isEmpty());
   }
 
-  @JsonIgnore
   public boolean isValidForDatabase() {
     return serviceDefinition != null;
   }
 
-  @JsonIgnore
   public boolean isValidForDNSSD() {
     boolean areInterfacesClean = true;
     for (String interf : interfaces) {

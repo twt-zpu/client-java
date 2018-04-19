@@ -9,8 +9,6 @@
 
 package eu.arrowhead.ArrowheadProvider.common.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 /**
  * Entity class for storing Arrowhead Systems in the database. The "system_name" column must be unique.
  */
@@ -63,12 +61,10 @@ public class ArrowheadSystem {
     this.authenticationInfo = authenticationInfo;
   }
 
-  @JsonIgnore
   public boolean isValid() {
     return systemName != null && address != null;
   }
 
-  @JsonIgnore
   public boolean isValidForDatabase() {
     return systemName != null;
   }

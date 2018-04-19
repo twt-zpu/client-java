@@ -16,6 +16,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Objects;
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -41,7 +42,7 @@ public class InboundDebugFilter implements ContainerRequestFilter {
       if (!sb.toString().isEmpty()) {
         String prettyJson = Utility.toPrettyJson(sb.toString(), null);
         System.out.println(prettyJson);
-        InputStream in = new ByteArrayInputStream(prettyJson.getBytes("UTF-8"));
+        InputStream in = new ByteArrayInputStream(Objects.requireNonNull(prettyJson).getBytes("UTF-8"));
         requestContext.setEntityStream(in);
       }
     }

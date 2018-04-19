@@ -20,10 +20,12 @@ import eu.arrowhead.ArrowheadProvider.common.exception.ExceptionType;
 import eu.arrowhead.ArrowheadProvider.common.exception.UnavailableServerException;
 import eu.arrowhead.ArrowheadProvider.common.json.JacksonJsonProviderAtRest;
 import eu.arrowhead.ArrowheadProvider.common.model.RawTokenInfo;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.KeyStore;
@@ -65,6 +67,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 
+@SuppressWarnings("WeakerAccess")
 public final class Utility {
 
   private static SSLContext sslContext;
@@ -405,6 +408,30 @@ public final class Utility {
     if (!propertyNames.containsAll(mandatoryProperties)) {
       properties.removeIf(propertyNames::contains);
       throw new ServiceConfigurationError("Missing field(s) from app.properties file: " + properties.toString());
+    }
+  }
+
+  public static String loadJsonFromFile(String pathName) {
+    StringBuilder sb;
+    try {
+      File file = new File(pathName);
+      FileInputStream is = new FileInputStream(file);
+
+      BufferedReader br = new BufferedReader(new InputStreamReader(is, "utf-8"));
+      sb = new StringBuilder();
+      String line;
+      while ((line = br.readLine()) != null) {
+        sb.append(line).append("\n");
+      }
+      br.close();
+    } catch (IOException e) {
+      throw new RuntimeException(e.getClass().toString() + ": " + e.getMessage(), e);
+    }
+
+    if (!sb.toString().isEmpty()) {
+      return sb.toString();
+    } else {
+      return null;
     }
   }
 
