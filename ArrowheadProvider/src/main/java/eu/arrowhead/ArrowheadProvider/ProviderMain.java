@@ -234,7 +234,7 @@ public class ProviderMain {
       }
     } else {
       String serviceDef = getProp().getProperty("service_name");
-      String serviceUri = getProp().getProperty("temperature");
+      String serviceUri = getProp().getProperty("service_uri");
       String interfaceList = getProp().getProperty("interfaces");
       List<String> interfaces = new ArrayList<>();
       if (interfaceList != null && !interfaceList.isEmpty()) {
