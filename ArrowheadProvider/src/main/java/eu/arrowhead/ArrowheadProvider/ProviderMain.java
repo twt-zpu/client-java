@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2018 AITIA International Inc.
+ *  Copyright (c) 2018 AITIA International Inc.
  *
- * This work is part of the Productive 4.0 innovation project, which receives grants from the
- * European Commissions H2020 research and innovation programme, ECSEL Joint Undertaking
- * (project no. 737459), the free state of Saxony, the German Federal Ministry of Education and
- * national funding authorities from involved countries.
+ *  This work is part of the Productive 4.0 innovation project, which receives grants from the
+ *  European Commissions H2020 research and innovation programme, ECSEL Joint Undertaking
+ *  (project no. 737459), the free state of Saxony, the German Federal Ministry of Education and
+ *  national funding authorities from involved countries.
  */
 
 package eu.arrowhead.ArrowheadProvider;
@@ -154,7 +154,7 @@ public class ProviderMain {
     config.registerClasses(TemperatureResource.class);
     config.packages("eu.arrowhead.ArrowheadProvider.common");
 
-    final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(uri, config);
+    final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(uri, config, false);
     server.getServerConfiguration().setAllowPayloadForUndefinedHttpMethods(true);
     server.start();
     System.out.println("Insecure server launched...");
@@ -204,7 +204,7 @@ public class ProviderMain {
     System.out.println("Authorization System PublicKey Base64: " + Base64.getEncoder().encodeToString(authorizationKey.getEncoded()));
 
     final HttpServer server = GrizzlyHttpServerFactory
-        .createHttpServer(uri, config, true, new SSLEngineConfigurator(sslCon).setClientMode(false).setNeedClientAuth(true));
+        .createHttpServer(uri, config, true, new SSLEngineConfigurator(sslCon).setClientMode(false).setNeedClientAuth(true), false);
     server.getServerConfiguration().setAllowPayloadForUndefinedHttpMethods(true);
     server.start();
     System.out.println("Secure server launched...");

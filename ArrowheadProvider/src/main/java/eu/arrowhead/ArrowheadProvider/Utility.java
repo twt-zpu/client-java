@@ -1,15 +1,16 @@
 /*
- * Copyright (c) 2018 AITIA International Inc.
+ *  Copyright (c) 2018 AITIA International Inc.
  *
- * This work is part of the Productive 4.0 innovation project, which receives grants from the
- * European Commissions H2020 research and innovation programme, ECSEL Joint Undertaking
- * (project no. 737459), the free state of Saxony, the German Federal Ministry of Education and
- * national funding authorities from involved countries.
+ *  This work is part of the Productive 4.0 innovation project, which receives grants from the
+ *  European Commissions H2020 research and innovation programme, ECSEL Joint Undertaking
+ *  (project no. 737459), the free state of Saxony, the German Federal Ministry of Education and
+ *  national funding authorities from involved countries.
  */
 
 package eu.arrowhead.ArrowheadProvider;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.arrowhead.ArrowheadProvider.common.JacksonJsonProviderAtRest;
 import eu.arrowhead.ArrowheadProvider.common.exception.ArrowheadException;
 import eu.arrowhead.ArrowheadProvider.common.exception.AuthException;
 import eu.arrowhead.ArrowheadProvider.common.exception.BadPayloadException;
@@ -18,7 +19,6 @@ import eu.arrowhead.ArrowheadProvider.common.exception.DuplicateEntryException;
 import eu.arrowhead.ArrowheadProvider.common.exception.ErrorMessage;
 import eu.arrowhead.ArrowheadProvider.common.exception.ExceptionType;
 import eu.arrowhead.ArrowheadProvider.common.exception.UnavailableServerException;
-import eu.arrowhead.ArrowheadProvider.common.json.JacksonJsonProviderAtRest;
 import eu.arrowhead.ArrowheadProvider.common.model.RawTokenInfo;
 import java.io.BufferedReader;
 import java.io.File;
