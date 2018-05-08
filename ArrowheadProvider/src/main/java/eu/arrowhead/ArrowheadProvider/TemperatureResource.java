@@ -20,8 +20,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
-@Produces(MediaType.APPLICATION_JSON)
 @Path("temperature")
+@Produces(MediaType.APPLICATION_JSON)
 public class TemperatureResource {
 
   @GET

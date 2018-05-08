@@ -7,13 +7,14 @@
  *  national funding authorities from involved countries.
  */
 
-package eu.arrowhead.ArrowheadConsumer;
+package eu.arrowhead.ArrowheadPublisher;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.arrowhead.ArrowheadConsumer.exception.ArrowheadException;
-import eu.arrowhead.ArrowheadConsumer.exception.ErrorMessage;
-import eu.arrowhead.ArrowheadConsumer.exception.UnavailableServerException;
-import eu.arrowhead.ArrowheadConsumer.json.JacksonJsonProviderAtRest;
+import eu.arrowhead.ArrowheadPublisher.common.TypeSafeProperties;
+import eu.arrowhead.ArrowheadPublisher.common.exception.ArrowheadException;
+import eu.arrowhead.ArrowheadPublisher.common.exception.ErrorMessage;
+import eu.arrowhead.ArrowheadPublisher.common.exception.UnavailableServerException;
+import eu.arrowhead.ArrowheadPublisher.common.json.JacksonJsonProviderAtRest;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -63,8 +64,10 @@ final class Utility {
 
     if (uri.startsWith("https")) {
       SslConfigurator sslConfig = SslConfigurator.newInstance().trustStoreFile(getProp().getProperty("truststore"))
-          .trustStorePassword(getProp().getProperty("truststorepass")).keyStoreFile(getProp().getProperty("keystore"))
-          .keyStorePassword(getProp().getProperty("keystorepass")).keyPassword(getProp().getProperty("keypass"));
+                                                 .trustStorePassword(getProp().getProperty("truststorepass"))
+                                                 .keyStoreFile(getProp().getProperty("keystore"))
+                                                 .keyStorePassword(getProp().getProperty("keystorepass"))
+                                                 .keyPassword(getProp().getProperty("keypass"));
       SSLContext sslContext = sslConfig.createSSLContext();
 
       X509Certificate clientCert = null;

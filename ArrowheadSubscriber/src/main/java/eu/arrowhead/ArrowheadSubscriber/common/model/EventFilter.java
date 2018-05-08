@@ -25,7 +25,7 @@ public class EventFilter {
   private Map<String, String> filterMetadata = new HashMap<>();
   private Integer port;
   private String notifyUri;
-  private Boolean matchMetadata;
+  private boolean matchMetadata;
 
   public EventFilter() {
   }
@@ -37,7 +37,7 @@ public class EventFilter {
   }
 
   public EventFilter(String eventType, ArrowheadSystem consumer, List<ArrowheadSystem> sources, LocalDateTime startDate, LocalDateTime endDate,
-                     Map<String, String> filterMetadata, Integer port, String notifyUri, Boolean matchMetadata) {
+                     Map<String, String> filterMetadata, Integer port, String notifyUri, boolean matchMetadata) {
     this.eventType = eventType;
     this.consumer = consumer;
     this.sources = sources;
@@ -113,11 +113,11 @@ public class EventFilter {
     this.notifyUri = notifyUri;
   }
 
-  public Boolean getMatchMetadata() {
+  public boolean getMatchMetadata() {
     return matchMetadata;
   }
 
-  public void setMatchMetadata(Boolean matchMetadata) {
+  public void setMatchMetadata(boolean matchMetadata) {
     this.matchMetadata = matchMetadata;
   }
 

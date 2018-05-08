@@ -7,7 +7,7 @@
  *  national funding authorities from involved countries.
  */
 
-package eu.arrowhead.ArrowheadSubscriber.common.model;
+package eu.arrowhead.ArrowheadPublisher.common.model;
 
 public class ArrowheadSystem {
 

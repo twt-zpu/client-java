@@ -9,10 +9,38 @@
 
 package eu.arrowhead.ArrowheadPublisher;
 
+import eu.arrowhead.ArrowheadPublisher.common.model.ArrowheadSystem;
+import eu.arrowhead.ArrowheadPublisher.common.model.PublishEvent;
+import java.time.LocalDateTime;
+
 public class PublisherMain {
 
-  public static void main(String[] args) {
+  private static boolean isSecure;
 
+  public static void main(String[] args) {
+    System.out.println("Working directory: " + System.getProperty("user.dir"));
+
+    String ehAddress = Utility.getProp().getProperty("eh_address", "0.0.0.0");
+    int ehInsecurePort = Utility.getProp().getIntProperty("eh_insecure_port", 8454);
+    int ehSecurePort = Utility.getProp().getIntProperty("eh_secure_port", 8455);
+
+    for (String arg : args) {
+      if (arg.equals("-tls")) {
+        isSecure = true;
+      }
+    }
+
+    String ehUri;
+    if (isSecure) {
+      ehUri = Utility.getUri(ehAddress, ehSecurePort, "eventhandler/publish", true);
+    } else {
+      ehUri = Utility.getUri(ehAddress, ehInsecurePort, "eventhandler/publish", false);
+    }
+
+    ArrowheadSystem source = new ArrowheadSystem("publisher", "localhost", 8080, null);
+    PublishEvent event = new PublishEvent(source, "test", "péééééjlóóód", LocalDateTime.now(), null, "feedback");
+    Utility.sendRequest(ehUri, "POST", event);
+    System.out.println("Event published to EH.");
   }
 
 }

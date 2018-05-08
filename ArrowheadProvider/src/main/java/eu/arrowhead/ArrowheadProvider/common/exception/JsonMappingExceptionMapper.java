@@ -34,7 +34,7 @@ public class JsonMappingExceptionMapper implements ExceptionMapper<JsonMappingEx
       errorCode = responseContext.get().getStatus();
     }
 
-    ErrorMessage errorMessage = new ErrorMessage("JsonMappingException: " + ex.getMessage(), errorCode, ExceptionType.JSON_MAPPING, origin);
+    ErrorMessage errorMessage = new ErrorMessage("JsonMappingException: " + ex.getMessage(), errorCode, ExceptionType.JSON_PROCESSING, origin);
     return Response.status(errorCode).entity(errorMessage).header("Content-type", "application/json").build();
   }
 

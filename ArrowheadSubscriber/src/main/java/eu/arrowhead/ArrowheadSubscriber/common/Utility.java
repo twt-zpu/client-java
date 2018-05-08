@@ -14,6 +14,7 @@ import eu.arrowhead.ArrowheadSubscriber.common.exception.ArrowheadException;
 import eu.arrowhead.ArrowheadSubscriber.common.exception.AuthException;
 import eu.arrowhead.ArrowheadSubscriber.common.exception.BadPayloadException;
 import eu.arrowhead.ArrowheadSubscriber.common.exception.DataNotFoundException;
+import eu.arrowhead.ArrowheadSubscriber.common.exception.DnsException;
 import eu.arrowhead.ArrowheadSubscriber.common.exception.DuplicateEntryException;
 import eu.arrowhead.ArrowheadSubscriber.common.exception.ErrorMessage;
 import eu.arrowhead.ArrowheadSubscriber.common.exception.UnavailableServerException;
@@ -156,11 +157,13 @@ public final class Utility {
           throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
         case DATA_NOT_FOUND:
           throw new DataNotFoundException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case DNSSD:
+          throw new DnsException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getOrigin());
         case DUPLICATE_ENTRY:
           throw new DuplicateEntryException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
         case GENERIC:
           throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
-        case JSON_MAPPING:
+        case JSON_PROCESSING:
           throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
         case UNAVAILABLE:
           throw new UnavailableServerException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());

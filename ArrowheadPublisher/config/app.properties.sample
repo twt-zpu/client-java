@@ -1,1 +1,3 @@
-eventhandler_uri=http://127.0.0.1:8454/eventhandler
+eh_address=0.0.0.0
+eh_insecure_port=8454
+eh_secure_port=8455
