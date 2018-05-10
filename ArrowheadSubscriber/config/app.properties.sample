@@ -30,7 +30,8 @@ eh_secure_port=8455
 #####################################################################
 
 # Certificate related paths and passwords
-keystore=config/certificates/testcloud1/tempsensor.testcloud1.jks #TODO do subscriber cert
+#TODO do subscriber cert
+keystore=config/certificates/testcloud1/tempsensor.testcloud1.jks
 keystorepass=12345
 keypass=12345
 truststore=config/certificates/testcloud1/testcloud1_cert.jks

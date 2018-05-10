@@ -31,7 +31,8 @@ event_payload=21 degrees celsius
 #####################################################################
 
 # Certificate related paths and passwords
-keystore=config/certificates/testcloud1/tempsensor.testcloud1.jks #TODO do publisher cert
+#TODO do publisher cert
+keystore=config/certificates/testcloud1/tempsensor.testcloud1.jks
 keystorepass=12345
 keypass=12345
 truststore=config/certificates/testcloud1/testcloud1_cert.jks
