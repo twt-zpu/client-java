@@ -106,7 +106,7 @@ public class SubscriberMain {
         shutdown();
       }));
     } else {
-      System.out.println("Type \"stop\" to shutdown ArrowheadProvider Server...");
+      System.out.println("Type \"stop\" to shutdown ArrowheadSubscriber Server...");
       BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
       String input = "";
       try {

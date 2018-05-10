@@ -13,9 +13,11 @@ import eu.arrowhead.ArrowheadPublisher.common.TypeSafeProperties;
 import eu.arrowhead.ArrowheadPublisher.common.exception.AuthException;
 import eu.arrowhead.ArrowheadPublisher.common.model.ArrowheadSystem;
 import eu.arrowhead.ArrowheadPublisher.common.model.PublishEvent;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
@@ -85,6 +87,27 @@ public class PublisherMain {
     }
 
     publishEvent();
+
+    if (daemon) {
+      System.out.println("In daemon mode, process will terminate for TERM signal...");
+      Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+        System.out.println("Received TERM signal, shutting down...");
+        shutdown();
+      }));
+    } else {
+      System.out.println("Type \"stop\" to shutdown ArrowheadPublisher Server...");
+      BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+      String input = "";
+      try {
+        while (!input.equals("stop")) {
+          input = br.readLine();
+        }
+        br.close();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      shutdown();
+    }
   }
 
   private static void publishEvent() {
