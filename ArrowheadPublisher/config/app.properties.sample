@@ -1,3 +1,40 @@
+######################
+# MANDATORY PARAMETERS
+######################
+
+# Type of the event to publish
+event_type=temperature
+# Resource path where the EventHandler can signal back the results of the event publishing
+callback_uri=feedback
+
+# System name to use while publishing the event
+insecure_system_name=InsecureSubscriber
+secure_system_name=SecureSubscriber
+
+################################################
+# NON-MANDATORY PARAMETERS (defaults are showed)
+################################################
+
+# Webserver parameters
+address=0.0.0.0
+insecure_port=8464
+secure_port=8465
+
+# Event Handler
 eh_address=0.0.0.0
 eh_insecure_port=8454
 eh_secure_port=8455
+
+# Payload of the published event
+event_payload=21 degrees celsius
+
+#####################################################################
+# MANDATORY PARAMETERS ONLY IN SECURE MODE (invoked w/ -tls argument)
+#####################################################################
+
+# Certificate related paths and passwords
+keystore=config/certificates/testcloud1/tempsensor.testcloud1.jks #TODO do publisher cert
+keystorepass=12345
+keypass=12345
+truststore=config/certificates/testcloud1/testcloud1_cert.jks
+truststorepass=12345

@@ -10,25 +10,38 @@
 package eu.arrowhead.ArrowheadPublisher;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.arrowhead.ArrowheadPublisher.common.TypeSafeProperties;
 import eu.arrowhead.ArrowheadPublisher.common.exception.ArrowheadException;
+import eu.arrowhead.ArrowheadPublisher.common.exception.AuthException;
+import eu.arrowhead.ArrowheadPublisher.common.exception.BadPayloadException;
+import eu.arrowhead.ArrowheadPublisher.common.exception.DataNotFoundException;
+import eu.arrowhead.ArrowheadPublisher.common.exception.DnsException;
+import eu.arrowhead.ArrowheadPublisher.common.exception.DuplicateEntryException;
 import eu.arrowhead.ArrowheadPublisher.common.exception.ErrorMessage;
 import eu.arrowhead.ArrowheadPublisher.common.exception.UnavailableServerException;
 import eu.arrowhead.ArrowheadPublisher.common.json.JacksonJsonProviderAtRest;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.ServiceConfigurationError;
+import java.util.Set;
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
@@ -44,49 +57,38 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.Response.Status.Family;
 import javax.ws.rs.core.UriBuilder;
-import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 
-final class Utility {
+@SuppressWarnings("WeakerAccess")
+public final class Utility {
 
-  private static TypeSafeProperties prop;
+  private static SSLContext sslContext;
   private static final ObjectMapper mapper = JacksonJsonProviderAtRest.getMapper();
 
   private Utility() {
   }
 
-  static <T> Response sendRequest(String uri, String method, T payload) {
+  public static void setSSLContext(SSLContext context) {
+    sslContext = context;
+  }
+
+  @SuppressWarnings("UnusedReturnValue")
+  public static <T> Response sendRequest(String uri, String method, T payload) {
     ClientConfig configuration = new ClientConfig();
-    configuration.property(ClientProperties.CONNECT_TIMEOUT, 60000);
+    configuration.property(ClientProperties.CONNECT_TIMEOUT, 30000);
     configuration.property(ClientProperties.READ_TIMEOUT, 30000);
     Client client;
 
     if (uri.startsWith("https")) {
-      SslConfigurator sslConfig = SslConfigurator.newInstance().trustStoreFile(getProp().getProperty("truststore"))
-                                                 .trustStorePassword(getProp().getProperty("truststorepass"))
-                                                 .keyStoreFile(getProp().getProperty("keystore"))
-                                                 .keyStorePassword(getProp().getProperty("keystorepass"))
-                                                 .keyPassword(getProp().getProperty("keypass"));
-      SSLContext sslContext = sslConfig.createSSLContext();
-
-      X509Certificate clientCert = null;
-      try {
-        KeyStore keyStore = loadKeyStore(getProp().getProperty("keystore"), getProp().getProperty("keystorepass"));
-        clientCert = getFirstCertFromKeyStore(keyStore);
-      } catch (Exception ex) {
-        ex.printStackTrace();
-      }
-      if (clientCert != null) {
-        String clientCN = getCertCNFromSubject(clientCert.getSubjectDN().getName());
-        System.out.println("Sending request with the common name: " + clientCN + "\n");
-      }
-      // building hostname verifier to avoid exception
       HostnameVerifier allHostsValid = (hostname, session) -> {
         // Decide whether to allow the connection...
         return true;
       };
-
+      if (sslContext == null) {
+        throw new ServiceConfigurationError(
+            "SSL Context is not set, but secure request sending was invoked. An insecure module can not send requests to secure modules.");
+      }
       client = ClientBuilder.newBuilder().sslContext(sslContext).withConfig(configuration).hostnameVerifier(allHostsValid).build();
     } else {
       client = ClientBuilder.newClient(configuration);
@@ -136,34 +138,141 @@ final class Utility {
     try {
       errorMessage = response.readEntity(ErrorMessage.class);
     } catch (RuntimeException e) {
-      throw new RuntimeException("Unknown error occurred at " + uri, e);
+      throw new ArrowheadException("Unknown error occurred at " + uri, e);
     }
     if (errorMessage == null || errorMessage.getExceptionType() == null) {
       System.out.println("Request failed, response status code: " + response.getStatus());
       System.out.println("Request failed, response body: " + errorMessageBody);
-      throw new RuntimeException("Unknown error occurred at " + uri);
+      throw new ArrowheadException("Unknown error occurred at " + uri);
     } else {
-      System.out.println("Request failed, response status code: " + errorMessage.getErrorCode());
-      System.out.println("The returned error message: " + errorMessage.getErrorMessage());
-      System.out.println("Exception type: " + errorMessage.getExceptionType());
-      System.out.println("Origin of the exception:" + errorMessage.getOrigin());
-      System.exit(-1);
+      switch (errorMessage.getExceptionType()) {
+        case ARROWHEAD:
+          throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case AUTH:
+          throw new AuthException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case BAD_METHOD:
+          throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case BAD_PAYLOAD:
+          throw new BadPayloadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case BAD_URI:
+          throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case DATA_NOT_FOUND:
+          throw new DataNotFoundException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case DNSSD:
+          throw new DnsException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getOrigin());
+        case DUPLICATE_ENTRY:
+          throw new DuplicateEntryException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case GENERIC:
+          throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case JSON_PROCESSING:
+          throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+        case UNAVAILABLE:
+          throw new UnavailableServerException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+      }
     }
   }
 
-  static synchronized TypeSafeProperties getProp() {
+  public static KeyStore loadKeyStore(String filePath, String pass) {
+    File file = new File(filePath);
+
     try {
-      if (prop == null) {
-        prop = new TypeSafeProperties();
-        File file = new File("config" + File.separator + "app.properties");
-        FileInputStream inputStream = new FileInputStream(file);
-        prop.load(inputStream);
+      KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+      FileInputStream is = new FileInputStream(file);
+      keystore.load(is, pass.toCharArray());
+      is.close();
+      return keystore;
+    } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e) {
+      e.printStackTrace();
+      throw new ServiceConfigurationError("Loading the keystore failed: " + e.getMessage(), e);
+    }
+  }
+
+  public static X509Certificate getFirstCertFromKeyStore(KeyStore keystore) {
+    try {
+      Enumeration<String> enumeration = keystore.aliases();
+      String alias = enumeration.nextElement();
+      Certificate certificate = keystore.getCertificate(alias);
+      return (X509Certificate) certificate;
+    } catch (KeyStoreException | NoSuchElementException e) {
+      e.printStackTrace();
+      throw new ServiceConfigurationError("Getting the first cert from keystore failed: " + e.getMessage(), e);
+    }
+  }
+
+  public static String getCertCNFromSubject(String subjectname) {
+    String cn = null;
+    try {
+      // Subject is in LDAP format, we can use the LdapName object for parsing
+      LdapName ldapname = new LdapName(subjectname);
+      for (Rdn rdn : ldapname.getRdns()) {
+        // Find the data after the CN field
+        if (rdn.getType().equalsIgnoreCase("CN")) {
+          cn = (String) rdn.getValue();
+        }
       }
-    } catch (Exception ex) {
-      ex.printStackTrace();
+    } catch (InvalidNameException e) {
+      System.out.println("Exception in getCertCN: " + e.toString());
+      return "";
     }
 
-    return prop;
+    if (cn == null) {
+      return "";
+    }
+
+    return cn;
+  }
+
+  public static PrivateKey getPrivateKey(KeyStore keystore, String pass) {
+    PrivateKey privatekey = null;
+    String element;
+    try {
+      Enumeration<String> enumeration = keystore.aliases();
+      while (enumeration.hasMoreElements()) {
+        element = enumeration.nextElement();
+        privatekey = (PrivateKey) keystore.getKey(element, pass.toCharArray());
+        if (privatekey != null) {
+          break;
+        }
+      }
+    } catch (KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException e) {
+      e.printStackTrace();
+      throw new ServiceConfigurationError("Getting the private key from keystore failed...", e);
+    }
+
+    if (privatekey == null) {
+      throw new ServiceConfigurationError("Getting the private key failed, keystore aliases do not identify a key.");
+    }
+    return privatekey;
+  }
+
+  public static boolean isCommonNameArrowheadValid(String commonName) {
+    String[] cnFields = commonName.split("\\.", 0);
+    return cnFields.length == 5 && cnFields[3].equals("arrowhead") && cnFields[4].equals("eu");
+  }
+
+  public static KeyStore createKeyStoreFromCert(String filePath) {
+    try {
+      InputStream is = new FileInputStream(filePath);
+      CertificateFactory cf = CertificateFactory.getInstance("X.509");
+      X509Certificate cert = (X509Certificate) cf.generateCertificate(is);
+      String alias = getCertCNFromSubject(cert.getSubjectDN().getName());
+      System.out.println("alias: " + alias);
+
+      KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+      keystore.load(null); // We don't need the KeyStore instance to come from a file.
+      keystore.setCertificateEntry(alias, cert);
+      return keystore;
+    } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e) {
+      e.printStackTrace();
+      throw new ServiceConfigurationError("Keystore creation from cert failed...", e);
+    }
+  }
+
+  public static String stripEndSlash(String uri) {
+    if (uri != null && uri.endsWith("/")) {
+      return uri.substring(0, uri.length() - 1);
+    }
+    return uri;
   }
 
   public static String toPrettyJson(String jsonString, Object obj) {
@@ -186,6 +295,14 @@ final class Utility {
           "Jackson library threw IOException during JSON serialization! Wrapping it in RuntimeException. Exception message: " + e.getMessage(), e);
     }
     return null;
+  }
+
+  public static <T> T fromJson(String json, Class<T> parsedClass) {
+    try {
+      return mapper.readValue(json, parsedClass);
+    } catch (IOException e) {
+      throw new ArrowheadException("Jackson library threw exception during JSON parsing!", e);
+    }
   }
 
   public static String getUri(String address, int port, String serviceUri, boolean isSecure) {
@@ -216,55 +333,40 @@ final class Utility {
     return url;
   }
 
-  // Below this comment are non-essential methods for acquiring the common name from the client certificate
-  private static KeyStore loadKeyStore(String filePath, String pass) {
-    File file = new File(filePath);
+  public static void checkProperties(Set<String> propertyNames, List<String> mandatoryProperties) {
+    if (mandatoryProperties == null || mandatoryProperties.isEmpty()) {
+      return;
+    }
+    //Arrays.asList() returns immutable lists, so we have to copy it first
+    List<String> properties = new ArrayList<>(mandatoryProperties);
+    if (!propertyNames.containsAll(mandatoryProperties)) {
+      properties.removeIf(propertyNames::contains);
+      throw new ServiceConfigurationError("Missing field(s) from app.properties file: " + properties.toString());
+    }
+  }
 
+  public static String loadJsonFromFile(String pathName) {
+    StringBuilder sb;
     try {
-      KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+      File file = new File(pathName);
       FileInputStream is = new FileInputStream(file);
-      keystore.load(is, pass.toCharArray());
-      is.close();
-      return keystore;
-    } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e) {
-      e.printStackTrace();
-      throw new ServiceConfigurationError("Loading the keystore failed: " + e.getMessage(), e);
-    }
-  }
 
-  private static X509Certificate getFirstCertFromKeyStore(KeyStore keystore) {
-    try {
-      Enumeration<String> enumeration = keystore.aliases();
-      String alias = enumeration.nextElement();
-      Certificate certificate = keystore.getCertificate(alias);
-      return (X509Certificate) certificate;
-    } catch (KeyStoreException | NoSuchElementException e) {
-      e.printStackTrace();
-      throw new ServiceConfigurationError("Getting the first cert from keystore failed: " + e.getMessage(), e);
-    }
-  }
-
-  private static String getCertCNFromSubject(String subjectname) {
-    String cn = null;
-    try {
-      // Subject is in LDAP format, we can use the LdapName object for parsing
-      LdapName ldapname = new LdapName(subjectname);
-      for (Rdn rdn : ldapname.getRdns()) {
-        // Find the data after the CN field
-        if (rdn.getType().equalsIgnoreCase("CN")) {
-          cn = (String) rdn.getValue();
-        }
+      BufferedReader br = new BufferedReader(new InputStreamReader(is, "utf-8"));
+      sb = new StringBuilder();
+      String line;
+      while ((line = br.readLine()) != null) {
+        sb.append(line).append("\n");
       }
-    } catch (InvalidNameException e) {
-      System.out.println("InvalidNameException in getCertCNFromSubject: " + e.getMessage());
-      return "";
+      br.close();
+    } catch (IOException e) {
+      throw new RuntimeException(e.getClass().toString() + ": " + e.getMessage(), e);
     }
 
-    if (cn == null) {
-      return "";
+    if (!sb.toString().isEmpty()) {
+      return sb.toString();
+    } else {
+      return null;
     }
-
-    return cn;
   }
 
 }

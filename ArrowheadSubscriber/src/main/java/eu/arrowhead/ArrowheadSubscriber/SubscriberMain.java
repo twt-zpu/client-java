@@ -26,8 +26,10 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ServiceConfigurationError;
+import java.util.Set;
 import javax.net.ssl.SSLContext;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.UriBuilder;
@@ -42,22 +44,24 @@ public class SubscriberMain {
   public static boolean DEBUG_MODE;
 
   private static boolean IS_SECURE;
+  private static Set<String> EVENT_TYPES = new HashSet<>();
+  private static String CONSUMER_NAME;
   private static String BASE_URI;
   private static String EH_BASE_URI;
   private static HttpServer server;
   private static String PROVIDER_PUBLIC_KEY;
-  private static TypeSafeProperties prop;
+  private static TypeSafeProperties prop = getProp();
 
   public static void main(String[] args) {
     System.out.println("Working directory: " + System.getProperty("user.dir"));
 
-    String address = getProp().getProperty("address", "0.0.0.0");
-    int insecurePort = getProp().getIntProperty("insecure_port", 8462);
-    int securePort = getProp().getIntProperty("secure_port", 8463);
+    String address = prop.getProperty("address", "0.0.0.0");
+    int insecurePort = prop.getIntProperty("insecure_port", 8462);
+    int securePort = prop.getIntProperty("secure_port", 8463);
 
-    String ehAddress = getProp().getProperty("eh_address", "0.0.0.0");
-    int ehInsecurePort = getProp().getIntProperty("eh_insecure_port", 8454);
-    int ehSecurePort = getProp().getIntProperty("eh_secure_port", 8455);
+    String ehAddress = prop.getProperty("eh_address", "0.0.0.0");
+    int ehInsecurePort = prop.getIntProperty("eh_insecure_port", 8454);
+    int ehSecurePort = prop.getIntProperty("eh_secure_port", 8455);
 
     boolean daemon = false;
     for (String arg : args) {
@@ -73,7 +77,7 @@ public class SubscriberMain {
         case "-tls":
           List<String> secureMandatoryProperties = new ArrayList<>(
               Arrays.asList("keystore", "keystorepass", "keypass", "truststore", "truststorepass"));
-          Utility.checkProperties(getProp().stringPropertyNames(), secureMandatoryProperties);
+          Utility.checkProperties(prop.stringPropertyNames(), secureMandatoryProperties);
           BASE_URI = Utility.getUri(address, securePort, null, true);
           EH_BASE_URI = Utility.getUri(ehAddress, ehSecurePort, "eventhandler/subscription", true);
           server = startSecureServer();
@@ -87,6 +91,12 @@ public class SubscriberMain {
       server = startServer();
     }
 
+    String typeList = prop.getProperty("event_types");
+    if (typeList != null && !typeList.isEmpty()) {
+      EVENT_TYPES.addAll(Arrays.asList(typeList.replaceAll("\\s+", "").split(",")));
+    }
+    CONSUMER_NAME = IS_SECURE ? prop.getProperty("secure_system_name") : prop.getProperty("insecure_system_name");
+    //Subscribe to all the event types in the EVENT_TYPES Set
     subscribe();
 
     if (daemon) {
@@ -136,11 +146,11 @@ public class SubscriberMain {
     config.registerClasses(SubscriberResource.class);
     config.packages("eu.arrowhead.ArrowheadSubscriber.common");
 
-    String keystorePath = getProp().getProperty("keystore");
-    String keystorePass = getProp().getProperty("keystorepass");
-    String keyPass = getProp().getProperty("keypass");
-    String truststorePath = getProp().getProperty("truststore");
-    String truststorePass = getProp().getProperty("truststorepass");
+    String keystorePath = prop.getProperty("keystore");
+    String keystorePass = prop.getProperty("keystorepass");
+    String keyPass = prop.getProperty("keypass");
+    String truststorePath = prop.getProperty("truststore");
+    String truststorePass = prop.getProperty("truststorepass");
 
     SSLContextConfigurator sslCon = new SSLContextConfigurator();
     sslCon.setKeyStoreFile(keystorePath);
@@ -183,7 +193,7 @@ public class SubscriberMain {
     if (server != null) {
       server.shutdownNow();
     }
-    System.out.println("Temperature Provider Server stopped.");
+    System.out.println("Arrowhead Subscriber Server stopped.");
     System.exit(0);
   }
 
@@ -196,18 +206,22 @@ public class SubscriberMain {
       throw new AssertionError("Parsing the BASE_URI resulted in an error.", e);
     }
 
-    ArrowheadSystem consumer = new ArrowheadSystem(null, baseUri.getHost(), baseUri.getPort(), PROVIDER_PUBLIC_KEY);
-    consumer.setSystemName(IS_SECURE ? "SecureSubscriber" : "InsecureSubscriber");
+    ArrowheadSystem consumer = new ArrowheadSystem(CONSUMER_NAME, baseUri.getHost(), baseUri.getPort(), PROVIDER_PUBLIC_KEY);
 
-    EventFilter filter = new EventFilter("test", consumer, "notify");
-    Utility.sendRequest(EH_BASE_URI, "POST", filter);
-    System.out.println("Subscribed to \"test\" event types.");
+    String notifyPath = prop.getProperty("notify_uri");
+    for (String eventType : EVENT_TYPES) {
+      EventFilter filter = new EventFilter(eventType, consumer, notifyPath);
+      Utility.sendRequest(EH_BASE_URI, "POST", filter);
+      System.out.println("Subscribed to " + eventType + " event types.");
+    }
   }
 
   private static void unsubscribe() {
-    String url = UriBuilder.fromPath(EH_BASE_URI).path("type").path("test").path("consumer").path("InsecureSubscriber").toString();
-    Utility.sendRequest(url, "DELETE", null);
-    System.out.println("Unsubscribed from \"test\" event types.");
+    for (String eventType : EVENT_TYPES) {
+      String url = UriBuilder.fromPath(EH_BASE_URI).path("type").path(eventType).path("consumer").path(CONSUMER_NAME).toString();
+      Utility.sendRequest(url, "DELETE", null);
+      System.out.println("Unsubscribed from " + eventType + " event types.");
+    }
   }
 
   private static synchronized TypeSafeProperties getProp() {
