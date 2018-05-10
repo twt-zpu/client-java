@@ -7,40 +7,27 @@
  *  national funding authorities from involved countries.
  */
 
-package eu.arrowhead.ArrowheadSubscriber.common.model;
+package eu.arrowhead.ArrowheadPublisher.common.model;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PublishEvent {
+public class Event {
 
-  private ArrowheadSystem source;
   private String type;
   private String payload;
   private LocalDateTime timestamp;
   private Map<String, String> eventMetadata = new HashMap<>();
-  private String deliveryCompleteUri;
 
-  public PublishEvent() {
+  public Event() {
   }
 
-  public PublishEvent(ArrowheadSystem source, String type, String payload, LocalDateTime timestamp, Map<String, String> eventMetadata,
-                      String deliveryCompleteUri) {
-    this.source = source;
+  public Event(String type, String payload, LocalDateTime timestamp, Map<String, String> eventMetadata) {
     this.type = type;
     this.payload = payload;
     this.timestamp = timestamp;
     this.eventMetadata = eventMetadata;
-    this.deliveryCompleteUri = deliveryCompleteUri;
-  }
-
-  public ArrowheadSystem getSource() {
-    return source;
-  }
-
-  public void setSource(ArrowheadSystem source) {
-    this.source = source;
   }
 
   public String getType() {
@@ -73,27 +60,6 @@ public class PublishEvent {
 
   public void setEventMetadata(Map<String, String> eventMetadata) {
     this.eventMetadata = eventMetadata;
-  }
-
-  public String getDeliveryCompleteUri() {
-    return deliveryCompleteUri;
-  }
-
-  public void setDeliveryCompleteUri(String deliveryCompleteUri) {
-    this.deliveryCompleteUri = deliveryCompleteUri;
-  }
-
-  @Override
-  public String toString() {
-    final StringBuffer sb = new StringBuffer("PublishEvent{");
-    sb.append("source=").append(source);
-    sb.append(", type='").append(type).append('\'');
-    sb.append(", payload='").append(payload).append('\'');
-    sb.append(", timestamp=").append(timestamp);
-    sb.append(", eventMetadata=").append(eventMetadata);
-    sb.append(", deliveryCompleteUri='").append(deliveryCompleteUri).append('\'');
-    sb.append('}');
-    return sb.toString();
   }
 
 }

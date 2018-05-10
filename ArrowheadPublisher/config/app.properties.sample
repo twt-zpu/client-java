@@ -4,8 +4,6 @@
 
 # Type of the event to publish
 event_type=temperature
-# Resource path where the EventHandler can signal back the results of the event publishing
-callback_uri=feedback
 
 # System name to use while publishing the event
 insecure_system_name=InsecureSubscriber

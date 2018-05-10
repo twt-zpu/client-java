@@ -9,29 +9,18 @@
 
 package eu.arrowhead.ArrowheadPublisher.common.model;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-
 public class PublishEvent {
 
   private ArrowheadSystem source;
-  private String type;
-  private String payload;
-  private LocalDateTime timestamp;
-  private Map<String, String> eventMetadata = new HashMap<>();
+  private Event event;
   private String deliveryCompleteUri;
 
   public PublishEvent() {
   }
 
-  public PublishEvent(ArrowheadSystem source, String type, String payload, LocalDateTime timestamp, Map<String, String> eventMetadata,
-                      String deliveryCompleteUri) {
+  public PublishEvent(ArrowheadSystem source, Event event, String deliveryCompleteUri) {
     this.source = source;
-    this.type = type;
-    this.payload = payload;
-    this.timestamp = timestamp;
-    this.eventMetadata = eventMetadata;
+    this.event = event;
     this.deliveryCompleteUri = deliveryCompleteUri;
   }
 
@@ -43,36 +32,12 @@ public class PublishEvent {
     this.source = source;
   }
 
-  public String getType() {
-    return type;
+  public Event getEvent() {
+    return event;
   }
 
-  public void setType(String type) {
-    this.type = type;
-  }
-
-  public String getPayload() {
-    return payload;
-  }
-
-  public void setPayload(String payload) {
-    this.payload = payload;
-  }
-
-  public LocalDateTime getTimestamp() {
-    return timestamp;
-  }
-
-  public void setTimestamp(LocalDateTime timestamp) {
-    this.timestamp = timestamp;
-  }
-
-  public Map<String, String> getEventMetadata() {
-    return eventMetadata;
-  }
-
-  public void setEventMetadata(Map<String, String> eventMetadata) {
-    this.eventMetadata = eventMetadata;
+  public void setEvent(Event event) {
+    this.event = event;
   }
 
   public String getDeliveryCompleteUri() {
@@ -81,19 +46,6 @@ public class PublishEvent {
 
   public void setDeliveryCompleteUri(String deliveryCompleteUri) {
     this.deliveryCompleteUri = deliveryCompleteUri;
-  }
-
-  @Override
-  public String toString() {
-    final StringBuffer sb = new StringBuffer("PublishEvent{");
-    sb.append("source=").append(source);
-    sb.append(", type='").append(type).append('\'');
-    sb.append(", payload='").append(payload).append('\'');
-    sb.append(", timestamp=").append(timestamp);
-    sb.append(", eventMetadata=").append(eventMetadata);
-    sb.append(", deliveryCompleteUri='").append(deliveryCompleteUri).append('\'');
-    sb.append('}');
-    return sb.toString();
   }
 
 }

@@ -12,6 +12,7 @@ package eu.arrowhead.ArrowheadPublisher;
 import eu.arrowhead.ArrowheadPublisher.common.TypeSafeProperties;
 import eu.arrowhead.ArrowheadPublisher.common.exception.AuthException;
 import eu.arrowhead.ArrowheadPublisher.common.model.ArrowheadSystem;
+import eu.arrowhead.ArrowheadPublisher.common.model.Event;
 import eu.arrowhead.ArrowheadPublisher.common.model.PublishEvent;
 import java.io.BufferedReader;
 import java.io.File;
@@ -118,11 +119,11 @@ public class PublisherMain {
     int usedPort = IS_SECURE ? securePort : insecurePort;
     String type = prop.getProperty("event_type");
     String payload = prop.getProperty("event_payload");
-    String callbackUri = prop.getProperty("callback_uri");
 
     ArrowheadSystem source = new ArrowheadSystem(systemName, address, usedPort, PROVIDER_PUBLIC_KEY);
-    PublishEvent event = new PublishEvent(source, type, payload, LocalDateTime.now(), null, callbackUri);
-    Utility.sendRequest(EH_BASE_URI, "POST", event);
+    Event event = new Event(type, payload, LocalDateTime.now(), null);
+    PublishEvent eventPublishing = new PublishEvent(source, event, "publisher/feedback");
+    Utility.sendRequest(EH_BASE_URI, "POST", eventPublishing);
     System.out.println("Event published to EH.");
   }
 

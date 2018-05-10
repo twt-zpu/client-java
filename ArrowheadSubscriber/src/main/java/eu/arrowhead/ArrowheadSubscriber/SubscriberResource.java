@@ -9,7 +9,7 @@
 
 package eu.arrowhead.ArrowheadSubscriber;
 
-import eu.arrowhead.ArrowheadSubscriber.common.model.PublishEvent;
+import eu.arrowhead.ArrowheadSubscriber.common.model.Event;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -29,7 +29,7 @@ public class SubscriberResource {
   }
 
   @POST
-  public Response receiveEvent(PublishEvent event) {
+  public Response receiveEvent(Event event) {
     System.out.println("New event received:");
     System.out.println(event.toString());
     return Response.ok().build();
