@@ -11,6 +11,7 @@ package eu.arrowhead.client.common.exception;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 import org.glassfish.jersey.server.ContainerRequest;
@@ -27,13 +28,35 @@ public class ArrowheadExceptionMapper implements ExceptionMapper<ArrowheadExcept
   @Override
   public Response toResponse(ArrowheadException ex) {
     ex.printStackTrace();
+    String origin =
+        ex.getOrigin() != null ? ex.getOrigin() : (requestContext.get() != null ? requestContext.get().getAbsolutePath().toString() : "unknown");
     int errorCode = (ex.getErrorCode() == 0 && responseContext.get() != null) ? responseContext.get().getStatus() : ex.getErrorCode();
-    String origin = (ex.getOrigin() == null && requestContext.get() != null) ? requestContext.get().getAbsolutePath().toString() : ex.getOrigin();
+    if (errorCode == 0) {
+      switch (ex.getExceptionType()) {
+        case AUTH:
+          errorCode = Status.UNAUTHORIZED.getStatusCode();
+          break;
+        case BAD_PAYLOAD:
+          errorCode = Status.BAD_REQUEST.getStatusCode();
+          break;
+        case DATA_NOT_FOUND:
+          errorCode = Status.NOT_FOUND.getStatusCode();
+          break;
+        case DUPLICATE_ENTRY:
+          errorCode = Status.BAD_REQUEST.getStatusCode();
+          break;
+        case JSON_PROCESSING:
+          errorCode = Status.BAD_REQUEST.getStatusCode();
+          break;
+        case UNAVAILABLE:
+          errorCode = Status.GATEWAY_TIMEOUT.getStatusCode();
+          break;
+        default:
+          errorCode = Status.INTERNAL_SERVER_ERROR.getStatusCode();
+      }
+    }
 
     ErrorMessage errorMessage = new ErrorMessage(ex.getMessage(), errorCode, ex.getExceptionType(), origin);
-    if (errorCode < 100 | errorCode > 599) {
-      errorCode = 500;
-    }
     return Response.status(errorCode).entity(errorMessage).header("Content-type", "application/json").build();
   }
 

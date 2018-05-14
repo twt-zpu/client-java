@@ -9,11 +9,20 @@
 
 package eu.arrowhead.client.common.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import eu.arrowhead.client.common.exception.BadPayloadException;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
-public class OrchestrationStore implements Comparable<OrchestrationStore> {
+@JsonIgnoreProperties({"alwaysMandatoryFields"})
+public class OrchestrationStore extends ArrowheadBase implements Comparable<OrchestrationStore> {
+
+  private static final Set<String> alwaysMandatoryFields = new HashSet<>(
+      Arrays.asList("service", "consumer", "providerSystem", "priority", "defaultEntry"));
 
   private ArrowheadService service;
   private ArrowheadSystem consumer;
@@ -25,23 +34,32 @@ public class OrchestrationStore implements Comparable<OrchestrationStore> {
   private LocalDateTime lastUpdated;
   private String instruction;
   private Map<String, String> attributes = new HashMap<>();
+  private String serviceURI;
 
   public OrchestrationStore() {
   }
 
   public OrchestrationStore(ArrowheadService service, ArrowheadSystem consumer, ArrowheadSystem providerSystem, ArrowheadCloud providerCloud,
-                            int priority, boolean defaultEntry) {
+                            int priority) {
     this.service = service;
     this.consumer = consumer;
     this.providerSystem = providerSystem;
     this.providerCloud = providerCloud;
+    this.priority = priority;
+  }
+
+  public OrchestrationStore(ArrowheadService service, ArrowheadSystem consumer, ArrowheadSystem providerSystem, Integer priority,
+                            boolean defaultEntry) {
+    this.service = service;
+    this.consumer = consumer;
+    this.providerSystem = providerSystem;
     this.priority = priority;
     this.defaultEntry = defaultEntry;
   }
 
   public OrchestrationStore(ArrowheadService service, ArrowheadSystem consumer, ArrowheadSystem providerSystem, ArrowheadCloud providerCloud,
                             Integer priority, boolean defaultEntry, String name, LocalDateTime lastUpdated, String instruction,
-                            Map<String, String> attributes) {
+                            Map<String, String> attributes, String serviceURI) {
     this.service = service;
     this.consumer = consumer;
     this.providerSystem = providerSystem;
@@ -52,6 +70,7 @@ public class OrchestrationStore implements Comparable<OrchestrationStore> {
     this.lastUpdated = lastUpdated;
     this.instruction = instruction;
     this.attributes = attributes;
+    this.serviceURI = serviceURI;
   }
 
   public ArrowheadService getService() {
@@ -132,6 +151,55 @@ public class OrchestrationStore implements Comparable<OrchestrationStore> {
 
   public void setAttributes(Map<String, String> attributes) {
     this.attributes = attributes;
+  }
+
+  public String getServiceURI() {
+    return serviceURI;
+  }
+
+  public void setServiceURI(String serviceURI) {
+    this.serviceURI = serviceURI;
+  }
+
+  public Set<String> missingFields(boolean throwException, Set<String> mandatoryFields) {
+    Set<String> mf = new HashSet<>(alwaysMandatoryFields);
+    if (mandatoryFields != null) {
+      mf.addAll(mandatoryFields);
+    }
+    Set<String> nonNullFields = getFieldNamesWithNonNullValue();
+    mf.removeAll(nonNullFields);
+    if (service != null) {
+      mf = service.missingFields(false, false, mf);
+    }
+
+    Set<String> fromConsumer = new HashSet<>();
+    Set<String> fromProvider = new HashSet<>();
+    if (consumer != null) {
+      fromConsumer = consumer.missingFields(false, mf);
+    }
+    if (providerSystem != null) {
+      fromProvider = providerSystem.missingFields(false, mf);
+    }
+    mf = new HashSet<>(fromConsumer);
+    mf.addAll(fromProvider);
+
+    if (priority < 0) {
+      mf.add("Priority can not be negative!");
+    }
+
+    if (providerCloud != null) {
+      if (defaultEntry) {
+        mf.add("Default store entries can only have intra-cloud providers!");
+      } else {
+        Set<String> fromCloud = providerCloud.missingFields(false, new HashSet<>(Arrays.asList("ArrowheadCloud:address", "gatekeeperServiceURI")));
+        mf.addAll(fromCloud);
+      }
+    }
+
+    if (throwException && !mf.isEmpty()) {
+      throw new BadPayloadException("Missing mandatory fields for " + getClass().getSimpleName() + ": " + String.join(", ", mf));
+    }
+    return mf;
   }
 
   /**

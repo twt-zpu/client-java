@@ -9,10 +9,18 @@
 
 package eu.arrowhead.client.common.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import eu.arrowhead.client.common.exception.BadPayloadException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-public class IntraCloudAuthEntry {
+@JsonIgnoreProperties({"alwaysMandatoryFields"})
+public class IntraCloudAuthEntry extends ArrowheadBase {
+
+  private static final Set<String> alwaysMandatoryFields = new HashSet<>(Arrays.asList("serviceList", "consumer", "providerList"));
 
   private ArrowheadSystem consumer;
   private List<ArrowheadSystem> providerList = new ArrayList<>();
@@ -49,6 +57,38 @@ public class IntraCloudAuthEntry {
 
   public void setServiceList(List<ArrowheadService> serviceList) {
     this.serviceList = serviceList;
+  }
+
+  public Set<String> missingFields(boolean throwException, Set<String> mandatoryFields) {
+    Set<String> mf = new HashSet<>(alwaysMandatoryFields);
+    if (mandatoryFields != null) {
+      mf.addAll(mandatoryFields);
+    }
+    Set<String> nonNullFields = getFieldNamesWithNonNullValue();
+    mf.removeAll(nonNullFields);
+
+    if (consumer != null) {
+      mf = consumer.missingFields(false, mf);
+    }
+
+    for (ArrowheadSystem provider : providerList) {
+      Set<String> fields = provider.missingFields(false, null);
+      if (!fields.isEmpty()) {
+        mf.add("Provider is missing mandatory field(s): " + String.join(", ", fields));
+      }
+    }
+
+    for (ArrowheadService service : serviceList) {
+      Set<String> fields = service.missingFields(false, false, null);
+      if (!fields.isEmpty()) {
+        mf.add("Service is missing mandatory field(s): " + String.join(", ", fields));
+      }
+    }
+
+    if (throwException && !mf.isEmpty()) {
+      throw new BadPayloadException("Missing mandatory fields for " + getClass().getSimpleName() + ": " + String.join(", ", mf));
+    }
+    return mf;
   }
 
 }

@@ -46,4 +46,5 @@ public class RawTokenInfo {
   public String toString() {
     return "ClassPojo [s = " + s + ", c = " + c + ", e = " + e + "]";
   }
+
 }

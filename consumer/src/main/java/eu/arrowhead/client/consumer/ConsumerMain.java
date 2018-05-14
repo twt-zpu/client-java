@@ -9,12 +9,14 @@
 
 package eu.arrowhead.client.consumer;
 
-import eu.arrowhead.client.consumer.exception.ArrowheadException;
-import eu.arrowhead.client.consumer.model.ArrowheadService;
-import eu.arrowhead.client.consumer.model.ArrowheadSystem;
-import eu.arrowhead.client.consumer.model.OrchestrationResponse;
-import eu.arrowhead.client.consumer.model.ServiceRequestForm;
-import eu.arrowhead.client.consumer.model.TemperatureReadout;
+import eu.arrowhead.client.common.Utility;
+import eu.arrowhead.client.common.exception.ArrowheadException;
+import eu.arrowhead.client.common.misc.TypeSafeProperties;
+import eu.arrowhead.client.common.model.ArrowheadService;
+import eu.arrowhead.client.common.model.ArrowheadSystem;
+import eu.arrowhead.client.common.model.OrchestrationResponse;
+import eu.arrowhead.client.common.model.ServiceRequestForm;
+import eu.arrowhead.client.common.model.TemperatureReadout;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,25 +26,27 @@ import javax.ws.rs.core.UriBuilder;
 public class ConsumerMain {
 
   private static boolean isSecure;
+  private static final TypeSafeProperties props = Utility.getProp("app.properties");
 
   public static void main(String[] args) {
     System.out.println("Working directory: " + System.getProperty("user.dir"));
 
-    String orchAddress = Utility.getProp().getProperty("orch_address", "0.0.0.0");
-    int orchInsecurePort = Utility.getProp().getIntProperty("orch_insecure_port", 8440);
-    int orchSecurePort = Utility.getProp().getIntProperty("orch_secure_port", 8441);
+    String orchAddress = props.getProperty("orch_address", "0.0.0.0");
+    int orchInsecurePort = props.getIntProperty("orch_insecure_port", 8440);
+    int orchSecurePort = props.getIntProperty("orch_secure_port", 8441);
 
     for (String arg : args) {
       if (arg.equals("-tls")) {
         isSecure = true;
+        break;
       }
     }
 
     String ORCH_URI;
     if (isSecure) {
-      ORCH_URI = Utility.getUri(orchAddress, orchSecurePort, "orchestrator/orchestration", true);
+      ORCH_URI = Utility.getUri(orchAddress, orchSecurePort, "orchestrator/orchestration", true, false);
     } else {
-      ORCH_URI = Utility.getUri(orchAddress, orchInsecurePort, "orchestrator/orchestration", false);
+      ORCH_URI = Utility.getUri(orchAddress, orchInsecurePort, "orchestrator/orchestration", false, false);
     }
 
     long startTime = System.currentTimeMillis();

@@ -9,18 +9,26 @@
 
 package eu.arrowhead.client.common.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import eu.arrowhead.client.common.exception.BadPayloadException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-/**
- * Entity class for storing Arrowhead Services in the database. The "service_definition" column must be unique.
- */
-public class ArrowheadService {
+@JsonIgnoreProperties({"alwaysMandatoryFields"})
+public class ArrowheadService extends ArrowheadBase {
+
+  private static final Set<String> alwaysMandatoryFields = new HashSet<>(Collections.singleton("serviceDefinition"));
 
   private String serviceDefinition;
   private List<String> interfaces = new ArrayList<>();
+  @JsonInclude(Include.NON_EMPTY)
   private Map<String, String> serviceMetadata = new HashMap<>();
 
   public ArrowheadService() {
@@ -61,23 +69,27 @@ public class ArrowheadService {
     this.serviceMetadata = metaData;
   }
 
-  public boolean isValid() {
-    return (serviceDefinition != null && !interfaces.isEmpty());
-  }
+  public Set<String> missingFields(boolean throwException, boolean forDNSSD, Set<String> mandatoryFields) {
+    Set<String> mf = new HashSet<>(alwaysMandatoryFields);
+    if (mandatoryFields != null) {
+      mf.addAll(mandatoryFields);
+    }
+    Set<String> nonNullFields = getFieldNamesWithNonNullValue();
+    mf.removeAll(nonNullFields);
 
-  public boolean isValidForDatabase() {
-    return serviceDefinition != null;
-  }
-
-  public boolean isValidForDNSSD() {
-    boolean areInterfacesClean = true;
-    for (String interf : interfaces) {
-      if (interf.contains("_")) {
-        areInterfacesClean = false;
+    if (forDNSSD) {
+      for (String interf : interfaces) {
+        if (interf.contains("_")) {
+          mf.add("Interfaces Can't Have Underscores!");
+        }
       }
     }
 
-    return (serviceDefinition != null && !interfaces.isEmpty() && !serviceDefinition.contains("_") && areInterfacesClean);
+    if (throwException && !mf.isEmpty()) {
+      throw new BadPayloadException("Missing mandatory fields for " + getClass().getSimpleName() + ": " + String.join(", ", mf));
+    }
+
+    return mf;
   }
 
   @Override

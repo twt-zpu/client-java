@@ -15,8 +15,8 @@ secure_system_name=SecureSubscriber
 
 # Webserver parameters
 address=0.0.0.0
-insecure_port=8464
-secure_port=8465
+insecure_port=8462
+secure_port=8463
 
 # Event Handler
 eh_address=0.0.0.0

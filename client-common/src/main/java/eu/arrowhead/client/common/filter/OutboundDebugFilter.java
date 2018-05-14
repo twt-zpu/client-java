@@ -9,8 +9,7 @@
 
 package eu.arrowhead.client.common.filter;
 
-import eu.arrowhead.ArrowheadProvider.ProviderMain;
-import eu.arrowhead.ArrowheadProvider.Utility;
+import eu.arrowhead.client.common.Utility;
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -24,7 +23,7 @@ public class OutboundDebugFilter implements ContainerResponseFilter {
 
   @Override
   public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
-    if (ProviderMain.DEBUG_MODE) {
+    if (Boolean.valueOf(System.getProperty("debug_mode", "false"))) {
       if (responseContext.getEntity() != null) {
         System.out.println("Response to the request at: " + requestContext.getUriInfo().getRequestUri().toString());
         System.out.println(Utility.toPrettyJson(null, responseContext.getEntity()));

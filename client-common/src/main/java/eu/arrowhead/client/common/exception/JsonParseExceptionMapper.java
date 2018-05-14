@@ -9,7 +9,7 @@
 
 package eu.arrowhead.client.common.exception;
 
-import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.core.JsonParseException;
 import javax.annotation.Priority;
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
@@ -21,7 +21,7 @@ import org.glassfish.jersey.server.ContainerResponse;
 
 @Provider
 @Priority(1) //This is needed in order to give this Mapper higher priority over Jackson's own implementation
-public class JsonMappingExceptionMapper implements ExceptionMapper<JsonMappingException> {
+public class JsonParseExceptionMapper implements ExceptionMapper<JsonParseException> {
 
   @Inject
   private javax.inject.Provider<ContainerRequest> requestContext;
@@ -29,7 +29,7 @@ public class JsonMappingExceptionMapper implements ExceptionMapper<JsonMappingEx
   private javax.inject.Provider<ContainerResponse> responseContext;
 
   @Override
-  public Response toResponse(JsonMappingException ex) {
+  public Response toResponse(JsonParseException ex) {
     ex.printStackTrace();
     int errorCode = 404; //Bad Request
     String origin = requestContext.get() != null ? requestContext.get().getAbsolutePath().toString() : "unknown";
@@ -37,8 +37,9 @@ public class JsonMappingExceptionMapper implements ExceptionMapper<JsonMappingEx
       errorCode = responseContext.get().getStatus();
     }
 
-    ErrorMessage errorMessage = new ErrorMessage("JsonMappingException: " + ex.getMessage(), errorCode, ExceptionType.JSON_PROCESSING, origin);
+    ErrorMessage errorMessage = new ErrorMessage("JsonParseException: " + ex.getMessage(), errorCode, ExceptionType.JSON_PROCESSING, origin);
     return Response.status(errorCode).entity(errorMessage).header("Content-type", "application/json").build();
   }
 
 }
+

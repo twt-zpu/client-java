@@ -9,14 +9,10 @@
 
 package eu.arrowhead.client.common.filter;
 
-import eu.arrowhead.ArrowheadProvider.ProviderMain;
-import eu.arrowhead.ArrowheadProvider.Utility;
-import java.io.BufferedReader;
+import eu.arrowhead.client.common.Utility;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Objects;
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -29,22 +25,13 @@ public class InboundDebugFilter implements ContainerRequestFilter {
 
   @Override
   public void filter(ContainerRequestContext requestContext) throws IOException {
-    if (ProviderMain.DEBUG_MODE) {
+    if (Boolean.valueOf(System.getProperty("debug_mode", "false"))) {
       System.out.println("New " + requestContext.getMethod() + " request at: " + requestContext.getUriInfo().getRequestUri().toString());
-      BufferedReader br = new BufferedReader(new InputStreamReader(requestContext.getEntityStream(), "utf-8"));
-      StringBuilder sb = new StringBuilder();
-      String line;
-      while ((line = br.readLine()) != null) {
-        sb.append(line).append("\n");
-      }
-      br.close();
+      String prettyJson = Utility.getRequestPayload(requestContext.getEntityStream());
+      System.out.println(prettyJson);
 
-      if (!sb.toString().isEmpty()) {
-        String prettyJson = Utility.toPrettyJson(sb.toString(), null);
-        System.out.println(prettyJson);
-        InputStream in = new ByteArrayInputStream(Objects.requireNonNull(prettyJson).getBytes("UTF-8"));
-        requestContext.setEntityStream(in);
-      }
+      InputStream in = new ByteArrayInputStream(prettyJson.getBytes("UTF-8"));
+      requestContext.setEntityStream(in);
     }
   }
 }

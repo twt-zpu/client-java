@@ -9,7 +9,16 @@
 
 package eu.arrowhead.client.common.model;
 
-public class ArrowheadCloud {
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import eu.arrowhead.client.common.exception.BadPayloadException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+@JsonIgnoreProperties({"alwaysMandatoryFields"})
+public class ArrowheadCloud extends ArrowheadBase {
+
+  private static final Set<String> alwaysMandatoryFields = new HashSet<>(Arrays.asList("operator", "cloudName"));
 
   private String operator;
   private String cloudName;
@@ -87,6 +96,26 @@ public class ArrowheadCloud {
 
   public void setSecure(Boolean secure) {
     this.secure = secure;
+  }
+
+  public Set<String> missingFields(boolean throwException, Set<String> mandatoryFields) {
+    Set<String> mf = new HashSet<>(alwaysMandatoryFields);
+    if (mandatoryFields != null) {
+      mf.addAll(mandatoryFields);
+    }
+    Set<String> nonNullFields = getFieldNamesWithNonNullValue();
+    for (final String field : mf) {
+      if (field.startsWith(getClass().getSimpleName())) {
+        nonNullFields = prefixFieldNames(nonNullFields);
+        break;
+      }
+    }
+    mf.removeAll(nonNullFields);
+
+    if (throwException && !mf.isEmpty()) {
+      throw new BadPayloadException("Missing mandatory fields for " + getClass().getSimpleName() + ": " + String.join(", ", mf));
+    }
+    return mf;
   }
 
   @Override

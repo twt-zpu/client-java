@@ -9,20 +9,17 @@
 
 package eu.arrowhead.client.provider;
 
-import eu.arrowhead.client.provider.common.TypeSafeProperties;
-import eu.arrowhead.client.provider.common.exception.ArrowheadException;
-import eu.arrowhead.client.provider.common.exception.AuthException;
-import eu.arrowhead.client.provider.common.exception.ExceptionType;
-import eu.arrowhead.client.provider.common.model.ArrowheadService;
-import eu.arrowhead.client.provider.common.model.ArrowheadSystem;
-import eu.arrowhead.client.provider.common.model.IntraCloudAuthEntry;
-import eu.arrowhead.client.provider.common.model.OrchestrationStore;
-import eu.arrowhead.client.provider.common.model.ServiceRegistryEntry;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import eu.arrowhead.client.common.ArrowheadClientMain;
+import eu.arrowhead.client.common.Utility;
+import eu.arrowhead.client.common.exception.ArrowheadException;
+import eu.arrowhead.client.common.exception.ExceptionType;
+import eu.arrowhead.client.common.misc.ClientType;
+import eu.arrowhead.client.common.misc.SecurityUtils;
+import eu.arrowhead.client.common.model.ArrowheadService;
+import eu.arrowhead.client.common.model.ArrowheadSystem;
+import eu.arrowhead.client.common.model.IntraCloudAuthEntry;
+import eu.arrowhead.client.common.model.OrchestrationStore;
+import eu.arrowhead.client.common.model.ServiceRegistryEntry;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.KeyStore;
@@ -34,72 +31,35 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceConfigurationError;
-import javax.net.ssl.SSLContext;
+import java.util.Set;
 import javax.ws.rs.core.UriBuilder;
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.grizzly.ssl.SSLContextConfigurator;
-import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
 
-public class ProviderMain {
-
-  public static boolean DEBUG_MODE;
+public class ProviderMain extends ArrowheadClientMain {
 
   static PublicKey authorizationKey;
   static PrivateKey privateKey;
 
-  private static boolean IS_SECURE;
   private static boolean NEED_AUTH;
   private static boolean NEED_ORCH;
   private static boolean FROM_FILE;
-  private static String BASE_URI;
   private static String SR_BASE_URI;
-  private static HttpServer server;
-  private static String PROVIDER_PUBLIC_KEY;
-  private static TypeSafeProperties prop;
 
   //JSON payloads
   private static ServiceRegistryEntry srEntry;
   private static IntraCloudAuthEntry authEntry;
   private static List<OrchestrationStore> storeEntry = new ArrayList<>();
 
-  public static void main(String[] args) throws IOException {
-    System.out.println("Working directory: " + System.getProperty("user.dir"));
+  private ProviderMain(String[] args) {
+    Set<Class<?>> classes = new HashSet<>(Collections.singleton(TemperatureResource.class));
+    String[] packages = {"eu.arrowhead.client.common"};
+    init(ClientType.PROVIDER, args, classes, packages);
 
-    String address = getProp().getProperty("address", "0.0.0.0");
-    int insecurePort = getProp().getIntProperty("insecure_port", 8460);
-    int securePort = getProp().getIntProperty("secure_port", 8461);
-
-    String srAddress = getProp().getProperty("sr_address", "0.0.0.0");
-    int srInsecurePort = getProp().getIntProperty("sr_insecure_port", 8442);
-    int srSecurePort = getProp().getIntProperty("sr_secure_port", 8443);
-
-    boolean daemon = false;
-    List<String> alwaysMandatoryProperties = Arrays.asList("service_name", "service_uri", "interfaces", "metadata", "insecure_system_name");
     for (String arg : args) {
       switch (arg) {
-        case "-daemon":
-          daemon = true;
-          System.out.println("Starting server as daemon!");
-          break;
-        case "-d":
-          DEBUG_MODE = true;
-          System.out.println("Starting server in debug mode!");
-          break;
-        case "-tls":
-          List<String> allMandatoryProperties = new ArrayList<>(alwaysMandatoryProperties);
-          allMandatoryProperties.addAll(
-              Arrays.asList("keystore", "keystorepass", "keypass", "truststore", "truststorepass", "authorization_cert", "secure_system_name"));
-          Utility.checkProperties(getProp().stringPropertyNames(), allMandatoryProperties);
-          BASE_URI = Utility.getUri(address, securePort, null, true);
-          SR_BASE_URI = Utility.getUri(srAddress, srSecurePort, "serviceregistry", true);
-          server = startSecureServer();
-          IS_SECURE = true;
-          break;
         case "-ff":
           FROM_FILE = true;
           break;
@@ -111,15 +71,13 @@ public class ProviderMain {
           break;
       }
     }
-    if (IS_SECURE && (NEED_AUTH || NEED_ORCH)) {
+    if (isSecure && (NEED_AUTH || NEED_ORCH)) {
       throw new ServiceConfigurationError("The Authorization/Store registration features can only be used in insecure mode!");
     }
-    if (server == null) {
-      Utility.checkProperties(getProp().stringPropertyNames(), alwaysMandatoryProperties);
-      BASE_URI = Utility.getUri(address, insecurePort, null, false);
-      SR_BASE_URI = Utility.getUri(srAddress, srInsecurePort, "serviceregistry", false);
-      server = startServer();
-    }
+
+    String srAddress = props.getProperty("sr_address", "0.0.0.0");
+    int srPort = isSecure ? props.getIntProperty("sr_secure_port", 8442) : props.getIntProperty("sr_insecure_port", 8443);
+    SR_BASE_URI = Utility.getUri(srAddress, srPort, "serviceregistry", isSecure, false);
 
     loadAndCompilePayloads(FROM_FILE);
     registerToServiceRegistry();
@@ -130,118 +88,64 @@ public class ProviderMain {
       registerToStore();
     }
 
-    if (daemon) {
-      System.out.println("In daemon mode, process will terminate for TERM signal...");
-      Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-        System.out.println("Received TERM signal, shutting down...");
-        shutdown();
-      }));
-    } else {
-      System.out.println("Type \"stop\" to shutdown ArrowheadProvider Server...");
-      BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-      String input = "";
-      while (!input.equals("stop")) {
-        input = br.readLine();
-      }
-      br.close();
-      shutdown();
-    }
+    listenForInput();
   }
 
-  private static HttpServer startServer() throws IOException {
-    URI uri = UriBuilder.fromUri(BASE_URI).build();
-    final ResourceConfig config = new ResourceConfig();
-    config.registerClasses(TemperatureResource.class);
-    config.packages("eu.arrowhead.ArrowheadProvider.common");
-
-    final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(uri, config, false);
-    server.getServerConfiguration().setAllowPayloadForUndefinedHttpMethods(true);
-    server.start();
-    System.out.println("Insecure server launched...");
-    return server;
+  public static void main(String[] args) {
+    new ProviderMain(args);
   }
 
-  private static HttpServer startSecureServer() throws IOException {
-    URI uri = UriBuilder.fromUri(BASE_URI).build();
-    final ResourceConfig config = new ResourceConfig();
-    config.registerClasses(TemperatureResource.class);
-    config.packages("eu.arrowhead.ArrowheadProvider.common");
+  @Override
+  protected void startSecureServer(Set<Class<?>> classes, String[] packages) {
+    super.startSecureServer(classes, packages);
 
-    String keystorePath = getProp().getProperty("keystore");
-    String keystorePass = getProp().getProperty("keystorepass");
-    String keyPass = getProp().getProperty("keypass");
-    String truststorePath = getProp().getProperty("truststore");
-    String truststorePass = getProp().getProperty("truststorepass");
+    //Load the Provider private key
+    String keystorePath = props.getProperty("keystore");
+    String keystorePass = props.getProperty("keystorepass");
+    KeyStore keyStore = SecurityUtils.loadKeyStore(keystorePath, keystorePass);
+    privateKey = SecurityUtils.getPrivateKey(keyStore, keystorePass);
 
-    SSLContextConfigurator sslCon = new SSLContextConfigurator();
-    sslCon.setKeyStoreFile(keystorePath);
-    sslCon.setKeyStorePass(keystorePass);
-    sslCon.setKeyPass(keyPass);
-    sslCon.setTrustStoreFile(truststorePath);
-    sslCon.setTrustStorePass(truststorePass);
-    if (!sslCon.validateConfiguration(true)) {
-      throw new AuthException("SSL Context is not valid, check the certificate files or app.properties!");
-    }
-
-    SSLContext sslContext = sslCon.createSSLContext();
-    Utility.setSSLContext(sslContext);
-
-    // Getting certificate keys
-    KeyStore keyStore = Utility.loadKeyStore(keystorePath, keystorePass);
-    privateKey = Utility.getPrivateKey(keyStore, keystorePass);
-    X509Certificate serverCert = Utility.getFirstCertFromKeyStore(keyStore);
-    PROVIDER_PUBLIC_KEY = Base64.getEncoder().encodeToString(serverCert.getPublicKey().getEncoded());
-    System.out.println("My certificate PublicKey in Base64: " + PROVIDER_PUBLIC_KEY);
-    String serverCN = Utility.getCertCNFromSubject(serverCert.getSubjectDN().getName());
-    System.out.println("My certificate CN: " + serverCN);
-    config.property("server_common_name", serverCN);
-
-    String authCertPath = getProp().getProperty("authorization_cert");
-    KeyStore authKeyStore = Utility.createKeyStoreFromCert(authCertPath);
-    X509Certificate authCert = Utility.getFirstCertFromKeyStore(authKeyStore);
+    //Load the Authorization Core System public key
+    String authCertPath = props.getProperty("authorization_cert");
+    KeyStore authKeyStore = SecurityUtils.createKeyStoreFromCert(authCertPath);
+    X509Certificate authCert = SecurityUtils.getFirstCertFromKeyStore(authKeyStore);
     authorizationKey = authCert.getPublicKey();
-    System.out.println("Authorization CN: " + Utility.getCertCNFromSubject(authCert.getSubjectDN().getName()));
+    System.out.println("Authorization CN: " + SecurityUtils.getCertCNFromSubject(authCert.getSubjectDN().getName()));
     System.out.println("Authorization System PublicKey Base64: " + Base64.getEncoder().encodeToString(authorizationKey.getEncoded()));
-
-    final HttpServer server = GrizzlyHttpServerFactory
-        .createHttpServer(uri, config, true, new SSLEngineConfigurator(sslCon).setClientMode(false).setNeedClientAuth(true), false);
-    server.getServerConfiguration().setAllowPayloadForUndefinedHttpMethods(true);
-    server.start();
-    System.out.println("Secure server launched...");
-    return server;
   }
 
-  private static void shutdown() {
+  @Override
+  protected void shutdown() {
     unregisterFromServiceRegistry();
     if (server != null) {
       server.shutdownNow();
     }
-    System.out.println("Temperature Provider Server stopped.");
+    System.out.println("Provider Server stopped");
     System.exit(0);
   }
 
-  private static void loadAndCompilePayloads(boolean fromFile) {
+  private void loadAndCompilePayloads(boolean fromFile) {
     if (fromFile) {
-      String srPath = getProp().getProperty("sr_entry");
+      String srPath = props.getProperty("sr_entry");
       srEntry = Utility.fromJson(Utility.loadJsonFromFile(srPath), ServiceRegistryEntry.class);
       if (NEED_AUTH) {
-        String authPath = getProp().getProperty("auth_entry");
+        String authPath = props.getProperty("auth_entry");
         authEntry = Utility.fromJson(Utility.loadJsonFromFile(authPath), IntraCloudAuthEntry.class);
       }
       if (NEED_ORCH) {
-        String storePath = getProp().getProperty("store_entry");
+        String storePath = props.getProperty("store_entry");
         storeEntry = Arrays.asList(Utility.fromJson(Utility.loadJsonFromFile(storePath), OrchestrationStore[].class));
       }
     } else {
-      String serviceDef = getProp().getProperty("service_name");
-      String serviceUri = getProp().getProperty("service_uri");
-      String interfaceList = getProp().getProperty("interfaces");
+      String serviceDef = props.getProperty("service_name");
+      String serviceUri = props.getProperty("service_uri");
+      String interfaceList = props.getProperty("interfaces");
       List<String> interfaces = new ArrayList<>();
       if (interfaceList != null && !interfaceList.isEmpty()) {
         interfaces.addAll(Arrays.asList(interfaceList.replaceAll("\\s+", "").split(",")));
       }
       Map<String, String> metadata = new HashMap<>();
-      String metadataString = getProp().getProperty("metadata");
+      String metadataString = props.getProperty("metadata");
       if (metadataString != null && !metadataString.isEmpty()) {
         String[] parts = metadataString.split(",");
         for (String part : parts) {
@@ -251,29 +155,29 @@ public class ProviderMain {
       }
       ArrowheadService service = new ArrowheadService(serviceDef, interfaces, metadata);
 
-      URI baseUri;
+      URI uri;
       try {
-        baseUri = new URI(BASE_URI);
+        uri = new URI(baseUri);
       } catch (URISyntaxException e) {
         throw new AssertionError("Parsing the BASE_URI resulted in an error.", e);
       }
       ArrowheadSystem provider;
-      if (IS_SECURE) {
+      if (isSecure) {
         if (!metadata.containsKey("security")) {
           metadata.put("security", "token");
         }
-        String secProviderName = getProp().getProperty("secure_system_name");
-        provider = new ArrowheadSystem(secProviderName, baseUri.getHost(), baseUri.getPort(), PROVIDER_PUBLIC_KEY);
+        String secProviderName = props.getProperty("secure_system_name");
+        provider = new ArrowheadSystem(secProviderName, uri.getHost(), uri.getPort(), base64PublicKey);
       } else {
-        String insecProviderName = getProp().getProperty("insecure_system_name");
-        provider = new ArrowheadSystem(insecProviderName, baseUri.getHost(), baseUri.getPort(), null);
+        String insecProviderName = props.getProperty("insecure_system_name");
+        provider = new ArrowheadSystem(insecProviderName, uri.getHost(), uri.getPort(), null);
       }
 
       ArrowheadSystem consumer = null;
       if (NEED_AUTH || NEED_ORCH) {
-        String consumerName = getProp().getProperty("consumer_name");
-        String consumerAddress = getProp().getProperty("consumer_address");
-        String consumerPK = getProp().getProperty("consumer_public_key");
+        String consumerName = props.getProperty("consumer_name");
+        String consumerAddress = props.getProperty("consumer_address");
+        String consumerPK = props.getProperty("consumer_public_key");
         consumer = new ArrowheadSystem(consumerName, consumerAddress, 0, consumerPK);
       }
 
@@ -282,7 +186,7 @@ public class ProviderMain {
         authEntry = new IntraCloudAuthEntry(consumer, Collections.singletonList(provider), Collections.singletonList(service));
       }
       if (NEED_ORCH) {
-        storeEntry = Collections.singletonList(new OrchestrationStore(service, consumer, provider, null, 0, false));
+        storeEntry = Collections.singletonList(new OrchestrationStore(service, consumer, provider, 0, false));
       }
     }
     System.out.println("Service Registry Entry: " + Utility.toPrettyJson(null, srEntry));
@@ -313,35 +217,20 @@ public class ProviderMain {
     System.out.println("Removing service is successful!");
   }
 
-  private static void registerToAuthorization() {
-    String authAddress = getProp().getProperty("auth_address", "0.0.0.0");
-    int authPort = getProp().getIntProperty("auth_port", 8444);
-    String authUri = Utility.getUri(authAddress, authPort, "authorization/mgmt/intracloud", false);
+  private void registerToAuthorization() {
+    String authAddress = props.getProperty("auth_address", "0.0.0.0");
+    int authPort = props.getIntProperty("auth_port", 8444);
+    String authUri = Utility.getUri(authAddress, authPort, "authorization/mgmt/intracloud", false, false);
     Utility.sendRequest(authUri, "POST", authEntry);
     System.out.println("Authorization registration is successful!");
   }
 
-  private static void registerToStore() {
-    String orchAddress = getProp().getProperty("orch_address", "0.0.0.0");
-    int orchPort = getProp().getIntProperty("orch_port", 8440);
-    String orchUri = Utility.getUri(orchAddress, orchPort, "orchestrator/mgmt/store", false);
+  private void registerToStore() {
+    String orchAddress = props.getProperty("orch_address", "0.0.0.0");
+    int orchPort = props.getIntProperty("orch_port", 8440);
+    String orchUri = Utility.getUri(orchAddress, orchPort, "orchestrator/mgmt/store", false, false);
     Utility.sendRequest(orchUri, "POST", storeEntry);
     System.out.println("Store registration is successful!");
-  }
-
-  private static synchronized TypeSafeProperties getProp() {
-    try {
-      if (prop == null) {
-        prop = new TypeSafeProperties();
-        File file = new File("config" + File.separator + "app.properties");
-        FileInputStream inputStream = new FileInputStream(file);
-        prop.load(inputStream);
-      }
-    } catch (Exception ex) {
-      ex.printStackTrace();
-    }
-
-    return prop;
   }
 
 }
