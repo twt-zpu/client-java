@@ -23,11 +23,14 @@ import javax.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 public class SubscriberResource {
 
+  //Method which can be called to check, if the web server works or not
   @GET
   public Response getIt() {
     return Response.ok().build();
   }
 
+  /*REST interface for the Event Handler to call with an event the subscriber asked for. The event contains the event type, a payload, timestamp
+    and metadata.*/
   @POST
   public Response receiveEvent(Event event) {
     System.out.println("New event received:");

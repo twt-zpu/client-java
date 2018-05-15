@@ -23,11 +23,14 @@ import javax.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 public class PublisherResource {
 
+  //Method which can be called to check, if the web server works or not
   @GET
   public Response getIt() {
     return Response.ok().build();
   }
 
+  /*REST interface for the Event Handler to call with the results of the event publishing. The Map contains the URLs of the subscribers and a
+    boolean indicating if notifying the subscriber was successful or not. */
   @POST
   @Path("feedback")
   public Response receiveEvent(Map<String, Boolean> results) {
