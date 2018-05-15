@@ -34,11 +34,6 @@
     </dependency>
 
     <dependency>
-      <groupId>eu.arrowhead</groupId>
-      <artifactId>client-common</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>javax.servlet-api</artifactId>
     </dependency>
