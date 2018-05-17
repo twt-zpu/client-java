@@ -33,7 +33,7 @@ public class ServiceRegistryEntry extends ArrowheadBase {
   private Integer version = 1;
   private boolean udp = false;
   //Time to live in seconds - endOfValidity is calculated from this upon registering and TTL is calculated from endOfValidity when queried
-  private int ttl;
+  private long ttl;
 
   //only for database
   private String metadata;
@@ -62,7 +62,7 @@ public class ServiceRegistryEntry extends ArrowheadBase {
   }
 
   public ServiceRegistryEntry(ArrowheadService providedService, ArrowheadSystem provider, Integer port, String serviceURI, Integer version,
-                              boolean udp, int ttl, String metadata, LocalDateTime endOfValidity) {
+                              boolean udp, long ttl, String metadata, LocalDateTime endOfValidity) {
     this.providedService = providedService;
     this.provider = provider;
     this.port = port;
@@ -122,11 +122,11 @@ public class ServiceRegistryEntry extends ArrowheadBase {
     this.udp = udp;
   }
 
-  public int getTtl() {
+  public long getTtl() {
     return ttl;
   }
 
-  public void setTtl(int ttl) {
+  public void setTtl(long ttl) {
     this.ttl = ttl;
   }
 
@@ -204,7 +204,7 @@ public class ServiceRegistryEntry extends ArrowheadBase {
       if (LocalDateTime.now().isAfter(endOfValidity)) {
         ttl = 0;
       } else {
-        ttl = (int) Duration.between(LocalDateTime.now(), endOfValidity).toMillis() / 1000;
+        ttl = Duration.between(LocalDateTime.now(), endOfValidity).toMinutes() * 60;
       }
     } else {
       ttl = 0;
