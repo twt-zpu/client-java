@@ -6,8 +6,8 @@
 event_type=temperature
 
 # System name to use while publishing the event
-insecure_system_name=InsecureSubscriber
-secure_system_name=SecureSubscriber
+insecure_system_name=InsecurePublisher
+secure_system_name=SecurePublisher
 
 ################################################
 # NON-MANDATORY PARAMETERS (defaults are showed)
