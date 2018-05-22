@@ -80,7 +80,7 @@ public final class Utility {
     return client;
   }
 
-  static void setSSLContext(SSLContext context) {
+  public static void setSSLContext(SSLContext context) {
     sslClient = createClient(context);
   }
 

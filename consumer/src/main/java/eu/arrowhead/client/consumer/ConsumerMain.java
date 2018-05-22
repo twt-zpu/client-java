@@ -20,8 +20,10 @@ import eu.arrowhead.client.common.model.TemperatureReadout;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import javax.net.ssl.SSLContext;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+import org.glassfish.jersey.SslConfigurator;
 
 public class ConsumerMain {
 
@@ -38,6 +40,12 @@ public class ConsumerMain {
     for (String arg : args) {
       if (arg.equals("-tls")) {
         isSecure = true;
+        SslConfigurator sslConfig = SslConfigurator.newInstance().trustStoreFile(props.getProperty("truststore"))
+                                                   .trustStorePassword(props.getProperty("truststorepass"))
+                                                   .keyStoreFile(props.getProperty("keystore")).keyStorePassword(props.getProperty("keystorepass"))
+                                                   .keyPassword(props.getProperty("keypass"));
+        SSLContext sslContext = sslConfig.createSSLContext();
+        Utility.setSSLContext(sslContext);
         break;
       }
     }
