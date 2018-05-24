@@ -14,7 +14,7 @@
   <parent>
     <artifactId>arrowheadclient</artifactId>
     <groupId>eu.arrowhead</groupId>
-    <version>M4</version>
+    <version>4.0</version>
   </parent>
 
   <artifactId>consumer</artifactId>
