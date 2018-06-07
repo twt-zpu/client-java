@@ -41,7 +41,8 @@ store_entry=config/store_entry.json
 # Authorization (only needed when -auth argument is used to send IntraCloud authorization registering too)
 # (Registering into the authorization is needed every time when the system names or service name changes)
 auth_address=0.0.0.0
-auth_port=8444
+auth_insecure_port=8444
+auth_secure_port=8445
 
 # Orchestration (only needed when -orch argument is used to register into the Orchestration Store too)
 # (priority: 0 and defaultEntry: false are assumed for the OrchestrationStore entry. Use the JSON files if you want a more custom Store entry)
