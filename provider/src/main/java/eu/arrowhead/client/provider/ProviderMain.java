@@ -71,8 +71,8 @@ public class ProviderMain extends ArrowheadClientMain {
           break;
       }
     }
-    if (isSecure && (NEED_AUTH || NEED_ORCH)) {
-      throw new ServiceConfigurationError("The Authorization/Store registration features can only be used in insecure mode!");
+    if (isSecure && NEED_ORCH) {
+      throw new ServiceConfigurationError("The Store registration feature can only be used in insecure mode!");
     }
 
     String srAddress = props.getProperty("sr_address", "0.0.0.0");
