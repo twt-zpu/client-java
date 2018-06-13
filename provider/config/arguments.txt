@@ -17,8 +17,8 @@ Short description of the available command line arguments for this Arrowhead Pro
   find these files has to be set in the app.properties config file)
 
 5) -auth
-  Send an IntraCloudAuth request to the Authorization Core System when starting. This feature only works in insecure mode, since the Authorization
-  will only allow the cloud operator to use this REST endpoint in secure mode.
+  Send an IntraCloudAuth request to the Authorization Core System when starting. This feature can only work in secure mode, if the Authorization
+  enables access to application systems in the local cloud.
 
 6) -orch
   Register into the Orchestration Store when starting. This feature only works in insecure mode, since the Orchestrator will only allow the cloud

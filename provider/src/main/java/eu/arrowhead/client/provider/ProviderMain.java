@@ -71,8 +71,8 @@ public class ProviderMain extends ArrowheadClientMain {
           break;
       }
     }
-    if (isSecure && (NEED_AUTH || NEED_ORCH)) {
-      throw new ServiceConfigurationError("The Authorization/Store registration features can only be used in insecure mode!");
+    if (isSecure && NEED_ORCH) {
+      throw new ServiceConfigurationError("The Store registration feature can only be used in insecure mode!");
     }
 
     String srAddress = props.getProperty("sr_address", "0.0.0.0");
@@ -219,8 +219,8 @@ public class ProviderMain extends ArrowheadClientMain {
 
   private void registerToAuthorization() {
     String authAddress = props.getProperty("auth_address", "0.0.0.0");
-    int authPort = props.getIntProperty("auth_port", 8444);
-    String authUri = Utility.getUri(authAddress, authPort, "authorization/mgmt/intracloud", false, false);
+    int authPort = isSecure ? props.getIntProperty("auth_secure_port", 8445) : props.getIntProperty("auth_insecure_port", 8444);
+    String authUri = Utility.getUri(authAddress, authPort, "authorization/mgmt/intracloud", isSecure, false);
     Utility.sendRequest(authUri, "POST", authEntry);
     System.out.println("Authorization registration is successful!");
   }
