@@ -34,7 +34,7 @@ typedef struct _Arrowhead_Data_ext
 	string				sAuthenticationInfo;
 } Arrowhead_Data_ext;
 
-class ServiceRegistryInterface :
+class ApplicationServiceInterface :
     Http_Handler,
     Https_Handler
 {
@@ -53,11 +53,11 @@ private:
 	int Unload_IniFile();
 
 public:
-	ServiceRegistryInterface(string ini_file);
-	ServiceRegistryInterface();
-	~ServiceRegistryInterface();
+	ApplicationServiceInterface(string ini_file);
+	ApplicationServiceInterface();
+	~ApplicationServiceInterface();
 
-	bool init_ServiceRegistryInterface( string ini_file );
+	bool init_ApplicationServiceInterface( string ini_file );
 	int deinit( );
 	int registerToServiceRegistry(Arrowhead_Data_ext &stAH_data, bool _bSecure);
 	int unregisterFromServiceRegistry(Arrowhead_Data_ext &stAH_data, bool _bSecureArrowheadInterface);

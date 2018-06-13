@@ -8,6 +8,7 @@
 #include <thread>
 #include <list>
 #include <time.h>
+#include <iomanip>
 
 #ifdef __linux__
      #include <unistd.h>
@@ -15,10 +16,10 @@
      #include <windows.h>
 #endif
 
-const std::string version = "0.2.8";
+const std::string version = "4.0";
 
-bool bSecureProviderInterface = false;
-bool bSecureArrowheadInterface = false;
+bool bSecureProviderInterface = false; //Enables HTTPS interface on the application service (with token enabled)
+bool bSecureArrowheadInterface = false; //Enables HTTPS interface towards ServiceRegistry AH module
 
 inline void parseArguments(int argc, char* argv[]){
      for(int i=1; i<argc; ++i){
@@ -31,40 +32,51 @@ inline void parseArguments(int argc, char* argv[]){
 
 int main(int argc, char* argv[]){
 
-     parseArguments(argc, argv);
-
 	printf("\n=============================\nProvider Example - v%s\n=============================\n", version.c_str());
+
+     parseArguments(argc, argv);
 
 	SensorHandler oSensorHandler;
 
-	#ifdef __linux__
-		sleep(1);
-	#elif _WIN32
-		Sleep(1000);
-	#endif
+//SenML format
+//todo:
+//generate own measured value into "measuredValue"
+//"value" should be periodically updated
+//"sLinuxEpoch" should be periodically updated
 
      std::string measuredValue; //JSON - SENML format
-
      time_t linuxEpochTime = std::time(0);
      std::string sLinuxEpoch = std::to_string((uint64_t)linuxEpochTime);
 
-     if(bSecureProviderInterface){
-          measuredValue = (std::string)"{\"e\":[{ \"n\": \"1:1:PS\", \"sv\": \"26\", \"t\": \"" + sLinuxEpoch + "\" }], \"bn\": \"1:1:PS\", \"bu\": \"Celsius\"}";
-     }
-     else{
-          measuredValue = (std::string)"{\"e\":[{ \"n\": \"1:1:P\", \"sv\": \"26\", \"t\": \"" + sLinuxEpoch + "\" }], \"bn\": \"1:1:P\", \"bu\": \"Celsius\"}";
-     }
+     double value = 26.0;
+//convert double to string
+     std::ostringstream streamObj;
+     streamObj << std::fixed;
+     streamObj << std::setprecision(1);
+     streamObj << value;
+     std::string sValue = streamObj.str();
 
-     oSensorHandler.processReceivedSensorData(measuredValue, bSecureArrowheadInterface);
+     measuredValue =
+          "{"
+               "\"e\":[{"
+                    "\"n\": \"this_is_the_sensor_id\","
+                    "\"v\":" + sValue +","
+                    "\"t\": \"" + sLinuxEpoch + "\""
+                    "}],"
+               "\"bn\": \"this_is_the_sensor_id\","
+               "\"bu\": \"Celsius\""
+          "}";
+
+//do not modify below this
+
+     oSensorHandler.processProvider(measuredValue, bSecureProviderInterface, bSecureArrowheadInterface);
 
 	while (true) {
-		std::string ex;
-		cin >> ex;
-
-		if(ex == "exit"){
-		    oSensorHandler.unregisterAllProvider();
-		    break;
-		}
+	    #ifdef __linux__
+               sleep(1);
+          #elif _WIN32
+               Sleep(1000);
+          #endif
 	}
 
 	return 0;

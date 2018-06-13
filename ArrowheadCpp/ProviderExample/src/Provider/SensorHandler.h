@@ -4,38 +4,60 @@
 #include <string>
 #include <map>
 #include <mutex>
-#include "../Interface/ServiceRegistryInterface.hpp"
-#include "SensorTable.h"
-#include "MoteTable.h"
+#include "../Interface/ApplicationServiceInterface.hpp"
 #include "ProvidedService.h"
 
-class SensorHandler : ServiceRegistryInterface
+class SensorHandler : ApplicationServiceInterface
 {
 public:
 	SensorHandler();
 	~SensorHandler();
 
-	void processReceivedSensorData(std::string pJsonSenML, bool _bSecureArrowheadInterface);
-
 	void processProvider(std::string pJsonSenML, bool _bProviderIsSecure, bool _bSecureArrowheadInterface);
-	void processProviderMQTT(std::string pJsonSenML);
 
-	//Overload - ServiceRegistryInterface callback
+	//Overload - ApplicationServiceInterface callback
 	int Callback_Serve_HTTP_GET(const char *Id, string *pStr);
 	int Callback_Serve_HTTPs_GET(const char *Id, string *pStr, string sToken, string sSignature, string clientDistName);
 
-	/*SensorTable*/ //active Providers
-	SensorTable oSensorTable;
+     bool sensorIsRegistered;
 
-	/*MoteTable*/
-	MoteTable oMoteTable;
+     std::string baseName;
+     std::string baseUnit;
+	double value;
+	std::string lastMeasuredValue;
+     std::string privateKeyPath;
+     std::string publicKeyPath;
+     std::string customURL;
+     std::string meta_unit;
 
 	/*ProvidedServices*/
 	ProvidedService oProvidedService;
 
-	/*Sensor registration, deregistration --- ServiceRegistry functions*/
+	/*Sensor registration, deregistration --- ApplicationService functions*/
 	bool registerSensor(std::string _jsonSenML, bool _bProviderIsSecure, bool _bSecureArrowheadInterface);
 	bool deregisterSensor(std::string _sensorURI, bool _bSecureArrowheadInterface);
 
-	void unregisterAllProvider();
 };
+
+template<typename T>
+vector<T>
+split(const T &str, const T &delimiters) {
+	vector<T> v;
+
+	typename T::size_type start = 0;
+
+	auto pos = str.find_first_of(delimiters, start);
+
+	while (pos != T::npos) {
+		if (pos != start)
+			v.emplace_back(str, start, pos - start);
+		start = pos + 1;
+		pos = str.find_first_of(delimiters, start);
+	}
+
+	if (start < str.length()) {
+		v.emplace_back(str, start, str.length() - start);
+	}
+
+	return v;
+}

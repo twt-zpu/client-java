@@ -2,31 +2,31 @@
 
 #include <string>
 #include <map>
-#include <mutex>
-#include "../Interface/json.hpp"
-
-using namespace nlohmann;
 
 class ProvidedService {
 private:
-	const std::string filePath = "providedServices.json";
-	std::map<std::string, json> table;
-
-	std::mutex m_MoteTable;
+// todo:
+// modify these parameters
+     std::string customURL         = "this_is_the_custom_url";
+     std::string systemName        = "SecureTemperatureSensor";
+     std::string serviceDefinition = "IndoorTemperature_ProviderExample";
+     std::string serviceInterface  = "REST-JSON-SENML";
+     std::string privateKeyPath    = "keys/tempsensor.testcloud1.private.key";
+     std::string publicKeyPath     = "keys/tempsensor.testcloud1.publickey.pem";
 
 public:
-	ProvidedService();
-	~ProvidedService();
+//do not modify below this
+     ProvidedService();
+     ~ProvidedService();
 
-	void readInputJsonFile();
-	void insertNewService(std::string s);
-	void printTable();
+     std::map<std::string, std::string> metadata;
+     void fillMetadata();
 
-	bool getServiceGroup(std::string sensorID, std::string moteID, std::string &r);
-	bool getServiceDefinition(std::string sensorID, std::string moteID, std::string &r);
-	bool getServiceInterface(std::string sensorID, std::string moteID, std::string &r);
-	bool getMoteID(std::string sensorID, std::string &r);
-	bool getMetaUnit(std::string sensorID, std::string moteID, std::string &r);
-	bool getPrivateKeyPath(std::string sensorID, std::string moteID, std::string &r);
-	bool getPublicKeyPath(std::string sensorID, std::string moteID, std::string &r);
+     void printService();
+     bool getCustomURL(std::string &r);
+     bool getSystemName(std::string &r);
+     bool getServiceDefinition(std::string &r);
+     bool getServiceInterface(std::string &r);
+     bool getPrivateKeyPath(std::string &r);
+     bool getPublicKeyPath(std::string &r);
 };

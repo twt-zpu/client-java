@@ -1,50 +1,50 @@
 
-#include "ServiceRegistryInterface.hpp"
+#include "ApplicationServiceInterface.hpp"
 
-ServiceRegistryInterface::ServiceRegistryInterface( )
+ApplicationServiceInterface::ApplicationServiceInterface( )
 {
 
 }
 
-ServiceRegistryInterface::ServiceRegistryInterface( string ini_file )
+ApplicationServiceInterface::ApplicationServiceInterface( string ini_file )
 {
-	init_ServiceRegistryInterface(ini_file);
+	init_ApplicationServiceInterface(ini_file);
 }
 
-ServiceRegistryInterface::~ServiceRegistryInterface()
+ApplicationServiceInterface::~ApplicationServiceInterface()
 {
 	deinit();
 }
 
 // HTTP_Handler overload
-int ServiceRegistryInterface::httpGETCallback(const char *Id, string *pData_str)
+int ApplicationServiceInterface::httpGETCallback(const char *Id, string *pData_str)
 {
 	return Callback_Serve_HTTP_GET(Id, pData_str);
 }
 
-int ServiceRegistryInterface::Callback_Serve_HTTP_GET(const char *Id, string *pData_str)
+int ApplicationServiceInterface::Callback_Serve_HTTP_GET(const char *Id, string *pData_str)
 {
 	*pData_str = "5678";
 	return 1;
 }
 
 // HTTPs_Handler overload
-int ServiceRegistryInterface::httpsGETCallback(const char *Id, string *pData_str, string _sToken, string _sSignature, string _clientDistName)
+int ApplicationServiceInterface::httpsGETCallback(const char *Id, string *pData_str, string _sToken, string _sSignature, string _clientDistName)
 {
 	return Callback_Serve_HTTPs_GET(Id, pData_str, _sToken, _sSignature, _clientDistName);
 }
 
-int ServiceRegistryInterface::Callback_Serve_HTTPs_GET(const char *Id, string *pData_str, string _sToken, string _sSignature, string _clientDistName)
+int ApplicationServiceInterface::Callback_Serve_HTTPs_GET(const char *Id, string *pData_str, string _sToken, string _sSignature, string _clientDistName)
 {
 	*pData_str = "5678";
 	return 1;
 }
 
-bool ServiceRegistryInterface::init_ServiceRegistryInterface( string ini_file )
+bool ApplicationServiceInterface::init_ApplicationServiceInterface( string ini_file )
 {
 	pini = Load_IniFile( (char *)ini_file.c_str() );
 	if( !pini ) {
-		printf("Error: Cannot load ServiceRegistryInterface.ini\n");
+		printf("Error: Cannot load ApplicationServiceInterface.ini\n");
 		return false;
 	}
 
@@ -98,7 +98,7 @@ bool ServiceRegistryInterface::init_ServiceRegistryInterface( string ini_file )
 	return true;
 }
 
-int ServiceRegistryInterface::deinit( )
+int ApplicationServiceInterface::deinit( )
 {
 	Unload_IniFile();
 
@@ -108,7 +108,7 @@ int ServiceRegistryInterface::deinit( )
     return 0;
 }
 
-dictionary *ServiceRegistryInterface::Load_IniFile(char *fname)
+dictionary *ApplicationServiceInterface::Load_IniFile(char *fname)
 {
 	pini = iniparser_load(fname);
 	if( pini )
@@ -117,7 +117,7 @@ dictionary *ServiceRegistryInterface::Load_IniFile(char *fname)
 	return pini;
 }
 
-int ServiceRegistryInterface::Unload_IniFile()
+int ApplicationServiceInterface::Unload_IniFile()
 {
 	if( pini )
 	{
@@ -128,7 +128,7 @@ int ServiceRegistryInterface::Unload_IniFile()
 	return 1;
 }
 
-int ServiceRegistryInterface::registerToServiceRegistry(Arrowhead_Data_ext &stAH_data, bool _bSecureArrowheadInterface )
+int ApplicationServiceInterface::registerToServiceRegistry(Arrowhead_Data_ext &stAH_data, bool _bSecureArrowheadInterface )
 {
 	//Expected content, example:
 	//{
@@ -156,10 +156,12 @@ int ServiceRegistryInterface::registerToServiceRegistry(Arrowhead_Data_ext &stAH
 	json jServiceMetadata;
 	json jProvider;
 
-	jServiceMetadata["unit"]     = stAH_data.vService_Meta["unit"];
+     for(std::map<std::string,std::string>::iterator it = stAH_data.vService_Meta.begin(); it!=stAH_data.vService_Meta.end(); ++it ){
+          if( (stAH_data.sAuthenticationInfo.size() == 0) && (strcmp(it->first.c_str(), "security") == 0) )
+               continue;
 
-	if(stAH_data.sAuthenticationInfo.size() != 0)
-          jServiceMetadata["security"] = stAH_data.vService_Meta["security"];
+          jServiceMetadata[it->first] = it->second;
+     }
 
 	jProvidedService["serviceDefinition"] = stAH_data.sServiceDefinition;
 	jProvidedService["interfaces"] = { stAH_data.sserviceInterface };
@@ -184,20 +186,29 @@ int ServiceRegistryInterface::registerToServiceRegistry(Arrowhead_Data_ext &stAH
 	//jHTTPpayload["udp"] = "false";
 	//jHTTPpayload["ttl"] = 255;
 
+	//printf("register\n");
+	//printf("payload: %s\n", jHTTPpayload.dump().c_str());
+	//printf("https uri: %s\n", SR_BASE_URI_HTTPS.c_str());
+
      if(_bSecureArrowheadInterface)
           return SendHttpsRequest(jHTTPpayload.dump(), SR_BASE_URI_HTTPS + "register", "POST");
      else
           return SendRequest(jHTTPpayload.dump(), SR_BASE_URI + "register", "POST");
 }
 
-int ServiceRegistryInterface::unregisterFromServiceRegistry(Arrowhead_Data_ext &stAH_data, bool _bSecureArrowheadInterface)
+int ApplicationServiceInterface::unregisterFromServiceRegistry(Arrowhead_Data_ext &stAH_data, bool _bSecureArrowheadInterface)
 {
 	json jHTTPpayload;
 	json jProvidedService;
 	json jServiceMetadata;
 	json jProvider;
 
-	jServiceMetadata["unit"] = stAH_data.vService_Meta["unit"];
+     for(std::map<std::string,std::string>::iterator it = stAH_data.vService_Meta.begin(); it!=stAH_data.vService_Meta.end(); ++it ){
+          if( (stAH_data.sAuthenticationInfo.size() == 0) && (strcmp(it->first.c_str(), "security") == 0) )
+               continue;
+
+          jServiceMetadata[it->first] = it->second;
+     }
 
 	jProvidedService["serviceDefinition"] = stAH_data.sServiceDefinition;
 	jProvidedService["interfaces"] = { stAH_data.sserviceInterface };

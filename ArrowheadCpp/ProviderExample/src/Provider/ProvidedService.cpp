@@ -1,185 +1,82 @@
 
 #include "ProvidedService.h"
-#include <fstream>
 
-ProvidedService::ProvidedService() {
-	readInputJsonFile();
-	printTable();
+ProvidedService::ProvidedService(){
+     printService();
+     fillMetadata();
 }
 
-ProvidedService::~ProvidedService() {
-
-}
-
-void ProvidedService::readInputJsonFile() {
-     std::ifstream inputFile;
-
-	std::string line;
-	inputFile.open(filePath);
-
-	if (!inputFile.good()) {
-		printf("Error: Cannot open %s\n", filePath.c_str());
-		inputFile.close();
-		return;
-	}
-
-	std::string tmp;
-
-	int numberOfOpen = 0;
-
-	while (std::getline(inputFile, line)) {
-		if (line.size() < 1) continue;
-
-		numberOfOpen += line.find("{") != std::string::npos;
-		numberOfOpen -= line.find("}") != std::string::npos;
-
-		tmp += line;
-
-		if (numberOfOpen == 0) {
-			insertNewService(tmp);
-			tmp = "";
-		}
-	}
-
-	inputFile.close();
-}
-
-void ProvidedService::insertNewService(std::string s) {
-	json j;
-
-	try {
-		j = json::parse(s.c_str());
-	}
-	catch (...) {
-		printf("Error: Cannot parse json: %s\n", s.c_str());
-	}
-
-	try {
-		std::lock_guard<std::mutex> lock(m_MoteTable);
-		table.insert(std::pair<std::string, json>(j.at("sensorID").get<std::string>(), j));
-	}
-	catch (...) {
-		printf("Error: Cannot insert Sensor into ProvidedServiceTable: %s\n", s.c_str());
-	}
-}
-
-void ProvidedService::printTable() {
-	printf("\n-----------------------------\nProvidedServiceTable\n-----------------------------\n");
-
-	std::map<std::string, json>::iterator i;
-
-	for (i = table.begin(); i != table.end(); ++i) {
-		printf("%s : %s\n", i->first.c_str(), i->second.dump().c_str());
-	}
+ProvidedService::~ProvidedService(){
 
 }
 
-bool ProvidedService::getServiceGroup(std::string sensorID, std::string moteID, std::string &r) {
-	std::lock_guard<std::mutex> lock(m_MoteTable);
-
-	std::map<std::string, json>::iterator i;
-
-	for (i = table.begin(); i != table.end(); ++i) {
-		if ( (i->first == sensorID) && (i->second.at("moteID").get<std::string>() == moteID)) {
-			r = i->second.at("serviceGroup").get<std::string>();
-			return true;
-		}
-	}
-
-	return false;
+void ProvidedService::printService() {
+	printf("\n-----------------------------\nProvidedService\n-----------------------------\n");
+     printf("%s : %s\n", "Custom URL", customURL.c_str());
+     printf("%s : %s\n", "System name", systemName.c_str());
+     printf("%s : %s\n", "Service definition", serviceDefinition.c_str());
+     printf("%s : %s\n", "Service interface", serviceInterface.c_str());
+     printf("%s : %s\n", "Private key path", privateKeyPath.c_str());
+     printf("%s : %s\n", "Public key path", publicKeyPath.c_str());
+     printf("Meta values:\n");
+     for(std::map<std::string,std::string>::iterator it = metadata.begin(); it!=metadata.end(); ++it )
+          printf("%s : %s\n", it->first.c_str(), it->second.c_str());
 }
 
-bool ProvidedService::getServiceDefinition(std::string sensorID, std::string moteID, std::string &r) {
-	std::lock_guard<std::mutex> lock(m_MoteTable);
+void ProvidedService::fillMetadata(){
+     metadata.insert(std::pair<std::string, std::string>("unit", "Celsius"));
+     metadata.insert(std::pair<std::string, std::string>("security", "token")); //not used, when the provider is unsecure
 
-	std::map<std::string, json>::iterator i;
-
-	for (i = table.begin(); i != table.end(); ++i) {
-		if ((i->first == sensorID) && (i->second.at("moteID").get<std::string>() == moteID)) {
-			r = i->second.at("serviceDefinition").get<std::string>();
-			return true;
-		}
-	}
-
-	return false;
+//todo:
+//add new/custom meta data
+     //metadata.insert(std::pair<std::string, std::string>("customKey", "customValue"));
 }
 
-bool ProvidedService::getServiceInterface(std::string sensorID, std::string moteID, std::string &r) {
-	std::lock_guard<std::mutex> lock(m_MoteTable);
+bool ProvidedService::getCustomURL(std::string &r) {
+     if(customURL.length() == 0)
+          return false;
 
-	std::map<std::string, json>::iterator i;
-
-	for (i = table.begin(); i != table.end(); ++i) {
-		if ((i->first == sensorID) && (i->second.at("moteID").get<std::string>() == moteID)) {
-			r = i->second.at("serviceInterface").get<std::string>();
-			return true;
-		}
-	}
-
-	return false;
+     r = customURL;
+	return true;
 }
 
-bool ProvidedService::getMoteID(std::string sensorID, std::string &r) {
-	std::lock_guard<std::mutex> lock(m_MoteTable);
+bool ProvidedService::getSystemName(std::string &r) {
+     if(systemName.length() == 0)
+          return false;
 
-	std::map<std::string, json>::iterator i;
-
-	for (i = table.begin(); i != table.end(); ++i) {
-		if (i->first == sensorID) {
-			r = i->second.at("moteID").get<std::string>();
-			return true;
-		}
-	}
-	return false;
+     r = systemName;
+	return true;
 }
 
-bool ProvidedService::getMetaUnit(std::string sensorID, std::string moteID, std::string &r) {
-	std::lock_guard<std::mutex> lock(m_MoteTable);
+bool ProvidedService::getServiceDefinition(std::string &r) {
+     if(serviceDefinition.length() == 0)
+          return false;
 
-	std::map<std::string, json>::iterator i;
-
-	for (i = table.begin(); i != table.end(); ++i) {
-		if ((i->first == sensorID) && (i->second.at("moteID").get<std::string>() == moteID)) {
-			r = i->second["meta"].at("unit").get<std::string>();
-			return true;
-		}
-	}
-
-	return false;
+     r = serviceDefinition;
+	return true;
 }
 
-bool ProvidedService::getPrivateKeyPath(std::string sensorID, std::string moteID, std::string &r) {
-	std::lock_guard<std::mutex> lock(m_MoteTable);
+bool ProvidedService::getServiceInterface(std::string &r) {
+     if(serviceInterface.length() == 0)
+          return false;
 
-	std::map<std::string, json>::iterator i;
-
-	for (i = table.begin(); i != table.end(); ++i) {
-		if (i->first == sensorID) {
-			r = i->second.at("privateKeyPath").get<std::string>();
-			if(r.size() == 0)
-			    return false;
-			else
-			    return true;
-		}
-	}
-	return false;
+     r = serviceInterface;
+	return true;
 }
 
+bool ProvidedService::getPrivateKeyPath(std::string &r) {
+     if(privateKeyPath.length() == 0)
+          return false;
 
-bool ProvidedService::getPublicKeyPath(std::string sensorID, std::string moteID, std::string &r) {
-	std::lock_guard<std::mutex> lock(m_MoteTable);
+     r = privateKeyPath;
+          return true;
+}
 
-	std::map<std::string, json>::iterator i;
+bool ProvidedService::getPublicKeyPath(std::string &r) {
+     if(publicKeyPath.length() == 0)
+          return false;
 
-	for (i = table.begin(); i != table.end(); ++i) {
-		if (i->first == sensorID) {
-			r = i->second.at("publicKeyPath").get<std::string>();
-			if(r.size() == 0)
-			    return false;
-			else
-			    return true;
-		}
-	}
-	return false;
+     r = publicKeyPath;
+          return true;
 }
 

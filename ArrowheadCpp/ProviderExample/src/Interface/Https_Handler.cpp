@@ -259,13 +259,6 @@ extern "C" int MHD_Callback_Https(void *cls,
 
      ci = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_GNUTLS_SESSION);
 
-     FILE *fp;
-     fp = fopen("connectionInfo.txt", "wb");
-
-     fwrite(ci, 1024, 1, fp);
-
-     fclose(fp);
-
      session = (gnutls_session_t)(ci->tls_session);
 
      r = get_client_cert(session, &client_cert);
