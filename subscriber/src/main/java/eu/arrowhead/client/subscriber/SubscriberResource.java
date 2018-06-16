@@ -9,7 +9,7 @@
 
 package eu.arrowhead.client.subscriber;
 
-import eu.arrowhead.client.common.model.Event;
+import eu.arrowhead.client.common.no_need_to_modify.model.Event;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;

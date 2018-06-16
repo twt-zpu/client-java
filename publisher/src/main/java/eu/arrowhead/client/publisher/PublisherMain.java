@@ -9,12 +9,12 @@
 
 package eu.arrowhead.client.publisher;
 
-import eu.arrowhead.client.common.ArrowheadClientMain;
-import eu.arrowhead.client.common.Utility;
-import eu.arrowhead.client.common.misc.ClientType;
-import eu.arrowhead.client.common.model.ArrowheadSystem;
-import eu.arrowhead.client.common.model.Event;
-import eu.arrowhead.client.common.model.PublishEvent;
+import eu.arrowhead.client.common.can_be_modified.misc.ClientType;
+import eu.arrowhead.client.common.no_need_to_modify.ArrowheadClientMain;
+import eu.arrowhead.client.common.no_need_to_modify.Utility;
+import eu.arrowhead.client.common.no_need_to_modify.model.ArrowheadSystem;
+import eu.arrowhead.client.common.no_need_to_modify.model.Event;
+import eu.arrowhead.client.common.no_need_to_modify.model.PublishEvent;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashSet;

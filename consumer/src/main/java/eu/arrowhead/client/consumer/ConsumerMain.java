@@ -9,14 +9,14 @@
 
 package eu.arrowhead.client.consumer;
 
-import eu.arrowhead.client.common.Utility;
-import eu.arrowhead.client.common.exception.ArrowheadException;
-import eu.arrowhead.client.common.misc.TypeSafeProperties;
-import eu.arrowhead.client.common.model.ArrowheadService;
-import eu.arrowhead.client.common.model.ArrowheadSystem;
-import eu.arrowhead.client.common.model.OrchestrationResponse;
-import eu.arrowhead.client.common.model.ServiceRequestForm;
-import eu.arrowhead.client.common.model.TemperatureReadout;
+import eu.arrowhead.client.common.can_be_modified.model.TemperatureReadout;
+import eu.arrowhead.client.common.no_need_to_modify.Utility;
+import eu.arrowhead.client.common.no_need_to_modify.exception.ArrowheadException;
+import eu.arrowhead.client.common.no_need_to_modify.misc.TypeSafeProperties;
+import eu.arrowhead.client.common.no_need_to_modify.model.ArrowheadService;
+import eu.arrowhead.client.common.no_need_to_modify.model.ArrowheadSystem;
+import eu.arrowhead.client.common.no_need_to_modify.model.OrchestrationResponse;
+import eu.arrowhead.client.common.no_need_to_modify.model.ServiceRequestForm;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;

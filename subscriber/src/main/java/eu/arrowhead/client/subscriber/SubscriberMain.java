@@ -9,11 +9,11 @@
 
 package eu.arrowhead.client.subscriber;
 
-import eu.arrowhead.client.common.ArrowheadClientMain;
-import eu.arrowhead.client.common.Utility;
-import eu.arrowhead.client.common.misc.ClientType;
-import eu.arrowhead.client.common.model.ArrowheadSystem;
-import eu.arrowhead.client.common.model.EventFilter;
+import eu.arrowhead.client.common.can_be_modified.misc.ClientType;
+import eu.arrowhead.client.common.no_need_to_modify.ArrowheadClientMain;
+import eu.arrowhead.client.common.no_need_to_modify.Utility;
+import eu.arrowhead.client.common.no_need_to_modify.model.ArrowheadSystem;
+import eu.arrowhead.client.common.no_need_to_modify.model.EventFilter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
