@@ -76,7 +76,7 @@
             </manifestEntries>
             <manifest>
               <addClasspath>true</addClasspath>
-              <mainClass>eu.arrowhead.consumer.ConsumerMain</mainClass>
+              <mainClass>eu.arrowhead.client.consumer.ConsumerMain</mainClass>
               <classpathPrefix>lib/</classpathPrefix>
             </manifest>
           </archive>

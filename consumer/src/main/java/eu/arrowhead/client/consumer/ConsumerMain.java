@@ -17,10 +17,13 @@ import eu.arrowhead.client.common.no_need_to_modify.model.ArrowheadService;
 import eu.arrowhead.client.common.no_need_to_modify.model.ArrowheadSystem;
 import eu.arrowhead.client.common.no_need_to_modify.model.OrchestrationResponse;
 import eu.arrowhead.client.common.no_need_to_modify.model.ServiceRequestForm;
+import java.awt.Font;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import javax.net.ssl.SSLContext;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.SslConfigurator;
@@ -112,6 +115,7 @@ public class ConsumerMain {
     TemperatureReadout readout = new TemperatureReadout();
     try {
       readout = getResponse.readEntity(TemperatureReadout.class);
+      System.out.println("Provider Response payload: " + Utility.toPrettyJson(null, readout));
     } catch (RuntimeException e) {
       e.printStackTrace();
       System.out.println("Provider did not send the temperature readout in SenML format.");
@@ -120,6 +124,9 @@ public class ConsumerMain {
       System.out.println("Provider did not send any MeasurementEntry.");
     } else {
       System.out.println("The indoor temperature is " + readout.getE().get(0).getV() + " degrees celsius.");
+      JLabel label = new JLabel("The indoor temperature is " + readout.getE().get(0).getV() + " degrees celsius.");
+      label.setFont(new Font("Arial", Font.BOLD, 18));
+      JOptionPane.showMessageDialog(null, label,"Provider Response", JOptionPane.INFORMATION_MESSAGE);
     }
   }
 
