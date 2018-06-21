@@ -83,7 +83,7 @@
             </manifestEntries>
             <manifest>
               <addClasspath>true</addClasspath>
-              <mainClass>eu.arrowhead.provider.ProviderMain</mainClass>
+              <mainClass>eu.arrowhead.provider.FullProviderMain</mainClass>
               <classpathPrefix>lib/</classpathPrefix>
             </manifest>
           </archive>
