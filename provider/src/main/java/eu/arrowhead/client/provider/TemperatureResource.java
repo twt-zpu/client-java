@@ -9,8 +9,8 @@
 
 package eu.arrowhead.client.provider;
 
-import eu.arrowhead.client.common.can_be_modified.model.MeasurementEntry;
-import eu.arrowhead.client.common.can_be_modified.model.TemperatureReadout;
+import eu.arrowhead.client.common.model.MeasurementEntry;
+import eu.arrowhead.client.common.model.TemperatureReadout;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;

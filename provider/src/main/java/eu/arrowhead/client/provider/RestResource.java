@@ -1,6 +1,6 @@
 package eu.arrowhead.client.provider;
 
-import eu.arrowhead.client.common.can_be_modified.model.Car;
+import eu.arrowhead.client.common.model.Car;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;

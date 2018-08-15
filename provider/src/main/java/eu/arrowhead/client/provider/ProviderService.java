@@ -1,10 +1,11 @@
 package eu.arrowhead.client.provider;
 
-import eu.arrowhead.client.common.no_need_to_modify.Utility;
-import eu.arrowhead.client.common.no_need_to_modify.exception.ErrorMessage;
-import eu.arrowhead.client.common.no_need_to_modify.exception.ExceptionType;
-import eu.arrowhead.client.common.no_need_to_modify.misc.SecurityUtils;
-import eu.arrowhead.client.common.no_need_to_modify.model.RawTokenInfo;
+import eu.arrowhead.client.common.Utility;
+import eu.arrowhead.client.common.exception.ErrorMessage;
+import eu.arrowhead.client.common.exception.ExceptionType;
+import eu.arrowhead.client.common.misc.SecurityUtils;
+import eu.arrowhead.client.common.model.RawTokenInfo;
+import java.nio.charset.StandardCharsets;
 import java.security.Security;
 import java.security.Signature;
 import java.util.Base64;
@@ -54,7 +55,7 @@ class ProviderService {
       //Check if the provider public key registered in the database is the same as the one used by the provider at the moment
       byte[] byteToken = cipher.doFinal(tokenbytes);
 
-      String json = new String(byteToken, "UTF-8");
+      String json = new String(byteToken, StandardCharsets.UTF_8);
       RawTokenInfo rawTokenInfo = Utility.fromJson(json, RawTokenInfo.class);
       String[] rawTokenInfoParts = rawTokenInfo.getC().split("\\.");
       String consumerTokenName = rawTokenInfoParts[0];

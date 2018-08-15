@@ -9,14 +9,14 @@
 
 package eu.arrowhead.client.consumer;
 
-import eu.arrowhead.client.common.can_be_modified.model.TemperatureReadout;
-import eu.arrowhead.client.common.no_need_to_modify.Utility;
-import eu.arrowhead.client.common.no_need_to_modify.exception.ArrowheadException;
-import eu.arrowhead.client.common.no_need_to_modify.misc.TypeSafeProperties;
-import eu.arrowhead.client.common.no_need_to_modify.model.ArrowheadService;
-import eu.arrowhead.client.common.no_need_to_modify.model.ArrowheadSystem;
-import eu.arrowhead.client.common.no_need_to_modify.model.OrchestrationResponse;
-import eu.arrowhead.client.common.no_need_to_modify.model.ServiceRequestForm;
+import eu.arrowhead.client.common.Utility;
+import eu.arrowhead.client.common.exception.ArrowheadException;
+import eu.arrowhead.client.common.misc.TypeSafeProperties;
+import eu.arrowhead.client.common.model.ArrowheadService;
+import eu.arrowhead.client.common.model.ArrowheadSystem;
+import eu.arrowhead.client.common.model.OrchestrationResponse;
+import eu.arrowhead.client.common.model.ServiceRequestForm;
+import eu.arrowhead.client.common.model.TemperatureReadout;
 import java.awt.Font;
 import java.util.Collections;
 import java.util.HashMap;
@@ -80,7 +80,7 @@ public class ConsumerMain {
       Interfaces: supported message formats (e.g. JSON, XML, JSON-SenML), a potential provider has to have at least 1 match,
       so the communication between consumer and provider can be facilitated.
      */
-    ArrowheadService service = new ArrowheadService("IndoorTemperature", Collections.singletonList("json"), metadata);
+    ArrowheadService service = new ArrowheadService("IndoorTemperature", Collections.singleton("json"), metadata);
 
     //Some of the orchestrationFlags the consumer can use, to influence the orchestration process
     Map<String, Boolean> orchestrationFlags = new HashMap<>();

@@ -9,17 +9,17 @@
 
 package eu.arrowhead.client.provider;
 
-import eu.arrowhead.client.common.can_be_modified.misc.ClientType;
-import eu.arrowhead.client.common.no_need_to_modify.ArrowheadClientMain;
-import eu.arrowhead.client.common.no_need_to_modify.Utility;
-import eu.arrowhead.client.common.no_need_to_modify.exception.ArrowheadException;
-import eu.arrowhead.client.common.no_need_to_modify.exception.ExceptionType;
-import eu.arrowhead.client.common.no_need_to_modify.misc.SecurityUtils;
-import eu.arrowhead.client.common.no_need_to_modify.model.ArrowheadService;
-import eu.arrowhead.client.common.no_need_to_modify.model.ArrowheadSystem;
-import eu.arrowhead.client.common.no_need_to_modify.model.IntraCloudAuthEntry;
-import eu.arrowhead.client.common.no_need_to_modify.model.OrchestrationStore;
-import eu.arrowhead.client.common.no_need_to_modify.model.ServiceRegistryEntry;
+import eu.arrowhead.client.common.ArrowheadClientMain;
+import eu.arrowhead.client.common.Utility;
+import eu.arrowhead.client.common.exception.ArrowheadException;
+import eu.arrowhead.client.common.exception.ExceptionType;
+import eu.arrowhead.client.common.misc.ClientType;
+import eu.arrowhead.client.common.misc.SecurityUtils;
+import eu.arrowhead.client.common.model.ArrowheadService;
+import eu.arrowhead.client.common.model.ArrowheadSystem;
+import eu.arrowhead.client.common.model.IntraCloudAuthEntry;
+import eu.arrowhead.client.common.model.OrchestrationStore;
+import eu.arrowhead.client.common.model.ServiceRegistryEntry;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.KeyStore;
@@ -146,7 +146,7 @@ public class FullProviderMain extends ArrowheadClientMain {
       String serviceDef = props.getProperty("service_name");
       String serviceUri = props.getProperty("service_uri");
       String interfaceList = props.getProperty("interfaces");
-      List<String> interfaces = new ArrayList<>();
+      Set<String> interfaces = new HashSet<>();
       if (interfaceList != null && !interfaceList.isEmpty()) {
         interfaces.addAll(Arrays.asList(interfaceList.replaceAll("\\s+", "").split(",")));
       }
