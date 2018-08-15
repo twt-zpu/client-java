@@ -1,4 +1,4 @@
-# arrowheadclient
+# Client Skeletons in Java
 
 This project provides client skeletons for the Arrowhead Framework Generation 4.0
 
