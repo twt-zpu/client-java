@@ -16,13 +16,13 @@ import java.util.Map;
 
 public class OrchestrationStore implements Comparable<OrchestrationStore> {
 
-  private long id;
+  private Long id;
   private ArrowheadService service;
   private ArrowheadSystem consumer;
   private ArrowheadSystem providerSystem;
   private ArrowheadCloud providerCloud;
-  private int priority;
-  private boolean defaultEntry;
+  private Integer priority;
+  private Boolean defaultEntry;
   private String name;
   private LocalDateTime lastUpdated;
   private String instruction;
@@ -64,11 +64,11 @@ public class OrchestrationStore implements Comparable<OrchestrationStore> {
     this.defaultEntry = defaultEntry;
   }
 
-  public long getId() {
+  public Long getId() {
     return id;
   }
 
-  public void setId(long id) {
+  public void setId(Long id) {
     this.id = id;
   }
 
@@ -112,11 +112,11 @@ public class OrchestrationStore implements Comparable<OrchestrationStore> {
     this.priority = priority;
   }
 
-  public boolean isDefaultEntry() {
+  public Boolean isDefaultEntry() {
     return defaultEntry;
   }
 
-  public void setDefaultEntry(boolean defaultEntry) {
+  public void setDefaultEntry(Boolean defaultEntry) {
     this.defaultEntry = defaultEntry;
   }
 
@@ -173,32 +173,32 @@ public class OrchestrationStore implements Comparable<OrchestrationStore> {
 
     OrchestrationStore that = (OrchestrationStore) o;
 
-    if (priority != that.priority) {
+    if (service != null ? !service.equals(that.service) : that.service != null) {
       return false;
     }
-    if (defaultEntry != that.defaultEntry) {
+    if (consumer != null ? !consumer.equals(that.consumer) : that.consumer != null) {
       return false;
     }
-    if (!service.equals(that.service)) {
+    if (providerSystem != null ? !providerSystem.equals(that.providerSystem) : that.providerSystem != null) {
       return false;
     }
-    if (!consumer.equals(that.consumer)) {
+    if (providerCloud != null ? !providerCloud.equals(that.providerCloud) : that.providerCloud != null) {
       return false;
     }
-    if (!providerSystem.equals(that.providerSystem)) {
+    if (priority != null ? !priority.equals(that.priority) : that.priority != null) {
       return false;
     }
-    return providerCloud != null ? providerCloud.equals(that.providerCloud) : that.providerCloud == null;
+    return defaultEntry != null ? defaultEntry.equals(that.defaultEntry) : that.defaultEntry == null;
   }
 
   @Override
   public int hashCode() {
-    int result = service.hashCode();
-    result = 31 * result + consumer.hashCode();
-    result = 31 * result + providerSystem.hashCode();
+    int result = service != null ? service.hashCode() : 0;
+    result = 31 * result + (consumer != null ? consumer.hashCode() : 0);
+    result = 31 * result + (providerSystem != null ? providerSystem.hashCode() : 0);
     result = 31 * result + (providerCloud != null ? providerCloud.hashCode() : 0);
-    result = 31 * result + priority;
-    result = 31 * result + (defaultEntry ? 1 : 0);
+    result = 31 * result + (priority != null ? priority.hashCode() : 0);
+    result = 31 * result + (defaultEntry != null ? defaultEntry.hashCode() : 0);
     return result;
   }
 

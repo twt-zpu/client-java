@@ -11,7 +11,7 @@ package eu.arrowhead.client.common.model;
 
 public class ArrowheadSystem {
 
-  private long id;
+  private Long id;
   private String systemName;
   private String address;
   private Integer port;
@@ -46,11 +46,11 @@ public class ArrowheadSystem {
     this.authenticationInfo = system.authenticationInfo;
   }
 
-  public long getId() {
+  public Long getId() {
     return id;
   }
 
-  public void setId(long id) {
+  public void setId(Long id) {
     this.id = id;
   }
 
@@ -99,26 +99,26 @@ public class ArrowheadSystem {
     if (this == o) {
       return true;
     }
-    if (o == null || getClass() != o.getClass()) {
+    if (!(o instanceof ArrowheadSystem)) {
       return false;
     }
 
     ArrowheadSystem that = (ArrowheadSystem) o;
 
-    if (!systemName.equals(that.systemName)) {
+    if (systemName != null ? !systemName.equals(that.systemName) : that.systemName != null) {
       return false;
     }
     if (address != null ? !address.equals(that.address) : that.address != null) {
       return false;
     }
-    return authenticationInfo != null ? authenticationInfo.equals(that.authenticationInfo) : that.authenticationInfo == null;
+    return port != null ? port.equals(that.port) : that.port == null;
   }
 
   @Override
   public int hashCode() {
-    int result = systemName.hashCode();
+    int result = systemName != null ? systemName.hashCode() : 0;
     result = 31 * result + (address != null ? address.hashCode() : 0);
-    result = 31 * result + (authenticationInfo != null ? authenticationInfo.hashCode() : 0);
+    result = 31 * result + (port != null ? port.hashCode() : 0);
     return result;
   }
 

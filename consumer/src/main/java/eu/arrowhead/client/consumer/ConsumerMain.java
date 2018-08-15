@@ -66,7 +66,7 @@ public class ConsumerMain {
       the address, port and authenticationInfo fields can be set to anything.
       SystemName can be an arbitrarily chosen name, which makes sense for the use case.
      */
-    ArrowheadSystem consumer = new ArrowheadSystem("client1", "localhost", 0, "null");
+    ArrowheadSystem consumer = new ArrowheadSystem("client1", "localhost", 8080, "null");
 
     //You can put any additional metadata you look for in a Service here (key-value pairs)
     Map<String, String> metadata = new HashMap<>();
