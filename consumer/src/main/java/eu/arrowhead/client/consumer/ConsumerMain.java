@@ -51,11 +51,15 @@ public class ConsumerMain {
     String providerUrl = sendOrchestrationRequest(srf);
 
     //Connect to the provider, consuming its service - THIS METHOD SHOULD BE MODIFIED ACCORDING TO YOUR USE CASE
-    consumeService(providerUrl);
+    double temperature = consumeService(providerUrl);
 
     //Printing out the elapsed time during the orchestration and service consumption
     long endTime = System.currentTimeMillis();
     System.out.println("Orchestration and Service consumption response time: " + Long.toString(endTime - startTime));
+    //Show a message dialog with the response from the service provider
+    JLabel label = new JLabel("The indoor temperature is " + temperature + " degrees celsius.");
+    label.setFont(new Font("Arial", Font.BOLD, 18));
+    JOptionPane.showMessageDialog(null, label, "Provider Response", JOptionPane.INFORMATION_MESSAGE);
   }
 
   //Compiles the payload for the orchestration request
@@ -99,7 +103,7 @@ public class ConsumerMain {
     return srf;
   }
 
-  private static void consumeService(String providerUrl) {
+  private static double consumeService(String providerUrl) {
     /*
       Sending request to the provider, to the acquired URL. The method type and payload should be known beforehand.
       If needed, compile the request payload here, before sending the request.
@@ -122,11 +126,10 @@ public class ConsumerMain {
     }
     if (readout.getE().get(0) == null) {
       System.out.println("Provider did not send any MeasurementEntry.");
+      return -1;
     } else {
       System.out.println("The indoor temperature is " + readout.getE().get(0).getV() + " degrees celsius.");
-      JLabel label = new JLabel("The indoor temperature is " + readout.getE().get(0).getV() + " degrees celsius.");
-      label.setFont(new Font("Arial", Font.BOLD, 18));
-      JOptionPane.showMessageDialog(null, label,"Provider Response", JOptionPane.INFORMATION_MESSAGE);
+      return readout.getE().get(0).getV();
     }
   }
 
