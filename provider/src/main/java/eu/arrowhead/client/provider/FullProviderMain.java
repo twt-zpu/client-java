@@ -184,7 +184,7 @@ public class FullProviderMain extends ArrowheadClientMain {
         String consumerName = props.getProperty("consumer_name");
         String consumerAddress = props.getProperty("consumer_address");
         String consumerPK = props.getProperty("consumer_public_key");
-        consumer = new ArrowheadSystem(consumerName, consumerAddress, 0, consumerPK);
+        consumer = new ArrowheadSystem(consumerName, consumerAddress, 8080, consumerPK);
       }
 
       srEntry = new ServiceRegistryEntry(service, provider, serviceUri);
@@ -227,16 +227,27 @@ public class FullProviderMain extends ArrowheadClientMain {
     String authAddress = props.getProperty("auth_address", "0.0.0.0");
     int authPort = isSecure ? props.getIntProperty("auth_secure_port", 8445) : props.getIntProperty("auth_insecure_port", 8444);
     String authUri = Utility.getUri(authAddress, authPort, "authorization/mgmt/intracloud", isSecure, false);
-    Utility.sendRequest(authUri, "POST", authEntry);
-    System.out.println("Authorization registration is successful!");
+    try {
+      Utility.sendRequest(authUri, "POST", authEntry);
+      System.out.println("Authorization registration is successful!");
+    } catch (ArrowheadException e) {
+      e.printStackTrace();
+      System.out.println("Authorization registration failed!");
+    }
+
   }
 
   private void registerToStore() {
     String orchAddress = props.getProperty("orch_address", "0.0.0.0");
     int orchPort = props.getIntProperty("orch_port", 8440);
     String orchUri = Utility.getUri(orchAddress, orchPort, "orchestrator/mgmt/store", false, false);
-    Utility.sendRequest(orchUri, "POST", storeEntry);
-    System.out.println("Store registration is successful!");
+    try {
+      Utility.sendRequest(orchUri, "POST", storeEntry);
+      System.out.println("Store registration is successful!");
+    } catch (ArrowheadException e) {
+      e.printStackTrace();
+      System.out.println("Store registration failed!");
+    }
   }
 
 }
