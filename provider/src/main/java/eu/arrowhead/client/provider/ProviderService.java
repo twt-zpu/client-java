@@ -63,7 +63,7 @@ class ProviderService {
       long endTime = rawTokenInfo.getE();
       long currentTime = System.currentTimeMillis();
 
-      if (consumerName.equals(consumerTokenName)) {
+      if (consumerName.equalsIgnoreCase(consumerTokenName)) {
         if (endTime == 0L || (endTime > currentTime)) {
           return Response.status(200).entity(responseEntity).build();
         }
@@ -71,7 +71,8 @@ class ProviderService {
         return Response.status(401).entity(error).build();
 
       } else {
-        ErrorMessage error = new ErrorMessage("Permission denied", 401, ExceptionType.AUTH, Utility.class.toString());
+        System.out.println("Token and provider name mismatch: " + consumerName + " " + consumerTokenName);
+        ErrorMessage error = new ErrorMessage("Permission denied", 401, ExceptionType.AUTH, null);
         return Response.status(401).entity(error).build();
       }
 
