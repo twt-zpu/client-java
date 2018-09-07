@@ -23,8 +23,9 @@ import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.SpringApplication;
+import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
@@ -38,7 +39,7 @@ public class CertRequestApplication {
   private static String COMMON_NAME;
 
   public static void main(String[] args) {
-    SpringApplication.run(CertRequestApplication.class, args);
+    new SpringApplicationBuilder(CertRequestApplication.class).web(WebApplicationType.NONE).run(args);
     COMMON_NAME = SYSTEM_NAME + "." + CLOUD_NAME + "." + OPERATOR + ".arrowhead.eu";
     getSignedCertificate();
     System.exit(0);
