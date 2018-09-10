@@ -14,8 +14,7 @@ There are 5 different input parameters inside the `application.properties` file:
 * `cert_authority_url`: the URL where the CA can accept certificate signing requests
 
 When running from source code, the `application.properties` can be found in `src/main/resources`. The application can be packaged from the 
-application root folder with `mvn package`. Place a new `application.properties` next to the resulting JAR file, to override the `application
-.properties` baked inside the JAR file.
+application root folder with `mvn package`. Place a new `application.properties` next to the resulting JAR file, to override the `application.properties` baked inside the JAR file.
 
 Both this skeleton and the CA core system uses the [Bouncy Castle](https://www.bouncycastle.org/) cryptography API.
 
@@ -32,9 +31,10 @@ other. The Certificate Authority core system has a similar setup to the other co
 controls the matching private key. The request is rejected if this verification fails.
 7. Create the new X.509 certificate, signed by the cloud certificate. The signed certificate is valid for 5 years from creation (this can be 
 tweaked manually in the CA, or maybe outsource it to the config file). 
-8. Add some basic certificate extensions to the cert, including a _basic constraint_, which signals **this newly issued certificate is a "leaf" 
+8. Add some certificate extensions to the cert, including a _basic constraint_, which signals **this newly issued certificate is a "leaf" 
 certificate, which can not sign other certificates.**
 9. Return the new signed certificate, the cloud certificate and root certificate (in Base64 encoded format) to the requester.
 10. Decode the certificates from the certificate signing response - **job of this application again**
 11. Construct a certificate chain from the certificates in step 10, and put it inside a keystore, along with the generated private key. (The signed
- certificate has the matching public key)
+ certificate has the matching public key) It is important that the keystore contains the full certificate chain (up to the root certificate), 
+ otherwise the TLS handshake will fail between the Arrowhead systems.
