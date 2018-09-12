@@ -1,4 +1,4 @@
-# arrowheadclient
+# Arrowhead Clients
 
 This project provides client skeletons for the Arrowhead Framework Generation 4.0
 

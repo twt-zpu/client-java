@@ -11,6 +11,7 @@ package eu.arrowhead.client.consumer;
 
 import eu.arrowhead.client.common.Utility;
 import eu.arrowhead.client.common.exception.ArrowheadException;
+import eu.arrowhead.client.common.misc.ClientType;
 import eu.arrowhead.client.common.misc.TypeSafeProperties;
 import eu.arrowhead.client.common.model.ArrowheadService;
 import eu.arrowhead.client.common.model.ArrowheadSystem;
@@ -32,10 +33,10 @@ public class ConsumerMain {
 
   private static boolean isSecure;
   private static String orchestratorUrl;
-  private static final TypeSafeProperties props = Utility.getProp("app.properties");
+  private static final TypeSafeProperties props = Utility.getProp();
 
   public static void main(String[] args) {
-    //Prints the working directory for extra information. Working directory should always contain a config folder with the app.properties file!
+    //Prints the working directory for extra information. Working directory should always contain a config folder with the app.conf file!
     System.out.println("Working directory: " + System.getProperty("user.dir"));
 
     //Compile the URL for the orchestration request.
@@ -139,7 +140,7 @@ public class ConsumerMain {
       Methods that do not need to be modified ↓
    */
 
-  //DO NOT MODIFY - Gets the correct URL where the orchestration requests needs to be sent (from app.properties config file + command line argument)
+  //DO NOT MODIFY - Gets the correct URL where the orchestration requests needs to be sent (from app.conf config file + command line argument)
   private static void getOrchestratorUrl(String[] args) {
     String orchAddress = props.getProperty("orch_address", "0.0.0.0");
     int orchInsecurePort = props.getIntProperty("orch_insecure_port", 8440);
@@ -159,6 +160,7 @@ public class ConsumerMain {
     }
 
     if (isSecure) {
+      Utility.checkProperties(props.stringPropertyNames(), ClientType.CONSUMER.getSecureMandatoryFields());
       orchestratorUrl = Utility.getUri(orchAddress, orchSecurePort, "orchestrator/orchestration", true, false);
     } else {
       orchestratorUrl = Utility.getUri(orchAddress, orchInsecurePort, "orchestrator/orchestration", false, false);

@@ -30,6 +30,9 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceConfigurationError;
@@ -60,6 +63,11 @@ public final class Utility {
     // Decide whether to allow the connection...
     return true;
   };
+
+  private static final String DEFAULT_CONF = "default.conf";
+  private static final String DEFAULT_CONF_DIR = "config" + File.separator + "default.conf";
+  private static final String APP_CONF = "app.conf";
+  private static final String APP_CONF_DIR = "config" + File.separator + "app.conf";
 
 
   private Utility() throws AssertionError {
@@ -232,7 +240,7 @@ public final class Utility {
   public static String getRequestPayload(InputStream is) {
     StringBuilder sb = new StringBuilder();
     String line;
-    try (BufferedReader br = new BufferedReader(new InputStreamReader(is, "UTF-8"))) {
+    try (BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
       while ((line = br.readLine()) != null) {
         sb.append(line);
       }
@@ -286,7 +294,7 @@ public final class Utility {
       File file = new File(pathName);
       FileInputStream is = new FileInputStream(file);
 
-      BufferedReader br = new BufferedReader(new InputStreamReader(is, "utf-8"));
+      BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
       sb = new StringBuilder();
       String line;
       while ((line = br.readLine()) != null) {
@@ -319,7 +327,31 @@ public final class Utility {
     return prop;
   }
 
-  static void checkProperties(Set<String> propertyNames, List<String> mandatoryProperties) {
+  public static TypeSafeProperties getProp() {
+    TypeSafeProperties prop = new TypeSafeProperties();
+
+    try {
+      if (Files.isReadable(Paths.get(DEFAULT_CONF))) {
+        prop.load(new FileInputStream(new File(DEFAULT_CONF)));
+      } else if (Files.isReadable(Paths.get(DEFAULT_CONF_DIR))) {
+        prop.load(new FileInputStream(new File(DEFAULT_CONF_DIR)));
+      } else {
+        throw new ServiceConfigurationError("default.conf file not found in the working directory! (" + System.getProperty("user.dir") + ")");
+      }
+
+      if (Files.isReadable(Paths.get(APP_CONF))) {
+        prop.load(new FileInputStream(new File(APP_CONF)));
+      } else if (Files.isReadable(Paths.get(APP_CONF_DIR))) {
+        prop.load(new FileInputStream(new File(APP_CONF_DIR)));
+      }
+    } catch (IOException e) {
+      throw new AssertionError("File loading failed...", e);
+    }
+
+    return prop;
+  }
+
+  public static void checkProperties(Set<String> propertyNames, List<String> mandatoryProperties) {
     if (mandatoryProperties == null || mandatoryProperties.isEmpty()) {
       return;
     }
@@ -327,7 +359,7 @@ public final class Utility {
     List<String> properties = new ArrayList<>(mandatoryProperties);
     if (!propertyNames.containsAll(mandatoryProperties)) {
       properties.removeIf(propertyNames::contains);
-      throw new ServiceConfigurationError("Missing field(s) from app.properties file: " + properties.toString());
+      throw new ServiceConfigurationError("Missing field(s) from config file: " + properties.toString());
     }
   }
 

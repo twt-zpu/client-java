@@ -38,7 +38,7 @@ import org.glassfish.jersey.server.ResourceConfig;
   Common base class for Client main classes.
   Functionalities:
     1) Read in basic command line arguments
-    2) Read in the contents of app.properties, check for missing mandatory values
+    2) Read in the contents of the config files (default + app), check for missing mandatory values
     3) Start an insecure/secure web server (this might be optional in the future)
     4) Listen for exit command + stop the web server
  */
@@ -48,7 +48,7 @@ public abstract class ArrowheadClientMain {
   protected String baseUri;
   protected String base64PublicKey;
   protected HttpServer server;
-  protected final TypeSafeProperties props = Utility.getProp("app.properties");
+  protected final TypeSafeProperties props = Utility.getProp();
 
   private boolean daemon;
   private ClientType clientType;
@@ -125,8 +125,8 @@ public abstract class ArrowheadClientMain {
       server.start();
       System.out.println("Started insecure server at: " + baseUri);
     } catch (IOException | ProcessingException e) {
-      throw new ServiceConfigurationError(
-          "Make sure you gave a valid address in the app.properties file! (Assignable to this JVM and not in use already)", e);
+      throw new ServiceConfigurationError("Make sure you gave a valid address in the config file! (Assignable to this JVM and not in use already)",
+                                          e);
     }
   }
 
@@ -148,7 +148,7 @@ public abstract class ArrowheadClientMain {
     sslCon.setTrustStoreFile(truststorePath);
     sslCon.setTrustStorePass(truststorePass);
     if (!sslCon.validateConfiguration(true)) {
-      throw new AuthException("SSL Context is not valid, check the certificate files or app.properties!", Status.UNAUTHORIZED.getStatusCode());
+      throw new AuthException("SSL Context is not valid, check the certificate or the config files!", Status.UNAUTHORIZED.getStatusCode());
     }
 
     SSLContext sslContext = sslCon.createSSLContext();
@@ -174,8 +174,8 @@ public abstract class ArrowheadClientMain {
       server.start();
       System.out.println("Started secure server at: " + baseUri);
     } catch (IOException | ProcessingException e) {
-      throw new ServiceConfigurationError(
-          "Make sure you gave a valid address in the app.properties file! (Assignable to this JVM and not in use already)", e);
+      throw new ServiceConfigurationError("Make sure you gave a valid address in the config file! (Assignable to this JVM and not in use already)",
+                                          e);
     }
   }
 
