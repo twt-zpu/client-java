@@ -25,5 +25,4 @@
 /config/
 *.properties
 */target
-*.txt
 *app.conf
