@@ -18,6 +18,7 @@
   <packaging>pom</packaging>
 
   <modules>
+    <module>cert_request</module>
     <module>client-common</module>
     <module>consumer</module>
     <module>provider</module>
