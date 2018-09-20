@@ -1,3 +1,5 @@
+[![Build Status](https://api.travis-ci.com/arrowhead-f/client-java.svg?branch=develop)](https://travis-ci.com/arrowhead-f/client-java)
+
 # Arrowhead Clients
 
 This project provides client skeletons for the Arrowhead Framework Generation 4.0
