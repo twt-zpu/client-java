@@ -19,6 +19,7 @@ import eu.arrowhead.client.common.exception.DuplicateEntryException;
 import eu.arrowhead.client.common.exception.ErrorMessage;
 import eu.arrowhead.client.common.exception.UnavailableServerException;
 import eu.arrowhead.client.common.misc.JacksonJsonProviderAtRest;
+import eu.arrowhead.client.common.misc.PasswordGenerator;
 import eu.arrowhead.client.common.misc.TypeSafeProperties;
 import java.io.BufferedReader;
 import java.io.File;
@@ -28,6 +29,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -363,4 +366,17 @@ public final class Utility {
     }
   }
 
+  public static boolean isHostAvailable(String host, int port, int timeout) {
+    try (Socket socket = new Socket()) {
+      socket.connect(new InetSocketAddress(host, port), timeout);
+      return true;
+    } catch (IOException e) {
+      return false; // Either timeout or unreachable or failed DNS lookup.
+    }
+  }
+
+  public static String getRandomPassword() {
+    PasswordGenerator generator = new PasswordGenerator.Builder().useDigits(true).useLower(true).useUpper(true).usePunctuation(false).build();
+    return generator.generate(12);
+  }
 }

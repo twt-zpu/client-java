@@ -1,11 +1,13 @@
 package eu.arrowhead.client.common;
 
 import eu.arrowhead.client.common.exception.ArrowheadException;
+import eu.arrowhead.client.common.exception.AuthException;
 import eu.arrowhead.client.common.misc.SecurityUtils;
 import eu.arrowhead.client.common.model.CertificateSigningRequest;
 import eu.arrowhead.client.common.model.CertificateSigningResponse;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.KeyPair;
@@ -21,6 +23,9 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.ServiceConfigurationError;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -48,6 +53,14 @@ public final class CertificateBootstrapper {
 
   private CertificateBootstrapper() {
     throw new AssertionError("CertificateBootstrapper is a non-instantiable class");
+  }
+
+  /*
+    Gets the Cloud Common Name from the Certificate Authority Core System, proper URL is read from the config file
+   */
+  public static String getCloudCommonNameFromCA() {
+    Response caResponse = Utility.sendRequest(CA_URL, "GET", null);
+    return caResponse.readEntity(String.class);
   }
 
   /**
@@ -164,11 +177,24 @@ public final class CertificateBootstrapper {
   }
 
   /*
-    Gets the Cloud Common Name from the Certificate Authority Core System, proper URL is read from the config file
+     Updates the given properties file with the given key-value pairs.
    */
-  public static String getCloudCommonNameFromCA() {
-    Response caResponse = Utility.sendRequest(CA_URL, "GET", null);
-    return caResponse.readEntity(String.class);
+  public static void updateConfigurationFiles(String configLocation, Map<String, String> configValues) {
+    try {
+      FileInputStream in = new FileInputStream(configLocation);
+      Properties props = new Properties();
+      props.load(in);
+      in.close();
+
+      FileOutputStream out = new FileOutputStream(configLocation);
+      for (Entry<String, String> entry : configValues.entrySet()) {
+        props.setProperty(entry.getKey(), entry.getValue());
+      }
+      props.store(out, null);
+      out.close();
+    } catch (IOException e) {
+      throw new ArrowheadException("Cert bootstrapping: IOException during configuration file update", e);
+    }
   }
 
   /*
@@ -204,7 +230,7 @@ public final class CertificateBootstrapper {
     try {
       signer = new JcaContentSignerBuilder("SHA512withRSA").setProvider("BC").build(keyPair.getPrivate());
     } catch (OperatorCreationException e) {
-      throw new RuntimeException("Certificate request signing failed! (" + e.getMessage() + ")", e);
+      throw new AuthException("Certificate request signing failed! (" + e.getMessage() + ")", e);
     }
     PKCS10CertificationRequest csr = new JcaPKCS10CertificationRequestBuilder(new X500Name("CN=" + commonName), keyPair.getPublic()).build(signer);
 
@@ -213,7 +239,7 @@ public final class CertificateBootstrapper {
     try {
       encodedCertRequest = Base64.getEncoder().encodeToString(csr.getEncoded());
     } catch (IOException e) {
-      throw new RuntimeException("Failed to encode certificate signing request!", e);
+      throw new AuthException("Failed to encode certificate signing request!", e);
     }
     CertificateSigningRequest request = new CertificateSigningRequest(encodedCertRequest);
     Response caResponse = Utility.sendRequest(CA_URL, "POST", request);
@@ -223,6 +249,7 @@ public final class CertificateBootstrapper {
   }
 
   //Convert PEM encoded cert back to an X509Certificate
+  @SuppressWarnings("Duplicates")
   private static X509Certificate getCertFromString(String encodedCert) {
     try {
       byte[] rawCert = Base64.getDecoder().decode(encodedCert);
@@ -230,7 +257,7 @@ public final class CertificateBootstrapper {
       CertificateFactory cf = CertificateFactory.getInstance("X.509");
       return (X509Certificate) cf.generateCertificate(bIn);
     } catch (CertificateException e) {
-      throw new RuntimeException("Encapsulated exceptions...", e);
+      throw new AuthException("Encapsulated exceptions...", e);
     }
   }
 

@@ -9,6 +9,7 @@
 
 package eu.arrowhead.client.common;
 
+import eu.arrowhead.client.common.exception.ArrowheadException;
 import eu.arrowhead.client.common.exception.AuthException;
 import eu.arrowhead.client.common.misc.ClientType;
 import eu.arrowhead.client.common.misc.SecurityUtils;
@@ -16,7 +17,9 @@ import eu.arrowhead.client.common.misc.TypeSafeProperties;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -26,7 +29,6 @@ import java.util.ServiceConfigurationError;
 import java.util.Set;
 import javax.net.ssl.SSLContext;
 import javax.ws.rs.ProcessingException;
-import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.ssl.SSLContextConfigurator;
@@ -148,7 +150,12 @@ public abstract class ArrowheadClientMain {
     sslCon.setTrustStoreFile(truststorePath);
     sslCon.setTrustStorePass(truststorePass);
     if (!sslCon.validateConfiguration(true)) {
-      throw new AuthException("SSL Context is not valid, check the certificate or the config files!", Status.UNAUTHORIZED.getStatusCode());
+      try {
+        sslCon = doCertificateBootstrapping();
+      } catch (ArrowheadException | MalformedURLException e) {
+        throw new AuthException(
+            "Provided SSL context is not valid, check the certificate or the config files! Certificate bootstrapping failed with: " + e.getMessage());
+      }
     }
 
     SSLContext sslContext = sslCon.createSSLContext();
@@ -162,7 +169,7 @@ public abstract class ArrowheadClientMain {
     if (!SecurityUtils.isKeyStoreCNArrowheadValid(serverCN)) {
       throw new AuthException(
           "Server CN ( " + serverCN + ") is not compliant with the Arrowhead cert structure, since it does not have 5 parts, or does not end with"
-              + " \"arrowhead.eu\".", Status.UNAUTHORIZED.getStatusCode());
+              + " \"arrowhead.eu\".");
     }
     config.property("server_common_name", serverCN);
 
@@ -187,4 +194,21 @@ public abstract class ArrowheadClientMain {
     System.exit(0);
   }
 
+  protected SSLContextConfigurator doCertificateBootstrapping() throws MalformedURLException {
+    URL url = new URL(props.getProperty("cert_authority_url"));
+    if (!Utility.isHostAvailable(url.getHost(), url.getPort(), 3000)) {
+      throw new ArrowheadException("CA Core System is unavailable at " + props.getProperty("cert_authority_url"));
+    }
+
+    String cloudCN = CertificateBootstrapper.getCloudCommonNameFromCA();
+    String systemName = clientType.name().replaceAll("_", "").toLowerCase() + System.currentTimeMillis();
+    String keyStorePassword = props.getProperty("keystorepass") != null ? props.getProperty("keystorepass") : Utility.getRandomPassword();
+    String trustStorePassword = props.getProperty("truststorepass") != null ? props.getProperty("truststorepass") : Utility.getRandomPassword();
+
+    KeyStore[] keyStores = CertificateBootstrapper
+        .obtainSystemAndCloudKeyStore(systemName, cloudCN, keyStorePassword.toCharArray(), trustStorePassword.toCharArray());
+
+    //updating app.conf is missing in the end yet
+    return null;
+  }
 }
