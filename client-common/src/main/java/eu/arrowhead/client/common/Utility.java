@@ -379,4 +379,8 @@ public final class Utility {
     PasswordGenerator generator = new PasswordGenerator.Builder().useDigits(true).useLower(true).useUpper(true).usePunctuation(false).build();
     return generator.generate(12);
   }
+
+  public static boolean isBlank(final String str) {
+    return (str == null || "".equals(str.trim()));
+  }
 }

@@ -112,6 +112,7 @@ public class FullProviderMain extends ArrowheadClientMain {
     privateKey = SecurityUtils.getPrivateKey(keyStore, keystorePass);
 
     //Load the Authorization Core System public key
+    //TODO expect and extract a public key only from crt
     String authCertPath = props.getProperty("authorization_cert");
     KeyStore authKeyStore = SecurityUtils.createKeyStoreFromCert(authCertPath);
     X509Certificate authCert = SecurityUtils.getFirstCertFromKeyStore(authKeyStore);

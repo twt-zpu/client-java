@@ -2,7 +2,9 @@ package eu.arrowhead.client.common;
 
 import eu.arrowhead.client.common.exception.ArrowheadException;
 import eu.arrowhead.client.common.exception.AuthException;
+import eu.arrowhead.client.common.misc.ClientType;
 import eu.arrowhead.client.common.misc.SecurityUtils;
+import eu.arrowhead.client.common.misc.TypeSafeProperties;
 import eu.arrowhead.client.common.model.CertificateSigningRequest;
 import eu.arrowhead.client.common.model.CertificateSigningResponse;
 import java.io.ByteArrayInputStream;
@@ -10,19 +12,21 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
-import java.security.Security;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -30,35 +34,75 @@ import java.util.ServiceConfigurationError;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import org.bouncycastle.asn1.x500.X500Name;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
+import org.glassfish.grizzly.ssl.SSLContextConfigurator;
 
 public final class CertificateBootstrapper {
 
-  private static String CA_URL;
-
-  //Static initializer: get the Certificate Authority URL when the class first gets used
-  static {
-    Security.addProvider(new BouncyCastleProvider());
-    CA_URL = Utility.getProp().getProperty("cert_authority_url");
-    if (CA_URL == null) {
-      throw new ArrowheadException("cert_authority_url property is not provided in config file, but certificate bootstrapping is requested!",
-                                   Status.BAD_REQUEST.getStatusCode());
-    }
-  }
+  private static TypeSafeProperties props = Utility.getProp();
+  private static String CA_URL = props.getProperty("cert_authority_url");
 
   private CertificateBootstrapper() {
     throw new AssertionError("CertificateBootstrapper is a non-instantiable class");
   }
 
+  public static SSLContextConfigurator bootstrap(ClientType clientType) {
+    //Check if the CA is available at the provided URL (with socket opening)
+    URL url;
+    try {
+      url = new URL(CA_URL);
+    } catch (MalformedURLException e) {
+      throw new ArrowheadException(
+          "cert_authority_url property is not (properly) provided in config file, but certificate bootstrapping is requested!",
+          Status.BAD_REQUEST.getStatusCode(), e);
+    }
+    if (!Utility.isHostAvailable(url.getHost(), url.getPort(), 3000)) {
+      throw new ArrowheadException("CA Core System is unavailable at " + props.getProperty("cert_authority_url"));
+    }
+
+    //Prepare the data needed to generate the certificate(s)
+    String cloudCN = CertificateBootstrapper.getCloudCommonNameFromCA();
+    String systemName = clientType.name().replaceAll("_", "").toLowerCase() + System.currentTimeMillis();
+    String keyStorePassword = !Utility.isBlank(props.getProperty("keystorepass")) ? props.getProperty("keystorepass") : Utility.getRandomPassword();
+    String trustStorePassword =
+        !Utility.isBlank(props.getProperty("truststorepass")) ? props.getProperty("truststorepass") : Utility.getRandomPassword();
+
+    //Obtain the keystore and truststore
+    KeyStore[] keyStores = CertificateBootstrapper
+        .obtainSystemAndCloudKeyStore(systemName, cloudCN, keyStorePassword.toCharArray(), trustStorePassword.toCharArray());
+
+    //Save the keystores to file
+    String certPathPrefix = "config" + File.separator + "certificates";
+    CertificateBootstrapper.saveKeyStoreToFile(keyStores[0], keyStorePassword.toCharArray(), systemName + ".p12", certPathPrefix);
+    CertificateBootstrapper.saveKeyStoreToFile(keyStores[1], trustStorePassword.toCharArray(), "truststore.p12", certPathPrefix);
+
+    //Update app.conf with the new values
+    Map<String, String> secureParameters = new HashMap<>();
+    secureParameters.put("keystore", certPathPrefix + File.separator + systemName + ".p12");
+    secureParameters.put("keystorepass", keyStorePassword);
+    secureParameters.put("keypass", keyStorePassword);
+    secureParameters.put("truststore", certPathPrefix + File.separator + "truststore.p12");
+    secureParameters.put("truststorepass", trustStorePassword);
+    CertificateBootstrapper.updateConfigurationFiles("config" + File.separator + "app.conf", secureParameters);
+
+    //Return a new, valid SSLContextConfigurator
+    SSLContextConfigurator sslCon = new SSLContextConfigurator();
+    sslCon.setKeyStoreFile(certPathPrefix + File.separator + systemName + ".p12");
+    sslCon.setKeyStorePass(keyStorePassword);
+    sslCon.setKeyPass(keyStorePassword);
+    sslCon.setTrustStoreFile(certPathPrefix + File.separator + "truststore.p12");
+    sslCon.setTrustStorePass(trustStorePassword);
+    return sslCon;
+  }
+
   /*
     Gets the Cloud Common Name from the Certificate Authority Core System, proper URL is read from the config file
    */
-  public static String getCloudCommonNameFromCA() {
+  private static String getCloudCommonNameFromCA() {
     Response caResponse = Utility.sendRequest(CA_URL, "GET", null);
     return caResponse.readEntity(String.class);
   }
@@ -74,7 +118,7 @@ public final class CertificateBootstrapper {
    *
    * @see <a href="https://tools.ietf.org/html/rfc5280.html#section-7.1">X.509 certificate specification: distinguished names</a>
    */
-  public static KeyStore obtainSystemKeyStore(String commonName, char[] keyStorePassword) {
+  private static KeyStore obtainSystemKeyStore(String commonName, char[] keyStorePassword) {
     CertificateSigningResponse signingResponse = getSignedCertFromCA(commonName);
 
     //Get the reconstructed certs from the CA response
@@ -110,7 +154,7 @@ public final class CertificateBootstrapper {
    *
    * @see <a href="https://tools.ietf.org/html/rfc5280.html#section-7.1">X.509 certificate specification: distinguished names</a>
    */
-  public static KeyStore[] obtainSystemAndCloudKeyStore(String systemName, String cloudCN, char[] systemKsPassword, char[] cloudKsPassword) {
+  private static KeyStore[] obtainSystemAndCloudKeyStore(String systemName, String cloudCN, char[] systemKsPassword, char[] cloudKsPassword) {
     String commonName = systemName + "." + cloudCN;
     CertificateSigningResponse signingResponse = getSignedCertFromCA(commonName);
 
@@ -139,7 +183,7 @@ public final class CertificateBootstrapper {
       KeyStore ks = KeyStore.getInstance("pkcs12");
       ks.load(null, cloudKsPassword);
       KeyStore.Entry certEntry = new KeyStore.TrustedCertificateEntry(cloudCert);
-      ks.setEntry(cloudCN, certEntry, new KeyStore.PasswordProtection(cloudKsPassword));
+      ks.setEntry(cloudCN, certEntry, null);
       keyStores[1] = ks;
     } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e) {
       throw new ArrowheadException("System key store creation failed!", e);
@@ -157,11 +201,11 @@ public final class CertificateBootstrapper {
    * @param saveLocation optional relative or absolute path where the keystore should be saved (must point to directory). If not provided, the file
    *     will be placed into the working directory.
    */
-  public static void saveKeyStoreToFile(KeyStore keyStore, char[] keyStorePassword, String fileName, String saveLocation) {
+  private static void saveKeyStoreToFile(KeyStore keyStore, char[] keyStorePassword, String fileName, String saveLocation) {
     if (keyStore == null || fileName == null) {
       throw new NullPointerException("Saving the key store to file is not possible, key store or file name is null!");
     }
-    if (!fileName.endsWith(".p12") || !fileName.endsWith(".jks")) {
+    if (!(fileName.endsWith(".p12") || fileName.endsWith(".jks"))) {
       throw new ServiceConfigurationError("File name should end with its extension! (p12 or jks)");
     }
     if (saveLocation != null) {
@@ -179,7 +223,7 @@ public final class CertificateBootstrapper {
   /*
      Updates the given properties file with the given key-value pairs.
    */
-  public static void updateConfigurationFiles(String configLocation, Map<String, String> configValues) {
+  private static void updateConfigurationFiles(String configLocation, Map<String, String> configValues) {
     try {
       FileInputStream in = new FileInputStream(configLocation);
       Properties props = new Properties();
@@ -195,12 +239,15 @@ public final class CertificateBootstrapper {
     } catch (IOException e) {
       throw new ArrowheadException("Cert bootstrapping: IOException during configuration file update", e);
     }
+    props = Utility.getProp();
+    CA_URL = props.getProperty("cert_authority_url");
   }
 
   /*
     Authorization Public Key is used by ArrowheadProviders to verify the signatures by the Authorization Core System in secure mode
    */
-  public static PublicKey getAuthorizationPublicKey() {
+  //TODO also save it to file and update props
+  private static PublicKey getAuthorizationPublicKey() {
     Response caResponse = Utility.sendRequest(CA_URL + "/auth", "GET", null);
     try {
       return SecurityUtils.getPublicKey(caResponse.readEntity(String.class));

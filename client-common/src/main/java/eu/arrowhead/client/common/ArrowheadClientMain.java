@@ -17,9 +17,7 @@ import eu.arrowhead.client.common.misc.TypeSafeProperties;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -50,7 +48,7 @@ public abstract class ArrowheadClientMain {
   protected String baseUri;
   protected String base64PublicKey;
   protected HttpServer server;
-  protected final TypeSafeProperties props = Utility.getProp();
+  protected TypeSafeProperties props = Utility.getProp();
 
   private boolean daemon;
   private ClientType clientType;
@@ -137,31 +135,27 @@ public abstract class ArrowheadClientMain {
     config.registerClasses(classes);
     config.packages(packages);
 
-    String keystorePath = props.getProperty("keystore");
-    String keystorePass = props.getProperty("keystorepass");
-    String keyPass = props.getProperty("keypass");
-    String truststorePath = props.getProperty("truststore");
-    String truststorePass = props.getProperty("truststorepass");
-
     SSLContextConfigurator sslCon = new SSLContextConfigurator();
-    sslCon.setKeyStoreFile(keystorePath);
-    sslCon.setKeyStorePass(keystorePass);
-    sslCon.setKeyPass(keyPass);
-    sslCon.setTrustStoreFile(truststorePath);
-    sslCon.setTrustStorePass(truststorePass);
+    sslCon.setKeyStoreFile(props.getProperty("keystore"));
+    sslCon.setKeyStorePass(props.getProperty("keystorepass"));
+    sslCon.setKeyPass(props.getProperty("keypass"));
+    sslCon.setTrustStoreFile(props.getProperty("truststore"));
+    sslCon.setTrustStorePass(props.getProperty("truststorepass"));
     if (!sslCon.validateConfiguration(true)) {
       try {
-        sslCon = doCertificateBootstrapping();
-      } catch (ArrowheadException | MalformedURLException e) {
+        sslCon = CertificateBootstrapper.bootstrap(clientType);
+        props = Utility.getProp();
+      } catch (ArrowheadException e) {
         throw new AuthException(
-            "Provided SSL context is not valid, check the certificate or the config files! Certificate bootstrapping failed with: " + e.getMessage());
+            "Provided SSL context is not valid, check the certificate or the config files! Certificate bootstrapping failed with: " + e.getMessage(),
+            e);
       }
     }
 
     SSLContext sslContext = sslCon.createSSLContext();
     Utility.setSSLContext(sslContext);
 
-    KeyStore keyStore = SecurityUtils.loadKeyStore(keystorePath, keystorePass);
+    KeyStore keyStore = SecurityUtils.loadKeyStore(props.getProperty("keystore"), props.getProperty("keystorepass"));
     X509Certificate serverCert = SecurityUtils.getFirstCertFromKeyStore(keyStore);
     base64PublicKey = Base64.getEncoder().encodeToString(serverCert.getPublicKey().getEncoded());
     System.out.println("Server PublicKey Base64: " + base64PublicKey);
@@ -192,23 +186,5 @@ public abstract class ArrowheadClientMain {
     }
     System.out.println(clientType + " Server stopped");
     System.exit(0);
-  }
-
-  protected SSLContextConfigurator doCertificateBootstrapping() throws MalformedURLException {
-    URL url = new URL(props.getProperty("cert_authority_url"));
-    if (!Utility.isHostAvailable(url.getHost(), url.getPort(), 3000)) {
-      throw new ArrowheadException("CA Core System is unavailable at " + props.getProperty("cert_authority_url"));
-    }
-
-    String cloudCN = CertificateBootstrapper.getCloudCommonNameFromCA();
-    String systemName = clientType.name().replaceAll("_", "").toLowerCase() + System.currentTimeMillis();
-    String keyStorePassword = props.getProperty("keystorepass") != null ? props.getProperty("keystorepass") : Utility.getRandomPassword();
-    String trustStorePassword = props.getProperty("truststorepass") != null ? props.getProperty("truststorepass") : Utility.getRandomPassword();
-
-    KeyStore[] keyStores = CertificateBootstrapper
-        .obtainSystemAndCloudKeyStore(systemName, cloudCN, keyStorePassword.toCharArray(), trustStorePassword.toCharArray());
-
-    //updating app.conf is missing in the end yet
-    return null;
   }
 }
