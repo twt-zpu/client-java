@@ -112,12 +112,16 @@ public class FullProviderMain extends ArrowheadClientMain {
     privateKey = SecurityUtils.getPrivateKey(keyStore, keystorePass);
 
     //Load the Authorization Core System public key
-    //TODO expect and extract a public key only from crt
-    String authCertPath = props.getProperty("authorization_cert");
-    KeyStore authKeyStore = SecurityUtils.createKeyStoreFromCert(authCertPath);
-    X509Certificate authCert = SecurityUtils.getFirstCertFromKeyStore(authKeyStore);
-    authorizationKey = authCert.getPublicKey();
-    System.out.println("Authorization CN: " + SecurityUtils.getCertCNFromSubject(authCert.getSubjectDN().getName()));
+    String authPublicKeyPath = props.getProperty("authorization_public_key");
+    //Supporting the old format used previously: crt file containing the full certificate
+    if (authPublicKeyPath.endsWith("crt")) {
+      KeyStore authKeyStore = SecurityUtils.createKeyStoreFromCert(authPublicKeyPath);
+      X509Certificate authCert = SecurityUtils.getFirstCertFromKeyStore(authKeyStore);
+      authorizationKey = authCert.getPublicKey();
+    } else { //This is just a PEM encoded public key
+      authorizationKey = SecurityUtils.getPublicKey(authPublicKeyPath, true);
+    }
+
     System.out.println("Authorization System PublicKey Base64: " + Base64.getEncoder().encodeToString(authorizationKey.getEncoded()));
   }
 

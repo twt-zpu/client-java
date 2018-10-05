@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.KeyPair;
@@ -20,11 +21,11 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.Security;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,17 +35,24 @@ import java.util.ServiceConfigurationError;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
+import org.bouncycastle.util.io.pem.PemObject;
+import org.bouncycastle.util.io.pem.PemWriter;
 import org.glassfish.grizzly.ssl.SSLContextConfigurator;
 
 public final class CertificateBootstrapper {
 
   private static TypeSafeProperties props = Utility.getProp();
   private static String CA_URL = props.getProperty("cert_authority_url");
+
+  static {
+    Security.addProvider(new BouncyCastleProvider());
+  }
 
   private CertificateBootstrapper() {
     throw new AssertionError("CertificateBootstrapper is a non-instantiable class");
@@ -87,6 +95,10 @@ public final class CertificateBootstrapper {
     secureParameters.put("keypass", keyStorePassword);
     secureParameters.put("truststore", certPathPrefix + File.separator + "truststore.p12");
     secureParameters.put("truststorepass", trustStorePassword);
+    if (clientType.equals(ClientType.PROVIDER)) {
+      getAuthorizationPublicKey(certPathPrefix + File.separator + "authorization.crt");
+      secureParameters.put("authorization_public_key", certPathPrefix + File.separator + "authorization.crt");
+    }
     CertificateBootstrapper.updateConfigurationFiles("config" + File.separator + "app.conf", secureParameters);
 
     //Return a new, valid SSLContextConfigurator
@@ -118,6 +130,7 @@ public final class CertificateBootstrapper {
    *
    * @see <a href="https://tools.ietf.org/html/rfc5280.html#section-7.1">X.509 certificate specification: distinguished names</a>
    */
+  @SuppressWarnings("unused")
   private static KeyStore obtainSystemKeyStore(String commonName, char[] keyStorePassword) {
     CertificateSigningResponse signingResponse = getSignedCertFromCA(commonName);
 
@@ -211,10 +224,8 @@ public final class CertificateBootstrapper {
     if (saveLocation != null) {
       fileName = saveLocation + File.separator + fileName;
     }
-    try {
-      FileOutputStream fos = new FileOutputStream(fileName);
+    try (FileOutputStream fos = new FileOutputStream(fileName)) {
       keyStore.store(fos, keyStorePassword);
-      fos.close();
     } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e) {
       throw new ArrowheadException("Saving keystore to file " + fileName + " failed!", e);
     }
@@ -246,13 +257,15 @@ public final class CertificateBootstrapper {
   /*
     Authorization Public Key is used by ArrowheadProviders to verify the signatures by the Authorization Core System in secure mode
    */
-  //TODO also save it to file and update props
-  private static PublicKey getAuthorizationPublicKey() {
+  private static void getAuthorizationPublicKey(String filePath) {
     Response caResponse = Utility.sendRequest(CA_URL + "/auth", "GET", null);
-    try {
-      return SecurityUtils.getPublicKey(caResponse.readEntity(String.class));
-    } catch (InvalidKeySpecException e) {
-      throw new ArrowheadException("Could not decode public key from CA response!", e);
+    try (FileOutputStream fos = new FileOutputStream(filePath)) {
+      PublicKey publicKey = SecurityUtils.getPublicKey(caResponse.readEntity(String.class), false);
+      PemWriter pemWriter = new PemWriter(new OutputStreamWriter(fos));
+      pemWriter.writeObject(new PemObject("PUBLIC KEY", publicKey.getEncoded()));
+      fos.write(fos.toString().getBytes());
+    } catch (IOException e) {
+      throw new ArrowheadException("IO exception during Authorization public key save!", e);
     }
   }
 
