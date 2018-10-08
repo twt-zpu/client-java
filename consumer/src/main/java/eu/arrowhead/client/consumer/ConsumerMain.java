@@ -198,7 +198,7 @@ public class ConsumerMain {
     if (serviceURI != null) {
       ub.path(serviceURI);
     }
-    if (provider.getPort() > 0) {
+    if (provider.getPort() != null && provider.getPort() > 0) {
       ub.port(provider.getPort());
     }
     if (orchResponse.getResponse().get(0).getService().getServiceMetadata().containsKey("security")) {
