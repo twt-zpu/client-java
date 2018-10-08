@@ -30,19 +30,17 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Properties;
 import java.util.ServiceConfigurationError;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
-import org.bouncycastle.util.io.pem.PemObject;
-import org.bouncycastle.util.io.pem.PemWriter;
 import org.glassfish.grizzly.ssl.SSLContextConfigurator;
 
 public final class CertificateBootstrapper {
@@ -58,7 +56,7 @@ public final class CertificateBootstrapper {
     throw new AssertionError("CertificateBootstrapper is a non-instantiable class");
   }
 
-  public static SSLContextConfigurator bootstrap(ClientType clientType) {
+  public static SSLContextConfigurator bootstrap(ClientType clientType, String systemName) {
     //Check if the CA is available at the provided URL (with socket opening)
     URL url;
     try {
@@ -74,7 +72,7 @@ public final class CertificateBootstrapper {
 
     //Prepare the data needed to generate the certificate(s)
     String cloudCN = CertificateBootstrapper.getCloudCommonNameFromCA();
-    String systemName = clientType.name().replaceAll("_", "").toLowerCase() + System.currentTimeMillis();
+    systemName = systemName != null ? systemName : clientType.name().replaceAll("_", "").toLowerCase() + System.currentTimeMillis();
     String keyStorePassword = !Utility.isBlank(props.getProperty("keystorepass")) ? props.getProperty("keystorepass") : Utility.getRandomPassword();
     String trustStorePassword =
         !Utility.isBlank(props.getProperty("truststorepass")) ? props.getProperty("truststorepass") : Utility.getRandomPassword();
@@ -96,8 +94,8 @@ public final class CertificateBootstrapper {
     secureParameters.put("truststore", certPathPrefix + File.separator + "truststore.p12");
     secureParameters.put("truststorepass", trustStorePassword);
     if (clientType.equals(ClientType.PROVIDER)) {
-      getAuthorizationPublicKey(certPathPrefix + File.separator + "authorization.crt");
-      secureParameters.put("authorization_public_key", certPathPrefix + File.separator + "authorization.crt");
+      getAuthorizationPublicKey(certPathPrefix + File.separator + "authorization.pub");
+      secureParameters.put("authorization_public_key", certPathPrefix + File.separator + "authorization.pub");
     }
     CertificateBootstrapper.updateConfigurationFiles("config" + File.separator + "app.conf", secureParameters);
 
@@ -237,7 +235,7 @@ public final class CertificateBootstrapper {
   private static void updateConfigurationFiles(String configLocation, Map<String, String> configValues) {
     try {
       FileInputStream in = new FileInputStream(configLocation);
-      Properties props = new Properties();
+      TypeSafeProperties props = new TypeSafeProperties();
       props.load(in);
       in.close();
 
@@ -260,10 +258,13 @@ public final class CertificateBootstrapper {
   private static void getAuthorizationPublicKey(String filePath) {
     Response caResponse = Utility.sendRequest(CA_URL + "/auth", "GET", null);
     try (FileOutputStream fos = new FileOutputStream(filePath)) {
+      OutputStreamWriter osw = new OutputStreamWriter(fos);
+      JcaPEMWriter pemWriter = new JcaPEMWriter(osw);
       PublicKey publicKey = SecurityUtils.getPublicKey(caResponse.readEntity(String.class), false);
-      PemWriter pemWriter = new PemWriter(new OutputStreamWriter(fos));
-      pemWriter.writeObject(new PemObject("PUBLIC KEY", publicKey.getEncoded()));
-      fos.write(fos.toString().getBytes());
+      pemWriter.writeObject(publicKey);
+      pemWriter.flush();
+      pemWriter.close();
+      osw.close();
     } catch (IOException e) {
       throw new ArrowheadException("IO exception during Authorization public key save!", e);
     }

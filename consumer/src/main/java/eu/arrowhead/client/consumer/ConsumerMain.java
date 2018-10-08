@@ -35,6 +35,7 @@ public class ConsumerMain {
   private static boolean isSecure;
   private static String orchestratorUrl;
   private static TypeSafeProperties props = Utility.getProp();
+  private static final String consumerSystemName = props.getProperty("consumer_system_name");
 
   private ConsumerMain(String[] args) {
     //Prints the working directory for extra information. Working directory should always contain a config folder with the app.conf file!
@@ -76,7 +77,7 @@ public class ConsumerMain {
       the address, port and authenticationInfo fields can be set to anything.
       SystemName can be an arbitrarily chosen name, which makes sense for the use case.
      */
-    ArrowheadSystem consumer = new ArrowheadSystem("client1", "localhost", 8080, "null");
+    ArrowheadSystem consumer = new ArrowheadSystem(consumerSystemName, "localhost", 8080, "null");
 
     //You can put any additional metadata you look for in a Service here (key-value pairs)
     Map<String, String> metadata = new HashMap<>();
@@ -161,7 +162,7 @@ public class ConsumerMain {
         sslCon.setTrustStoreFile(props.getProperty("truststore"));
         sslCon.setTrustStorePass(props.getProperty("truststorepass"));
         if (!sslCon.validateConfiguration(true)) {
-          sslCon = CertificateBootstrapper.bootstrap(ClientType.CONSUMER);
+          sslCon = CertificateBootstrapper.bootstrap(ClientType.CONSUMER, consumerSystemName);
           props = Utility.getProp();
         }
         SSLContext sslContext = sslCon.createSSLContext();
