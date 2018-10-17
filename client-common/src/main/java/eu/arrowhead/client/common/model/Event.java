@@ -12,6 +12,7 @@ package eu.arrowhead.client.common.model;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import jersey.repackaged.com.google.common.base.MoreObjects;
 
 public class Event {
 
@@ -62,4 +63,8 @@ public class Event {
     this.eventMetadata = eventMetadata;
   }
 
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).add("type", type).add("payload", payload).add("eventMetadata", eventMetadata).toString();
+  }
 }
