@@ -8,7 +8,7 @@ Contact: hegeduscs'at'aitia.ai
 
 ### Project structure
 
-This is a multi module maven project, the root `pom.xml` lists all the modules.
+This is a multi module maven project, the [root `pom.xml`](https://github.com/arrowhead-f/client-java/blob/master/pom.xml) lists all the modules and common dependencies.
 
 * **BasicConsumer**: this is a stand-alone plain Java project (not using maven), the only dependencies it needs are in `BasicConsumer/resources` folder
 * **client-common**: a common library module for the other maven modules. Contains all the data transfer objects and common dependencies.
