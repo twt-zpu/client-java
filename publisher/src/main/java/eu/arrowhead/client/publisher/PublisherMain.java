@@ -15,6 +15,7 @@ import eu.arrowhead.client.common.misc.ClientType;
 import eu.arrowhead.client.common.model.ArrowheadSystem;
 import eu.arrowhead.client.common.model.Event;
 import eu.arrowhead.client.common.model.PublishEvent;
+
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashSet;

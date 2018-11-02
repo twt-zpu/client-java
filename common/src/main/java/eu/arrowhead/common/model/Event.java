@@ -7,12 +7,14 @@
  *  national funding authorities from involved countries.
  */
 
-package eu.arrowhead.client.common.model;
+package eu.arrowhead.common.model;
+
+import org.glassfish.jersey.internal.guava.MoreObjects;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import org.glassfish.jersey.internal.guava.MoreObjects;
 
 public class Event {
 
@@ -22,6 +24,12 @@ public class Event {
   private Map<String, String> eventMetadata = new HashMap<>();
 
   public Event() {
+  }
+
+  public Event(String type, String payload) {
+    this.type = type;
+    this.payload = payload;
+    this.timestamp = LocalDateTime.now();
   }
 
   public Event(String type, String payload, LocalDateTime timestamp, Map<String, String> eventMetadata) {

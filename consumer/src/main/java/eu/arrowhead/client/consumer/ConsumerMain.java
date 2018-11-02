@@ -162,7 +162,7 @@ public class ConsumerMain {
         sslCon.setTrustStoreFile(props.getProperty("truststore"));
         sslCon.setTrustStorePass(props.getProperty("truststorepass"));
         if (!sslCon.validateConfiguration(true)) {
-          sslCon = CertificateBootstrapper.bootstrap(ClientType.CONSUMER, consumerSystemName);
+          sslCon = CertificateBootstrapper.bootstrap(consumerSystemName, false);
           props = Utility.getProp();
         }
         SSLContext sslContext = sslCon.createSSLContext();

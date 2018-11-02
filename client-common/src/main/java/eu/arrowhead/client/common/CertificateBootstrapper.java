@@ -2,37 +2,10 @@ package eu.arrowhead.client.common;
 
 import eu.arrowhead.client.common.exception.ArrowheadException;
 import eu.arrowhead.client.common.exception.AuthException;
-import eu.arrowhead.client.common.misc.ClientType;
 import eu.arrowhead.client.common.misc.SecurityUtils;
 import eu.arrowhead.client.common.misc.TypeSafeProperties;
 import eu.arrowhead.client.common.model.CertificateSigningRequest;
 import eu.arrowhead.client.common.model.CertificateSigningResponse;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
-import java.security.Security;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.ServiceConfigurationError;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
@@ -42,6 +15,20 @@ import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
 import org.glassfish.grizzly.ssl.SSLContextConfigurator;
+
+import javax.net.ssl.SSLContext;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.security.*;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.util.*;
+import java.util.Map.Entry;
 
 public final class CertificateBootstrapper {
 
@@ -56,7 +43,7 @@ public final class CertificateBootstrapper {
     throw new AssertionError("CertificateBootstrapper is a non-instantiable class");
   }
 
-  public static SSLContextConfigurator bootstrap(ClientType clientType, String systemName) {
+  public static SSLContextConfigurator bootstrap(String systemName, boolean needAuth) {
     //Check if the CA is available at the provided URL (with socket opening)
     URL url;
     try {
@@ -70,9 +57,18 @@ public final class CertificateBootstrapper {
       throw new ArrowheadException("CA Core System is unavailable at " + props.getProperty("cert_authority_url"));
     }
 
+    if (systemName == null) throw new ArrowheadException("System name is required to generate certificates - have" +
+            "you set \"secure_system_name\" in the config file?");
+
+    SSLContextConfigurator sslCon = new SSLContextConfigurator();
+    sslCon.setKeyPass(props.getProperty("keypass"));
+    sslCon.setTrustStoreFile(props.getProperty("truststore"));
+    sslCon.setTrustStorePass(props.getProperty("truststorepass"));
+    SSLContext sslContext = sslCon.createSSLContext();
+    Utility.setSSLContext(sslContext);
+
     //Prepare the data needed to generate the certificate(s)
     String cloudCN = CertificateBootstrapper.getCloudCommonNameFromCA();
-    systemName = systemName != null ? systemName : clientType.name().replaceAll("_", "").toLowerCase() + System.currentTimeMillis();
     String keyStorePassword = !Utility.isBlank(props.getProperty("keystorepass")) ? props.getProperty("keystorepass") : Utility.getRandomPassword();
     String trustStorePassword =
         !Utility.isBlank(props.getProperty("truststorepass")) ? props.getProperty("truststorepass") : Utility.getRandomPassword();
@@ -82,7 +78,7 @@ public final class CertificateBootstrapper {
         .obtainSystemAndCloudKeyStore(systemName, cloudCN, keyStorePassword.toCharArray(), trustStorePassword.toCharArray());
 
     //Save the keystores to file
-    String certPathPrefix = "config" + File.separator + "certificates";
+    String certPathPrefix = "config"; // TODO This should be more flexible, Thomas
     CertificateBootstrapper.saveKeyStoreToFile(keyStores[0], keyStorePassword.toCharArray(), systemName + ".p12", certPathPrefix);
     CertificateBootstrapper.saveKeyStoreToFile(keyStores[1], trustStorePassword.toCharArray(), "truststore.p12", certPathPrefix);
 
@@ -93,14 +89,14 @@ public final class CertificateBootstrapper {
     secureParameters.put("keypass", keyStorePassword);
     secureParameters.put("truststore", certPathPrefix + File.separator + "truststore.p12");
     secureParameters.put("truststorepass", trustStorePassword);
-    if (clientType.equals(ClientType.PROVIDER)) {
+    if (needAuth) {
       getAuthorizationPublicKey(certPathPrefix + File.separator + "authorization.pub");
       secureParameters.put("authorization_public_key", certPathPrefix + File.separator + "authorization.pub");
     }
     CertificateBootstrapper.updateConfigurationFiles("config" + File.separator + "app.conf", secureParameters);
 
     //Return a new, valid SSLContextConfigurator
-    SSLContextConfigurator sslCon = new SSLContextConfigurator();
+    sslCon = new SSLContextConfigurator();
     sslCon.setKeyStoreFile(certPathPrefix + File.separator + systemName + ".p12");
     sslCon.setKeyStorePass(keyStorePassword);
     sslCon.setKeyPass(keyStorePassword);

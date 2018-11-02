@@ -143,7 +143,7 @@ public abstract class ArrowheadClientMain {
     sslCon.setTrustStorePass(props.getProperty("truststorepass"));
     if (!sslCon.validateConfiguration(true)) {
       try {
-        sslCon = CertificateBootstrapper.bootstrap(clientType, props.getProperty("secure_system_name"));
+        sslCon = CertificateBootstrapper.bootstrap(props.getProperty("secure_system_name"), true);
         props = Utility.getProp();
       } catch (ArrowheadException e) {
         throw new AuthException(

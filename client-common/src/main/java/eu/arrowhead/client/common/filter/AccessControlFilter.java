@@ -52,21 +52,6 @@ public class AccessControlFilter implements ContainerRequestFilter {
     NOTE this method should be modified for customized behaviour
    */
   private boolean isClientAuthorized(String subjectName) {
-    //Logic can be different for each client type in this project
-    String clientType = System.getProperty("client_type");
-    switch (clientType) {
-      case "PROVIDER":
-        break;
-      case "CONSUMER":
-        break;
-      case "SUBSCRIBER":
-        break;
-      case "PUBLISHER":
-        break;
-      default:
-        break;
-    }
-
     String clientCN = SecurityUtils.getCertCNFromSubject(subjectName);
     String serverCN = (String) configuration.getProperty("server_common_name");
 
