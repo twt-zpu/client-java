@@ -27,6 +27,13 @@ public abstract class ArrowheadClient {
 
     public ArrowheadClient(String[] args, CertificateAuthorityClient ca) {
         // TODO Switch ALL system.out to log4j, Thomas
+        props.putIfAbsent("log4j.rootLogger", "INFO, CONSOLE");
+        props.putIfAbsent("log4j.appender.CONSOLE", "org.apache.log4j.ConsoleAppender");
+        props.putIfAbsent("log4j.appender.CONSOLE.target", "System.err");
+        props.putIfAbsent("log4j.appender.CONSOLE.ImmediateFlush", "true");
+        props.putIfAbsent("log4j.appender.CONSOLE.Threshold", "debug");
+        props.putIfAbsent("log4j.appender.CONSOLE.layout", "org.apache.log4j.PatternLayout");
+        props.putIfAbsent("log4j.appender.CONSOLE.layout.conversionPattern", "%d{yyyy-MM-dd HH:mm:ss}, %l, %p, %m%n");
         PropertyConfigurator.configure(props);
 
         System.out.println("Working directory: " + System.getProperty("user.dir"));
