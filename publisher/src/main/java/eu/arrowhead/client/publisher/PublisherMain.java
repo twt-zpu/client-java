@@ -40,7 +40,7 @@ public class PublisherMain extends ArrowheadClient {
     TimerTask authTask = new TimerTask() {
       @Override
       public void run() {
-        eventHandler.publish(new Event(props.getProperty("event_type"), "Hello World"), me);
+        eventHandler.publish(new Event(props.getEventType(), "Hello World"), me);
       }
     };
     timer.schedule(authTask, 2L * 1000L, 8L * 1000L);

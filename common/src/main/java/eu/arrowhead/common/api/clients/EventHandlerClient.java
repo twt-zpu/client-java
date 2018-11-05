@@ -88,7 +88,7 @@ public class EventHandlerClient extends ArrowheadSystem {
     }
 
     public void subscribe(String eventType, ArrowheadSystem consumer, ArrowheadProperties props) {
-        subscribe(eventType, consumer, props.getProperty("notify_uri", "subscriber/notify"));
+        subscribe(eventType, consumer, props.getNotifyUri());
     }
 
     public void subscribe(String eventType, ArrowheadSystem consumer, String notifyPath) {

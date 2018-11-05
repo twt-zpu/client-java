@@ -394,7 +394,7 @@ public final class Utility {
         // TODO Create file if it doesn't exist!
         try {
             FileInputStream in = new FileInputStream(configLocation);
-            TypeSafeProperties props = new TypeSafeProperties();
+            ArrowheadProperties props = new ArrowheadProperties();
             props.load(in);
             in.close();
 

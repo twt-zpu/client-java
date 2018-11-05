@@ -2,7 +2,6 @@ package eu.arrowhead.common.misc;
 
 import java.time.ZonedDateTime;
 
-// TODO Search for the primitive getX from upstream and replace with these, Thomas
 public class ArrowheadProperties extends TypeSafeProperties {
     public static boolean getDefaultIsSecure() {
         return true;
@@ -62,6 +61,10 @@ public class ArrowheadProperties extends TypeSafeProperties {
 
     public static String createDefaultSystemName() {
         return "unknown-" + ZonedDateTime.now().toEpochSecond();
+    }
+
+    public static String getDefaultNotifyUri() {
+        return "subscriber/notify";
     }
 
     public boolean isSecure() {
@@ -148,5 +151,13 @@ public class ArrowheadProperties extends TypeSafeProperties {
 
     public String getMetadata() {
         return getProperty("metadata");
+    }
+
+    public String getEventType() {
+        return getProperty("event_type");
+    }
+
+    public String getNotifyUri() {
+        return getProperty("notify_uri", getDefaultNotifyUri());
     }
 }
