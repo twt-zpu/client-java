@@ -9,18 +9,33 @@
 
 package eu.arrowhead.common.misc;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 
 public class TypeSafeProperties extends Properties {
+
+  public void loadFromFile(String fileName) {
+    try {
+      File file = new File(fileName);
+      FileInputStream inputStream = new FileInputStream(file);
+      load(inputStream);
+    } catch (FileNotFoundException e) {
+      throw new ServiceConfigurationError(fileName + " file not found, make sure you have the correct working directory set!", e);
+    } catch (IOException e) {
+      throw new AssertionError("File loading failed...", e);
+    }
+  }
 
   public int getIntProperty(String key, int defaultValue) {
     String val = getProperty(key);
     try {
       return (val == null) ? defaultValue : Integer.valueOf(val);
     } catch (NumberFormatException e) {
-      System.out
-          .println(val + " is not a valid number! Please fix the \"" + key + "\" property! Using default value (" + defaultValue + ") instead!");
+      System.out.println(val + " is not a valid number! Please fix the \"" + key + "\" property! Using default value (" + defaultValue + ") instead!");
       return defaultValue;
     }
   }
@@ -29,9 +44,6 @@ public class TypeSafeProperties extends Properties {
     String val = getProperty(key);
     return (val == null) ? defaultValue : Boolean.valueOf(val);
   }
-
-  //NOTE add more data types later if needed
-
 
   //These methods are here to make sure TypeSafeProperties are saved to file in alphabetical order (sorted by key value)
   @Override
@@ -57,5 +69,6 @@ public class TypeSafeProperties extends Properties {
   @Override
   public synchronized Enumeration<Object> keys() {
     return Collections.enumeration(new TreeSet<>(super.keySet()));
+
   }
 }

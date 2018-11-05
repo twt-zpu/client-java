@@ -50,12 +50,6 @@ public final class Utility {
         return true;
     };
 
-    private static final String DEFAULT_CONF = "default.conf";
-    private static final String DEFAULT_CONF_DIR = "config" + File.separator + "default.conf";
-    private static final String APP_CONF = "app.conf";
-    private static final String APP_CONF_DIR = "config" + File.separator + "app.conf";
-
-
     private Utility() throws AssertionError {
         throw new AssertionError("Arrowhead Common:Utility is a non-instantiable class");
     }
@@ -320,38 +314,18 @@ public final class Utility {
 
     public static ArrowheadProperties getProp(String fileName) {
         ArrowheadProperties prop = new ArrowheadProperties();
-        try {
-            File file = new File("config" + File.separator + fileName);
-            FileInputStream inputStream = new FileInputStream(file);
-            prop.load(inputStream);
-        } catch (FileNotFoundException ex) {
-            throw new ServiceConfigurationError(
-                    fileName + " file not found, make sure you have the correct working directory set! (directory where the config folder can be found)", ex);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        prop.loadFromFile(fileName);
         return prop;
     }
 
     public static ArrowheadProperties getProp() {
+        final String confDir = ArrowheadProperties.getConfDir();
+
         ArrowheadProperties prop = new ArrowheadProperties();
-
-        try {
-            if (Files.isReadable(Paths.get(DEFAULT_CONF))) {
-                prop.load(new FileInputStream(new File(DEFAULT_CONF)));
-            } else if (Files.isReadable(Paths.get(DEFAULT_CONF_DIR))) {
-                prop.load(new FileInputStream(new File(DEFAULT_CONF_DIR)));
-            } else {
-                throw new ServiceConfigurationError("default.conf file not found in the working directory! (" + System.getProperty("user.dir") + ")");
-            }
-
-            if (Files.isReadable(Paths.get(APP_CONF))) {
-                prop.load(new FileInputStream(new File(APP_CONF)));
-            } else if (Files.isReadable(Paths.get(APP_CONF_DIR))) {
-                prop.load(new FileInputStream(new File(APP_CONF_DIR)));
-            }
-        } catch (IOException e) {
-            throw new AssertionError("File loading failed...", e);
+        prop.loadFromFile((confDir != null ? confDir + File.separator : "") + "default.conf");
+        final String appConf = (confDir != null ? confDir + File.separator : "") + "app.conf";
+        if (Files.isReadable(Paths.get(appConf))) {
+            prop.loadFromFile(appConf);
         }
 
         return prop;

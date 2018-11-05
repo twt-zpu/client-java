@@ -1,18 +1,24 @@
 package eu.arrowhead.common.misc;
 
+import java.io.File;
 import java.time.ZonedDateTime;
 
 public class ArrowheadProperties extends TypeSafeProperties {
+    public static String getConfDir() {
+        // TODO Should probably document this new feature somewhere, Thomas
+        return System.getProperty("confDir");
+    }
+
     public static boolean getDefaultIsSecure() {
         return true;
     }
 
     public static String getDefaultKeyStore(String systemName) {
-        return systemName + ".p12";
+        return getDefaultCertDir() + File.separator + systemName + ".p12";
     }
 
     public static String getDefaultTruststore(String systemName) {
-        return systemName + ".p12";
+        return getDefaultCertDir() + File.separator + systemName + ".p12";
     }
 
     public static String getDefaultAddress() {
@@ -56,7 +62,7 @@ public class ArrowheadProperties extends TypeSafeProperties {
     }
 
     public static String getDefaultAuthKey() {
-        return "authorization.pub";
+        return getDefaultCertDir() + File.separator + "authorization.pub";
     }
 
     public static String createDefaultSystemName() {
@@ -67,12 +73,17 @@ public class ArrowheadProperties extends TypeSafeProperties {
         return "subscriber/notify";
     }
 
+    public static String getDefaultCertDir() {
+        return "config/certificates";
+    }
+
     public boolean isSecure() {
         return getBooleanProperty("secure", getDefaultIsSecure());
     }
 
     public String getKeystore() {
-        return getProperty("keystore", getDefaultKeyStore(getSystemName()));
+        final String certDir = getCertDir();
+        return (certDir != null ? certDir + File.separator : "") + getProperty("keystore", getDefaultKeyStore(getSystemName()));
     }
 
     public String getKeystorePass() {
@@ -84,7 +95,8 @@ public class ArrowheadProperties extends TypeSafeProperties {
     }
 
     public String getTruststore() {
-        return getProperty("truststore", getDefaultTruststore(getSystemName()));
+        final String certDir = getCertDir();
+        return (certDir != null ? certDir + File.separator : "") + getProperty("truststore", getDefaultTruststore(getSystemName()));
     }
 
     public String getTruststorePass() {
@@ -135,7 +147,10 @@ public class ArrowheadProperties extends TypeSafeProperties {
         return getIntProperty("ca_port", getDefaultCaPort(isSecure()));
     }
 
-    public String getAuthKey() { return getProperty("auth_pub", getDefaultAuthKey()); }
+    public String getAuthKey() {
+        final String certDir = getCertDir();
+        return (certDir != null ? certDir + File.separator : "") + getProperty("auth_pub", getDefaultAuthKey());
+    }
 
     public String getServiceUri() {
         return getProperty("service_uri");
@@ -159,5 +174,9 @@ public class ArrowheadProperties extends TypeSafeProperties {
 
     public String getNotifyUri() {
         return getProperty("notify_uri", getDefaultNotifyUri());
+    }
+
+    public String getCertDir() {
+        return getProperty("cert_dir", getDefaultCertDir());
     }
 }

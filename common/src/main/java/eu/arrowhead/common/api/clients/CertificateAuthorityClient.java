@@ -19,6 +19,7 @@ import java.util.Map;
 public final class CertificateAuthorityClient extends ArrowheadSystem {
     private String keyPass, truststore, truststorePass, keystorePass;
     private String cloudCnUri, authPubKeyUri, certSignUri;
+    private String confDir, certDir;
     private boolean isSecure;
 
     static {
@@ -38,7 +39,9 @@ public final class CertificateAuthorityClient extends ArrowheadSystem {
                 .setKeyPass(props.getKeyPass())
                 .setTruststore(props.getTruststore())
                 .setTruststorePass(props.getTruststorePass())
-                .setKeystorePass(props.getKeystorePass());
+                .setKeystorePass(props.getKeystorePass())
+                .setConfDir(ArrowheadProperties.getConfDir())
+                .setCertDir(props.getCertDir());
     }
 
     public static CertificateAuthorityClient createDefault() {
@@ -46,7 +49,9 @@ public final class CertificateAuthorityClient extends ArrowheadSystem {
         return new CertificateAuthorityClient()
                 .setSecure(isSecure)
                 .setAddress(ArrowheadProperties.getDefaultCaAddress())
-                .setPort(ArrowheadProperties.getDefaultCaPort(isSecure));
+                .setPort(ArrowheadProperties.getDefaultCaPort(isSecure))
+                .setConfDir(ArrowheadProperties.getConfDir())
+                .setCertDir(ArrowheadProperties.getDefaultCertDir());
     }
 
     private CertificateAuthorityClient() {
@@ -114,6 +119,24 @@ public final class CertificateAuthorityClient extends ArrowheadSystem {
         return this;
     }
 
+    public String getConfDir() {
+        return confDir;
+    }
+
+    public CertificateAuthorityClient setConfDir(String confDir) {
+        this.confDir = confDir;
+        return this;
+    }
+
+    public String getCertDir() {
+        return certDir;
+    }
+
+    public CertificateAuthorityClient setCertDir(String certDir) {
+        this.certDir = certDir;
+        return this;
+    }
+
     private void updateUris() {
         String baseUri = Utility.getUri(getAddress(), getPort(), "ca", isSecure, false);
         cloudCnUri = baseUri;
@@ -128,8 +151,6 @@ public final class CertificateAuthorityClient extends ArrowheadSystem {
 
         if (systemName == null) throw new ArrowheadException("System name is required to generate " +
                 "certificates - have you set \"system_name\" in the config file?");
-
-        String certPathPrefix = "config"; // TODO This should be more flexible, Thomas
 
         // Setting temporary truststore if given (for the secure CA)
         Utility.setSSLContext(null, null, keyPass, truststore, truststorePass, false);
@@ -148,11 +169,11 @@ public final class CertificateAuthorityClient extends ArrowheadSystem {
         final KeyStore trustStore = SecurityUtils.createTrustStore(cloudCN, signingResponse, trustStorePassword.toCharArray());
 
         // Save the keystores to file
-        SecurityUtils.saveKeyStoreToFile(keyStore, keyStorePassword.toCharArray(), systemName + ".p12", certPathPrefix);
-        SecurityUtils.saveKeyStoreToFile(trustStore, trustStorePassword.toCharArray(), "truststore.p12", certPathPrefix);
+        SecurityUtils.saveKeyStoreToFile(keyStore, keyStorePassword.toCharArray(), systemName + ".p12", certDir);
+        SecurityUtils.saveKeyStoreToFile(trustStore, trustStorePassword.toCharArray(), "truststore.p12", certDir);
 
         // Get authorization public key if requested
-        final String authFile = certPathPrefix + File.separator + "authorization.pub";
+        final String authFile = (certDir != null ? certDir + File.separator : "") + "authorization.pub";
         if (needAuth) {
             final PublicKey publicKey = getAuthorizationPublicKeyFromCa();
             SecurityUtils.savePEM(publicKey, authFile);
@@ -160,21 +181,21 @@ public final class CertificateAuthorityClient extends ArrowheadSystem {
 
         // Update app.conf with the new values
         Map<String, String> secureParameters = new HashMap<>();
-        secureParameters.put("keystore", certPathPrefix + File.separator + systemName + ".p12");
+        secureParameters.put("keystore", (certDir != null ? certDir + File.separator : "") + systemName + ".p12");
         secureParameters.put("keystorepass", keyStorePassword);
         secureParameters.put("keypass", keyStorePassword);
-        secureParameters.put("truststore", certPathPrefix + File.separator + "truststore.p12");
+        secureParameters.put("truststore", (certDir != null ? certDir + File.separator : "") + "truststore.p12");
         secureParameters.put("truststorepass", trustStorePassword);
         if (needAuth) {
             secureParameters.put("auth_pub", authFile);
         }
-        Utility.updateConfigurationFiles("config" + File.separator + "app.conf", secureParameters);
+        Utility.updateConfigurationFiles(confDir + File.separator + "app.conf", secureParameters);
 
         Utility.setSSLContext(
-                certPathPrefix + File.separator + systemName + ".p12",
+                (certDir != null ? certDir + File.separator : "") + systemName + ".p12",
                 keyStorePassword,
                 keyStorePassword,
-                certPathPrefix + File.separator + "truststore.p12",
+                (certDir != null ? certDir + File.separator : "") + "truststore.p12",
                 trustStorePassword,
                 true);
     }
