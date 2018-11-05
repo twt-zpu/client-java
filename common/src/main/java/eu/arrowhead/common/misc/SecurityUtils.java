@@ -13,6 +13,7 @@ import eu.arrowhead.common.exception.ArrowheadException;
 import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.common.model.CertificateSigningRequest;
 import eu.arrowhead.common.model.CertificateSigningResponse;
+import org.apache.log4j.Logger;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.bouncycastle.operator.ContentSigner;
@@ -44,6 +45,7 @@ import java.util.regex.Pattern;
 
 @SuppressWarnings("unused")
 public final class SecurityUtils {
+  private static final Logger log = Logger.getLogger(SecurityUtils.class);
 
   public static KeyStore loadKeyStore(String filePath, String pass) {
     try {
@@ -80,7 +82,7 @@ public final class SecurityUtils {
         }
       }
     } catch (InvalidNameException e) {
-      System.out.println("InvalidNameException in getCertCNFromSubject: " + e.getMessage());
+      log.warn("InvalidNameException in getCertCNFromSubject", e);
       return "";
     }
 

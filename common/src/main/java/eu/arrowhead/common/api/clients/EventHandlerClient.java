@@ -7,6 +7,7 @@ import eu.arrowhead.common.model.ArrowheadSystem;
 import eu.arrowhead.common.model.Event;
 import eu.arrowhead.common.model.EventFilter;
 import eu.arrowhead.common.model.PublishEvent;
+import org.apache.log4j.Logger;
 
 import javax.ws.rs.core.UriBuilder;
 import java.util.HashMap;
@@ -80,7 +81,7 @@ public class EventHandlerClient extends ArrowheadSystem {
     public void publish(Event event, ArrowheadSystem eventSource) {
         PublishEvent eventPublishing = new PublishEvent(eventSource, event, "publisher/feedback");
         Utility.sendRequest(publishUri, "POST", eventPublishing);
-        System.out.println("Event published to EH.");
+        log.info("Event published to EH.");
     }
 
     public void subscribe(String eventType, ArrowheadSystem consumer) {
@@ -106,7 +107,7 @@ public class EventHandlerClient extends ArrowheadSystem {
         if (!handlerSubscriptions.containsKey(consumer)) handlerSubscriptions.put(consumer, new HashSet<>());
         handlerSubscriptions.get(consumer).add(eventType);
 
-        System.out.println("Subscribed to " + eventType + " event types.");
+        log.info("Subscribed to " + eventType + " event types.");
     }
 
     public void unsubscribe(ArrowheadSystem consumer, String eventType) {
@@ -119,7 +120,7 @@ public class EventHandlerClient extends ArrowheadSystem {
         final Set<String> consumerSubscriptions = handlerSubscriptions != null ? handlerSubscriptions.get(consumer) : null;
         if (consumerSubscriptions != null) consumerSubscriptions.remove(eventType);
 
-        System.out.println("Unsubscribed from " + eventType + " event types.");
+        log.info("Unsubscribed from " + eventType + " event types.");
     }
 
     public void unsubscribe(ArrowheadSystem consumer, Set<String> subscriptions) {

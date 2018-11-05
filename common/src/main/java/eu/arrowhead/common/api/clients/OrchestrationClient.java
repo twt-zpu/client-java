@@ -72,7 +72,7 @@ public class OrchestrationClient extends ArrowheadSystem {
                 .sendRequest(orchestrationUri, "POST", srf)
                 .readEntity(OrchestrationResponse.class);
 
-        System.out.println("Orchestration Response payload: " + Utility.toPrettyJson(null, orchResponse));
+        log.info("Orchestration Response payload: " + Utility.toPrettyJson(null, orchResponse));
 
         final OrchestrationForm entry = orchResponse.getFirst();
         ArrowheadSystem provider = entry.getProvider();
@@ -91,7 +91,7 @@ public class OrchestrationClient extends ArrowheadSystem {
             ub.queryParam("signature", entry.getSignature());
         }
 
-        System.out.println("Received provider system URL: " + ub.toString());
+        log.info("Received provider system URL: " + ub.toString());
 
         return ub.toString();
     }

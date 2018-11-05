@@ -10,6 +10,7 @@
 package eu.arrowhead.client.publisher;
 
 import eu.arrowhead.common.api.resources.ArrowheadPublisherResource;
+import org.apache.log4j.Logger;
 
 import java.util.Map;
 import javax.ws.rs.Consumes;
@@ -23,6 +24,7 @@ import javax.ws.rs.core.Response;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class PublisherResource implements ArrowheadPublisherResource {
+  protected final Logger log = Logger.getLogger(getClass());
 
   @GET
   public Response getIt() {
@@ -31,8 +33,7 @@ public class PublisherResource implements ArrowheadPublisherResource {
 
   @Override
   public Response receiveEvent(Map<String, Boolean> results) {
-    System.out.println("Event publishing results:");
-    System.out.println(results.toString());
+    log.info("Event publishing results: " + results.toString());
     return Response.ok().build();
   }
 

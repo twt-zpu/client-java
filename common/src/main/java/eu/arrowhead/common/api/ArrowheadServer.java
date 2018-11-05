@@ -5,6 +5,7 @@ import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
 import eu.arrowhead.common.misc.SecurityUtils;
 import eu.arrowhead.common.misc.Utility;
+import org.apache.log4j.Logger;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
@@ -22,6 +23,7 @@ import java.util.ServiceConfigurationError;
 import java.util.Set;
 
 public class ArrowheadServer {
+    protected final Logger log = Logger.getLogger(getClass());
     private static final Set<ArrowheadServer> servers = new HashSet<>();
     private HttpServer server;
     private String base64PublicKey;
@@ -189,7 +191,7 @@ public class ArrowheadServer {
         }
 
         servers.add(this);
-        System.out.println("Started " + (isSecure ? "secure" : "insecure") + " server at: " + baseUri);
+        log.info("Started " + (isSecure ? "secure" : "insecure") + " server at: " + baseUri);
 
         return this;
     }

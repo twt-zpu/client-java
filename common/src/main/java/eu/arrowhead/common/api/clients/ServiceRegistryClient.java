@@ -76,7 +76,7 @@ public class ServiceRegistryClient extends ArrowheadSystem {
             Utility.sendRequest(registerUri, "POST", srEntry);
         } catch (ArrowheadException e) {
             if (e.getExceptionType() == ExceptionType.DUPLICATE_ENTRY) {
-                System.out.println("Received DuplicateEntryException from SR, sending delete request and then " +
+                log.warn("Received DuplicateEntryException from SR, sending delete request and then " +
                         "registering again.");
                 unregister(srEntry);
                 Utility.sendRequest(registerUri, "POST", srEntry);
@@ -88,7 +88,7 @@ public class ServiceRegistryClient extends ArrowheadSystem {
         if (!entries.containsKey(this)) entries.put(this, new HashSet<>());
         entries.get(this).add(srEntry);
 
-        System.out.println("Registering service is successful!");
+        log.info("Registering service is successful!");
 
         return srEntry;
     }
@@ -98,7 +98,7 @@ public class ServiceRegistryClient extends ArrowheadSystem {
             Utility.sendRequest(removeUri, "PUT", srEntry);
             if (entries.containsKey(this))
                 entries.get(this).remove(srEntry);
-            System.out.println("Removing service is successful!");
+            log.info("Removing service is successful!");
         }
     }
 

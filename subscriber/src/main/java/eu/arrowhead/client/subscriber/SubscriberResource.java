@@ -24,7 +24,7 @@ import javax.ws.rs.core.Response;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class SubscriberResource implements ArrowheadSubscriberResource {
-  private static final Logger log = Logger.getLogger(SubscriberResource.class.getName());
+  private static final Logger log = Logger.getLogger(SubscriberResource.class);
 
   @GET
   public Response getIt() {

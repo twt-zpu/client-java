@@ -42,15 +42,15 @@ public class ConsumerMain extends ArrowheadClient {
         TemperatureReadout readout = new TemperatureReadout();
         try {
             readout = getResponse.readEntity(TemperatureReadout.class);
-            System.out.println("Provider Response payload: " + Utility.toPrettyJson(null, readout));
+            log.info("Provider Response payload: " + Utility.toPrettyJson(null, readout));
         } catch (RuntimeException e) {
             e.printStackTrace();
-            System.out.println("Provider did not send the temperature readout in SenML format.");
+            log.error("Provider did not send the temperature readout in SenML format.");
         }
         if (readout.getE().get(0) == null) {
-            System.out.println("Provider did not send any MeasurementEntry.");
+            log.error("Provider did not send any MeasurementEntry.");
         } else {
-            System.out.println("The indoor temperature is " + readout.getE().get(0).getV() + " degrees celsius.");
+            log.info("The indoor temperature is " + readout.getE().get(0).getV() + " degrees celsius.");
         }
     }
 
@@ -70,7 +70,7 @@ public class ConsumerMain extends ArrowheadClient {
         orchestrationFlags.put("enableInterCloud", true);
 
         ServiceRequestForm srf = new ServiceRequestForm.Builder(consumer).requestedService(service).orchestrationFlags(orchestrationFlags).build();
-        System.out.println("Service Request payload: " + Utility.toPrettyJson(null, srf));
+        log.info("Service Request payload: " + Utility.toPrettyJson(null, srf));
         return srf;
     }
 

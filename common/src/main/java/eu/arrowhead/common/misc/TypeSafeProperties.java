@@ -9,6 +9,8 @@
 
 package eu.arrowhead.common.misc;
 
+import org.apache.log4j.Logger;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -17,6 +19,7 @@ import java.util.*;
 import java.util.Map.Entry;
 
 public class TypeSafeProperties extends Properties {
+  protected final Logger log = Logger.getLogger(getClass());
 
   public void loadFromFile(String fileName) {
     try {
@@ -35,7 +38,7 @@ public class TypeSafeProperties extends Properties {
     try {
       return (val == null) ? defaultValue : Integer.valueOf(val);
     } catch (NumberFormatException e) {
-      System.out.println(val + " is not a valid number! Please fix the \"" + key + "\" property! Using default value (" + defaultValue + ") instead!");
+      log.error(val + " is not a valid number! Please fix the \"" + key + "\" property! Using default value (" + defaultValue + ") instead!", e);
       return defaultValue;
     }
   }

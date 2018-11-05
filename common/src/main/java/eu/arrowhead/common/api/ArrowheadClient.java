@@ -8,6 +8,7 @@ import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
 import eu.arrowhead.common.misc.SecurityUtils;
 import eu.arrowhead.common.misc.Utility;
+import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
 import java.io.BufferedReader;
@@ -18,6 +19,7 @@ import java.security.cert.X509Certificate;
 import java.util.Base64;
 
 public abstract class ArrowheadClient {
+    protected final Logger log = Logger.getLogger(getClass());
     protected ArrowheadProperties props = Utility.getProp();
     private final boolean isDaemon;
 
@@ -26,20 +28,19 @@ public abstract class ArrowheadClient {
     }
 
     public ArrowheadClient(String[] args, CertificateAuthorityClient ca) {
-        // TODO Switch ALL system.out to log4j, Thomas
         props.putIfAbsent("log4j.rootLogger", "INFO, CONSOLE");
         props.putIfAbsent("log4j.appender.CONSOLE", "org.apache.log4j.ConsoleAppender");
         props.putIfAbsent("log4j.appender.CONSOLE.target", "System.err");
         props.putIfAbsent("log4j.appender.CONSOLE.ImmediateFlush", "true");
         props.putIfAbsent("log4j.appender.CONSOLE.Threshold", "debug");
         props.putIfAbsent("log4j.appender.CONSOLE.layout", "org.apache.log4j.PatternLayout");
-        props.putIfAbsent("log4j.appender.CONSOLE.layout.conversionPattern", "%d{yyyy-MM-dd HH:mm:ss}, %l, %p, %m%n");
+        props.putIfAbsent("log4j.appender.CONSOLE.layout.conversionPattern", "%d{yyyy-MM-dd HH:mm:ss}  %c{1}.%M(%F:%L)  %p  %m%n");
         PropertyConfigurator.configure(props);
 
-        System.out.println("Working directory: " + System.getProperty("user.dir"));
+        log.info("Working directory: " + System.getProperty("user.dir"));
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("Received TERM signal, shutting down...");
+            log.info("Received TERM signal, shutting down...");
             shutdown();
         }));
 
@@ -48,17 +49,17 @@ public abstract class ArrowheadClient {
             switch (arg) {
                 case "-daemon":
                     daemon = true;
-                    System.out.println("Starting server as daemon!");
+                    log.info("Starting server as daemon!");
                     break;
                 case "-d":
                     System.setProperty("debug_mode", "true");
-                    System.out.println("Starting server in debug mode!");
+                    log.info("Starting server in debug mode!");
                     break;
                 case "-tls":
-                    System.err.println("-------------------------------------------------------");
-                    System.err.println("  WARNING: -TLS IS NO LONGER ACCEPTED AS ARGUMENT");
-                    System.err.println("  Use 'secure=true' in the configuration file instead");
-                    System.err.println("-------------------------------------------------------");
+                    log.warn("-------------------------------------------------------");
+                    log.warn("  WARNING: -TLS IS NO LONGER ACCEPTED AS ARGUMENT");
+                    log.warn("  Use 'secure=true' in the configuration file instead");
+                    log.warn("-------------------------------------------------------");
             }
         }
         isDaemon = daemon;
@@ -89,7 +90,7 @@ public abstract class ArrowheadClient {
             KeyStore keyStore = SecurityUtils.loadKeyStore(props.getKeystore(), props.getKeystorePass());
             X509Certificate serverCert = SecurityUtils.getFirstCertFromKeyStore(keyStore);
             String base64PublicKey = Base64.getEncoder().encodeToString(serverCert.getPublicKey().getEncoded());
-            System.out.println("PublicKey Base64: " + base64PublicKey);
+            log.info("PublicKey Base64: " + base64PublicKey);
         }
     }
 
@@ -102,9 +103,9 @@ public abstract class ArrowheadClient {
 
     protected void listenForInput() {
         if (isDaemon) {
-            System.out.println("In daemon mode, process will terminate for TERM signal...");
+            log.info("In daemon mode, process will terminate for TERM signal...");
         } else {
-            System.out.println("Type \"stop\" to shutdown...");
+            log.info("Type \"stop\" to shutdown...");
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
             String input = "";
             try {

@@ -11,6 +11,7 @@ package eu.arrowhead.common.misc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.arrowhead.common.exception.*;
+import org.apache.log4j.Logger;
 import org.glassfish.grizzly.ssl.SSLContextConfigurator;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
@@ -39,6 +40,7 @@ import java.util.*;
 
 //Contains static utility methods for the project, most important one is the sendRequest method!
 public final class Utility {
+    private static final Logger log = Logger.getLogger(Utility.class);
 
     private static final Client client = createClient(null);
     private static Client sslClient;
@@ -165,11 +167,11 @@ public final class Utility {
             throw new ArrowheadException("Unknown error occurred at " + uri, e);
         }
         if (errorMessage == null || errorMessage.getExceptionType() == null) {
-            System.out.println("Request failed, response status code: " + response.getStatus());
-            System.out.println("Request failed, response body: " + errorMessageBody);
+            log.warn("Request failed, response status code: " + response.getStatus());
+            log.warn("Request failed, response body: " + errorMessageBody);
             throw new ArrowheadException("Unknown error occurred at " + uri);
         } else {
-            System.out.println(Utility.toPrettyJson(null, errorMessage));
+            log.warn(Utility.toPrettyJson(null, errorMessage));
             switch (errorMessage.getExceptionType()) {
                 case ARROWHEAD:
                     throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());

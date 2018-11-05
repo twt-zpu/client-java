@@ -3,6 +3,7 @@ package eu.arrowhead.common.misc;
 import eu.arrowhead.common.exception.ErrorMessage;
 import eu.arrowhead.common.exception.ExceptionType;
 import eu.arrowhead.common.model.RawTokenInfo;
+import org.apache.log4j.Logger;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.crypto.Cipher;
@@ -15,7 +16,7 @@ import java.util.Base64;
 import java.util.function.Supplier;
 
 public class SecurityVerifier {
-
+    protected final Logger log = Logger.getLogger(getClass());
     private PrivateKey privateKey;
     private PublicKey authKey;
 
@@ -60,7 +61,7 @@ public class SecurityVerifier {
             authKey = SecurityUtils.getPublicKey(keyPath, true);
         }
 
-        System.out.println("Authorization System PublicKey Base64: " + Base64.getEncoder().encodeToString(authKey.getEncoded()));
+        log.info("Authorization System PublicKey Base64: " + Base64.getEncoder().encodeToString(authKey.getEncoded()));
         return this;
     }
 
@@ -124,7 +125,7 @@ public class SecurityVerifier {
                 return Response.status(401).entity(error).build();
 
             } else {
-                System.out.println("Token and provider name mismatch: " + consumerName + " " + consumerTokenName);
+                log.warn("Token and provider name mismatch: " + consumerName + " " + consumerTokenName);
                 ErrorMessage error = new ErrorMessage("Permission denied", 401, ExceptionType.AUTH, null);
                 return Response.status(401).entity(error).build();
             }
