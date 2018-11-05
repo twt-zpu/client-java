@@ -9,6 +9,7 @@ import eu.arrowhead.common.misc.ArrowheadProperties;
 import eu.arrowhead.common.misc.SecurityUtils;
 import eu.arrowhead.common.misc.Utility;
 import eu.arrowhead.common.misc.TypeSafeProperties;
+import org.apache.log4j.PropertyConfigurator;
 import org.glassfish.grizzly.ssl.SSLContextConfigurator;
 
 import java.io.BufferedReader;
@@ -27,6 +28,9 @@ public abstract class ArrowheadClient {
     }
 
     public ArrowheadClient(String[] args, CertificateAuthorityClient ca) {
+        // TODO Switch ALL system.out to log4j, Thomas
+        PropertyConfigurator.configure(props);
+
         System.out.println("Working directory: " + System.getProperty("user.dir"));
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
