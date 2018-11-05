@@ -12,7 +12,7 @@ package eu.arrowhead.client.common.model;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import jersey.repackaged.com.google.common.base.MoreObjects;
+import org.glassfish.jersey.internal.guava.MoreObjects;
 
 public class Event {
 
