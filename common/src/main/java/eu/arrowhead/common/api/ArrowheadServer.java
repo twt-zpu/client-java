@@ -1,13 +1,11 @@
 package eu.arrowhead.common.api;
 
-import eu.arrowhead.common.clients.CertificateAuthorityClient;
 import eu.arrowhead.common.exception.ArrowheadException;
 import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
 import eu.arrowhead.common.misc.SecurityUtils;
 import eu.arrowhead.common.misc.Utility;
 import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.grizzly.ssl.SSLContextConfigurator;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -19,9 +17,9 @@ import java.net.URI;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.ServiceConfigurationError;
 import java.util.Set;
-import java.util.HashSet;
 
 public class ArrowheadServer {
     private static Set<ArrowheadServer> servers = new HashSet<>();
@@ -46,7 +44,7 @@ public class ArrowheadServer {
                 .setTruststore(props.getTruststore())
                 .setTruststorePass(props.getTruststorePass())
                 .setSystemName(props.getSystemName())
-                .setAddress(props.getaddress())
+                .setAddress(props.getAddress())
                 .setPort(props.getPort());
     }
 
@@ -148,11 +146,11 @@ public class ArrowheadServer {
         return this;
     }
 
-    public ArrowheadServer start(Class<?>[] classes, String[] packages) {
-        return start(classes, packages, null);
+    public ArrowheadServer start(Class<?>[] classes) {
+        return start(classes, new String[] { "eu.arrowhead.common" });
     }
 
-    public ArrowheadServer start(Class<?>[] classes, String[] packages, CertificateAuthorityClient ca) {
+    public ArrowheadServer start(Class<?>[] classes, String[] packages) {
         if (server != null)
             throw new ArrowheadException("Server already started");
 
@@ -162,37 +160,7 @@ public class ArrowheadServer {
 
         SSLEngineConfigurator sslEC = null;
         if (isSecure) {
-            SSLContextConfigurator sslCon;
-            try {
-                sslCon = Utility.setSSLContext(
-                        keystore,
-                        keystorePass,
-                        keyPass,
-                        truststore,
-                        truststorePass,
-                        true);
-            } catch (AuthException e) {
-                if (ca != null) {
-                    try {
-                        sslCon = ca.bootstrap(systemName, true);
-                        // TODO Reloading props like this (and here only) could cause problems in other classes, Thomas
-                        ArrowheadProperties props = Utility.getProp();
-                        setKeystore(props.getKeystore());
-                        setKeystorePass(props.getKeystorePass());
-                        setKeyPass(props.getKeyPass());
-                        setTruststore(props.getTruststore());
-                        setTruststorePass(props.getTruststorePass());
-                    } catch (ArrowheadException e2) {
-                        throw new AuthException("Certificate bootstrapping failed with: " + e2.getMessage(), e2);
-                    }
-                } else {
-                    throw new AuthException("No certificates available for secure mode: " + e.getMessage(), e);
-                }
-            }
-
-            KeyStore keyStore = SecurityUtils.loadKeyStore(
-                    keystore,
-                    keystorePass);
+            KeyStore keyStore = SecurityUtils.loadKeyStore(keystore, keystorePass);
             X509Certificate serverCert = SecurityUtils.getFirstCertFromKeyStore(keyStore);
             String serverCN = SecurityUtils.getCertCNFromSubject(serverCert.getSubjectDN().getName());
             if (!SecurityUtils.isKeyStoreCNArrowheadValid(serverCN)) {
@@ -203,9 +171,8 @@ public class ArrowheadServer {
             config.property("server_common_name", serverCN);
 
             base64PublicKey = Base64.getEncoder().encodeToString(serverCert.getPublicKey().getEncoded());
-            System.out.println("Server PublicKey Base64: " + base64PublicKey);
 
-            sslEC = new SSLEngineConfigurator(sslCon).setClientMode(false).setNeedClientAuth(true);
+            sslEC = new SSLEngineConfigurator(Utility.getSSLContextConfigurator()).setClientMode(false).setNeedClientAuth(true);
         }
 
         baseUri = Utility.getUri(address, port, null, isSecure, true);

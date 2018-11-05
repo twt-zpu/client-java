@@ -28,19 +28,33 @@ public class ArrowheadSystem {
     return createFromProperties(Utility.getProp(), server);
   }
 
+  public static ArrowheadSystem createFromProperties() {
+    return createFromProperties(Utility.getProp(), null);
+  }
+
+  public static ArrowheadSystem createFromProperties(ArrowheadProperties props) {
+    return createFromProperties(Utility.getProp(), null);
+  }
+
   public static ArrowheadSystem createFromProperties(ArrowheadProperties props, ArrowheadServer server) {
     boolean isSecure = props.isSecure();
 
-    URI uri;
-    try {
-      uri = new URI(server.getBaseUri());
-    } catch (URISyntaxException e) {
-      throw new AssertionError("Parsing the BASE_URI resulted in an error.", e);
+    String host = props.getAddress();
+    int port = props.getPort();
+    if (server != null) {
+      try {
+        URI uri = new URI(server.getBaseUri());
+        host = uri.getHost();
+        port = uri.getPort();
+      } catch (URISyntaxException e) {
+        throw new AssertionError("Parsing the BASE_URI resulted in an error.", e);
+      }
     }
 
-    String systemName = props.getProperty("system_name");
-    final String authInfo = isSecure ? server.getBase64PublicKey() : null;
-    return new ArrowheadSystem(systemName, uri.getHost(), uri.getPort(), authInfo);
+    String systemName = props.getSystemName();
+    final String authInfo = isSecure && server != null ? server.getBase64PublicKey() : null;
+
+    return new ArrowheadSystem(systemName, host, port, authInfo);
   }
 
   public ArrowheadSystem() {

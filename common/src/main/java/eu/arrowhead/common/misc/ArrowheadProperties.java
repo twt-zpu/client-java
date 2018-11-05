@@ -31,6 +31,14 @@ public class ArrowheadProperties extends TypeSafeProperties {
         return secure ? 8443 : 8442;
     }
 
+    public static String getDefaultOrchAddress() {
+        return "0.0.0.0";
+    }
+
+    public static int getDefaultOrchPort(boolean secure) {
+        return secure ? 8441 : 8440;
+    }
+
     public static String getDefaultEhAddress() {
         return "0.0.0.0";
     }
@@ -45,6 +53,10 @@ public class ArrowheadProperties extends TypeSafeProperties {
 
     public static int getDefaultCaPort(boolean secure) {
         return secure ? 8459 : 8458;
+    }
+
+    public static String getDefaultAuthKey() {
+        return "authorization.pub";
     }
 
     public static String createDefaultSystemName() {
@@ -79,7 +91,7 @@ public class ArrowheadProperties extends TypeSafeProperties {
         return getProperty("system_name");
     }
 
-    public String getaddress() {
+    public String getAddress() {
         return getProperty("address", getDefaultAddress());
     }
 
@@ -93,6 +105,14 @@ public class ArrowheadProperties extends TypeSafeProperties {
 
     public int getSrPort() {
         return getIntProperty("sr_port", getDefaultSrPort(isSecure()));
+    }
+
+    public String getOrchAddress() {
+        return getProperty("orch_address", getDefaultOrchAddress());
+    }
+
+    public int getOrchPort() {
+        return getIntProperty("orch_port", getDefaultOrchPort(isSecure()));
     }
 
     public String getEhAddress() {
@@ -109,5 +129,23 @@ public class ArrowheadProperties extends TypeSafeProperties {
 
     public int getCaPort() {
         return getIntProperty("ca_port", getDefaultCaPort(isSecure()));
+    }
+
+    public String getAuthKey() { return getProperty("auth_pub", getDefaultAuthKey()); }
+
+    public String getServiceUri() {
+        return getProperty("service_uri");
+    }
+
+    public String getServiceName() {
+        return getProperty("service_name");
+    }
+
+    public String getInterfaces() {
+        return getProperty("interfaces");
+    }
+
+    public String getMetadata() {
+        return getProperty("metadata");
     }
 }

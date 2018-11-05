@@ -9,6 +9,7 @@
 
 package eu.arrowhead.common.exception;
 
+// TODO Shouldn't really inherit from RuntimeException, forcing people to do try-catch is good in some cases, Thomas
 public class ArrowheadException extends RuntimeException {
 
   private ExceptionType exceptionType = ExceptionType.ARROWHEAD;

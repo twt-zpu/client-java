@@ -32,7 +32,7 @@ public class ServiceRegistryEntry {
   private static ServiceRegistryEntry createFromProperties(ArrowheadProperties props, ArrowheadServer server) {
     final ArrowheadService service = ArrowheadService.createFromProperties(props);
     final ArrowheadSystem provider = ArrowheadSystem.createFromProperties(props, server);
-    final String serviceUri = props.getProperty("service_uri");
+    final String serviceUri = props.getServiceUri();
 
     return new ServiceRegistryEntry(service, provider, serviceUri);
   }

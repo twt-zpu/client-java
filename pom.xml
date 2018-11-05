@@ -25,6 +25,7 @@
     <module>provider</module>
     <module>publisher</module>
     <module>subscriber</module>
+    <module>demo-common</module>
   </modules>
 
   <properties>
@@ -52,6 +53,12 @@
       <dependency>
         <groupId>eu.arrowhead</groupId>
         <artifactId>common</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>eu.arrowhead</groupId>
+        <artifactId>demo-common</artifactId>
         <version>${project.version}</version>
       </dependency>
 

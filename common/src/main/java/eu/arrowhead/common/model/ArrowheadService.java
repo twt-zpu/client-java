@@ -27,16 +27,16 @@ public class ArrowheadService {
 
   public static ArrowheadService createFromProperties(ArrowheadProperties props) {
     boolean isSecure = props.isSecure();
-    String serviceDef = props.getProperty("service_name");
+    String serviceDef = props.getServiceName();
 
-    String interfaceList = props.getProperty("interfaces");
+    String interfaceList = props.getInterfaces();
     Set<String> interfaces = new HashSet<String>();
     if (interfaceList != null && !interfaceList.isEmpty()) {
       interfaces.addAll(Arrays.asList(interfaceList.replaceAll("\\s+", "").split(",")));
     }
 
     Map<String, String> metadata = new HashMap<String, String>();
-    String metadataString = props.getProperty("metadata");
+    String metadataString = props.getMetadata();
     if (metadataString != null && !metadataString.isEmpty()) {
       String[] parts = metadataString.split(",");
       for (String part : parts) {
