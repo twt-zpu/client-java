@@ -11,7 +11,7 @@ import javax.ws.rs.core.UriBuilder;
 import java.util.*;
 
 public class ServiceRegistryClient extends ArrowheadSystem {
-    private static Map<ServiceRegistryClient, Set<ServiceRegistryEntry>> entries = new HashMap<>();
+    private static final Map<ServiceRegistryClient, Set<ServiceRegistryEntry>> entries = new HashMap<>();
     private String registerUri;
     private String removeUri;
     private boolean isSecure;

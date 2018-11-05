@@ -13,12 +13,9 @@ import eu.arrowhead.common.api.ArrowheadClient;
 import eu.arrowhead.common.api.ArrowheadServer;
 import eu.arrowhead.common.api.clients.CertificateAuthorityClient;
 import eu.arrowhead.common.api.clients.EventHandlerClient;
-import eu.arrowhead.common.api.clients.ServiceRegistryClient;
 import eu.arrowhead.common.model.ArrowheadSystem;
 import eu.arrowhead.common.model.Event;
-import eu.arrowhead.common.model.ServiceRegistryEntry;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 public class PublisherMain extends ArrowheadClient {

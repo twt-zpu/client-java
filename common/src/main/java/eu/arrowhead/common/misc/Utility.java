@@ -40,7 +40,7 @@ import java.util.*;
 //Contains static utility methods for the project, most important one is the sendRequest method!
 public final class Utility {
 
-    private static Client client = createClient(null);
+    private static final Client client = createClient(null);
     private static Client sslClient;
     private static SSLContextConfigurator sslContextConfigurator;
 

@@ -8,9 +8,7 @@ import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
 import eu.arrowhead.common.misc.SecurityUtils;
 import eu.arrowhead.common.misc.Utility;
-import eu.arrowhead.common.misc.TypeSafeProperties;
 import org.apache.log4j.PropertyConfigurator;
-import org.glassfish.grizzly.ssl.SSLContextConfigurator;
 
 import java.io.BufferedReader;
 import java.io.IOException;

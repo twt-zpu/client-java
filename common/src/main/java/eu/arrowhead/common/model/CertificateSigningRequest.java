@@ -9,12 +9,6 @@
 
 package eu.arrowhead.common.model;
 
-import eu.arrowhead.common.exception.AuthException;
-import org.bouncycastle.pkcs.PKCS10CertificationRequest;
-
-import java.io.IOException;
-import java.util.Base64;
-
 public class CertificateSigningRequest {
 
   private String encodedCertRequest;

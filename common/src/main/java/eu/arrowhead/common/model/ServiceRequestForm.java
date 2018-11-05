@@ -113,7 +113,7 @@ public class ServiceRequestForm {
   public static class Builder {
 
     // Required parameters
-    private ArrowheadSystem requesterSystem;
+    private final ArrowheadSystem requesterSystem;
     // Optional parameters
     private ArrowheadCloud requesterCloud;
     private ArrowheadService requestedService;

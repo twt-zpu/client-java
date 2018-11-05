@@ -36,22 +36,16 @@ public class TypeSafeProperties extends Properties {
   //These methods are here to make sure TypeSafeProperties are saved to file in alphabetical order (sorted by key value)
   @Override
   public Set<Object> keySet() {
-    return Collections.unmodifiableSet(new TreeSet<Object>(super.keySet()));
+    return Collections.unmodifiableSet(new TreeSet<>(super.keySet()));
   }
 
   @Override
   public Set<Entry<Object, Object>> entrySet() {
 
     Set<Entry<Object, Object>> set1 = super.entrySet();
-    Set<Entry<Object, Object>> set2 = new LinkedHashSet<Entry<Object, Object>>(set1.size());
+    Set<Entry<Object, Object>> set2 = new LinkedHashSet<>(set1.size());
 
-    Iterator<Entry<Object, Object>> iterator = set1.stream().sorted(new Comparator<Entry<Object, Object>>() {
-
-      @Override
-      public int compare(Entry<Object, Object> o1, Entry<Object, Object> o2) {
-        return o1.getKey().toString().compareTo(o2.getKey().toString());
-      }
-    }).iterator();
+    Iterator<Entry<Object, Object>> iterator = set1.stream().sorted(Comparator.comparing(o -> o.getKey().toString())).iterator();
 
     while (iterator.hasNext()) {
       set2.add(iterator.next());
@@ -62,6 +56,6 @@ public class TypeSafeProperties extends Properties {
 
   @Override
   public synchronized Enumeration<Object> keys() {
-    return Collections.enumeration(new TreeSet<Object>(super.keySet()));
+    return Collections.enumeration(new TreeSet<>(super.keySet()));
   }
 }

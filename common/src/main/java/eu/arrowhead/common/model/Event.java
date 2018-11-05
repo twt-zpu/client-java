@@ -12,7 +12,6 @@ package eu.arrowhead.common.model;
 import org.glassfish.jersey.internal.guava.MoreObjects;
 
 import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
 

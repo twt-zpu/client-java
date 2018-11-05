@@ -30,12 +30,12 @@ public class ArrowheadService {
     String serviceDef = props.getServiceName();
 
     String interfaceList = props.getInterfaces();
-    Set<String> interfaces = new HashSet<String>();
+    Set<String> interfaces = new HashSet<>();
     if (interfaceList != null && !interfaceList.isEmpty()) {
       interfaces.addAll(Arrays.asList(interfaceList.replaceAll("\\s+", "").split(",")));
     }
 
-    Map<String, String> metadata = new HashMap<String, String>();
+    Map<String, String> metadata = new HashMap<>();
     String metadataString = props.getMetadata();
     if (metadataString != null && !metadataString.isEmpty()) {
       String[] parts = metadataString.split(",");

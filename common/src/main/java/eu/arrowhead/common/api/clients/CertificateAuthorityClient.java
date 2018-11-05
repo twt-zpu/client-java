@@ -8,7 +8,6 @@ import eu.arrowhead.common.model.ArrowheadSystem;
 import eu.arrowhead.common.model.CertificateSigningRequest;
 import eu.arrowhead.common.model.CertificateSigningResponse;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.glassfish.grizzly.ssl.SSLContextConfigurator;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -122,7 +121,7 @@ public final class CertificateAuthorityClient extends ArrowheadSystem {
         authPubKeyUri = UriBuilder.fromPath(baseUri).path("auth").toString();
     }
 
-    public SSLContextConfigurator bootstrap(String systemName, boolean needAuth) {
+    public void bootstrap(String systemName, boolean needAuth) {
         if (!Utility.isHostAvailable(getAddress(), getPort(), 3000)) {
             throw new ArrowheadException("CA Core System is unavailable at " + getAddress() + ":" + getPort());
         }
@@ -171,7 +170,7 @@ public final class CertificateAuthorityClient extends ArrowheadSystem {
         }
         Utility.updateConfigurationFiles("config" + File.separator + "app.conf", secureParameters);
 
-        return Utility.setSSLContext(
+        Utility.setSSLContext(
                 certPathPrefix + File.separator + systemName + ".p12",
                 keyStorePassword,
                 keyStorePassword,
