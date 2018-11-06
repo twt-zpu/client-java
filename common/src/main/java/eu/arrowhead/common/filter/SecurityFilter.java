@@ -7,7 +7,7 @@
  *  national funding authorities from involved countries.
  */
 
-package eu.arrowhead.client.common.filter;
+package eu.arrowhead.common.filter;
 
 import java.security.Principal;
 import java.security.cert.X509Certificate;

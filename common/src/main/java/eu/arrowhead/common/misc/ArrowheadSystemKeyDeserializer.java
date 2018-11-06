@@ -7,11 +7,11 @@
  *  national funding authorities from involved countries.
  */
 
-package eu.arrowhead.client.common.misc;
+package eu.arrowhead.common.misc;
 
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.KeyDeserializer;
-import eu.arrowhead.client.common.model.ArrowheadSystem;
+import eu.arrowhead.common.model.ArrowheadSystem;
 
 public class ArrowheadSystemKeyDeserializer extends KeyDeserializer {
 

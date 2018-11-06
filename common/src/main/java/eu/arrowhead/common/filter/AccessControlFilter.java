@@ -7,11 +7,12 @@
  *  national funding authorities from involved countries.
  */
 
-package eu.arrowhead.client.common.filter;
+package eu.arrowhead.common.filter;
 
-import eu.arrowhead.client.common.Utility;
-import eu.arrowhead.client.common.exception.AuthException;
-import eu.arrowhead.client.common.misc.SecurityUtils;
+import eu.arrowhead.common.exception.AuthException;
+import eu.arrowhead.common.misc.SecurityUtils;
+import eu.arrowhead.common.misc.Utility;
+
 import javax.annotation.Priority;
 import javax.inject.Inject;
 import javax.ws.rs.Priorities;

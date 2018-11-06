@@ -7,9 +7,10 @@
  *  national funding authorities from involved countries.
  */
 
-package eu.arrowhead.client.common.filter;
+package eu.arrowhead.common.filter;
 
-import eu.arrowhead.client.common.Utility;
+import eu.arrowhead.common.misc.Utility;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
