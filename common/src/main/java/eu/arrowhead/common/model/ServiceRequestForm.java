@@ -11,6 +11,7 @@ package eu.arrowhead.common.model;
 
 import eu.arrowhead.common.exception.BadPayloadException;
 
+import javax.validation.constraints.Size;
 import java.util.*;
 
 /**
@@ -18,146 +19,148 @@ import java.util.*;
  */
 public class ServiceRequestForm {
 
-  private ArrowheadSystem requesterSystem;
-  private ArrowheadCloud requesterCloud;
-  private ArrowheadService requestedService;
-  private OrchestrationFlags orchestrationFlags = new OrchestrationFlags();
-  private List<PreferredProvider> preferredProviders = new ArrayList<>();
-  private Map<String, String> requestedQoS = new HashMap<>();
-  private Map<String, String> commands = new HashMap<>();
-
-  public ServiceRequestForm() {
-  }
-
-  private ServiceRequestForm(Builder builder) {
-    requesterSystem = builder.requesterSystem;
-    requesterCloud = builder.requesterCloud;
-    requestedService = builder.requestedService;
-    orchestrationFlags = builder.orchestrationFlags;
-    preferredProviders = builder.preferredProviders;
-    requestedQoS = builder.requestedQoS;
-    commands = builder.commands;
-  }
-
-  public ArrowheadSystem getRequesterSystem() {
-    return requesterSystem;
-  }
-
-  public ArrowheadCloud getRequesterCloud() {
-    return requesterCloud;
-  }
-
-  public ArrowheadService getRequestedService() {
-    return requestedService;
-  }
-
-
-  public Map<String, Boolean> getOrchestrationFlags() {
-    return orchestrationFlags;
-  }
-
-  public List<PreferredProvider> getPreferredProviders() {
-    return preferredProviders;
-  }
-
-  public Map<String, String> getRequestedQoS() {
-    return requestedQoS;
-  }
-
-  public Map<String, String> getCommands() {
-    return commands;
-  }
-
-  public static class Builder {
-
-    // Required parameters
-    private final ArrowheadSystem requesterSystem;
-    // Optional parameters
+    private ArrowheadSystem requesterSystem;
     private ArrowheadCloud requesterCloud;
     private ArrowheadService requestedService;
-
     private OrchestrationFlags orchestrationFlags = new OrchestrationFlags();
     private List<PreferredProvider> preferredProviders = new ArrayList<>();
     private Map<String, String> requestedQoS = new HashMap<>();
     private Map<String, String> commands = new HashMap<>();
 
-    public Builder(ArrowheadSystem requesterSystem) {
-      this.requesterSystem = requesterSystem;
+    public ServiceRequestForm() {
     }
 
-    public Builder requesterCloud(ArrowheadCloud cloud) {
-      requesterCloud = cloud;
-      return this;
+    private ServiceRequestForm(Builder builder) {
+        requesterSystem = builder.requesterSystem;
+        requesterCloud = builder.requesterCloud;
+        requestedService = builder.requestedService;
+        orchestrationFlags = builder.orchestrationFlags;
+        preferredProviders = builder.preferredProviders;
+        requestedQoS = builder.requestedQoS;
+        commands = builder.commands;
     }
 
-    public Builder requestedService(ArrowheadService service) {
-      requestedService = service;
-      return this;
+    public ArrowheadSystem getRequesterSystem() {
+        return requesterSystem;
     }
 
-    public Builder flag(OrchestrationFlags.Flags flag, Boolean value) {
-      this.orchestrationFlags.put(flag, value);
-      return this;
+    public ArrowheadCloud getRequesterCloud() {
+        return requesterCloud;
     }
 
-    public Builder flag(String key, Boolean value) {
-      this.orchestrationFlags.put(key, value);
-      return this;
+    public ArrowheadService getRequestedService() {
+        return requestedService;
     }
 
-    public Builder flags(Map<String, Boolean> flags) {
-      this.orchestrationFlags.putAll(flags);
-      return this;
+
+    public Map<String, Boolean> getOrchestrationFlags() {
+        return orchestrationFlags;
     }
 
-    public Builder flags(OrchestrationFlags flags) {
-      this.orchestrationFlags.putAll(flags);
-      return this;
+    public List<PreferredProvider> getPreferredProviders() {
+        return preferredProviders;
     }
 
-    public Builder preferredProviders(List<PreferredProvider> providers) {
-      preferredProviders = providers;
-      return this;
+    public Map<String, String> getRequestedQoS() {
+        return requestedQoS;
     }
 
-    public Builder requestedQoS(Map<String, String> qos) {
-      requestedQoS = qos;
-      return this;
+    public Map<String, String> getCommands() {
+        return commands;
     }
 
-    public Builder commands(Map<String, String> commands) {
-      this.commands = commands;
-      return this;
-    }
+    // TODO Should all forms use builders for consistency?, Thomas
+    public static class Builder {
 
-    public ServiceRequestForm build() {
-      return new ServiceRequestForm(this).validateCrossParameterConstraints();
-    }
-  }
+        // Required parameters
+        private final ArrowheadSystem requesterSystem;
+        // Optional parameters
+        private ArrowheadCloud requesterCloud;
+        private ArrowheadService requestedService;
 
-  public ServiceRequestForm validateCrossParameterConstraints() {
-    if (requestedService == null && orchestrationFlags.get(OrchestrationFlags.Flags.OVERRIDE_STORE)) {
-      throw new BadPayloadException("RequestedService can not be null when overrideStore is TRUE");
-    }
+        @Size(max = 9, message = "There are only 9 orchestration flags, map size must not be bigger than 9")
+        private OrchestrationFlags orchestrationFlags = new OrchestrationFlags();
+        private List<PreferredProvider> preferredProviders = new ArrayList<>();
+        private Map<String, String> requestedQoS = new HashMap<>();
+        private Map<String, String> commands = new HashMap<>();
 
-    if (orchestrationFlags.get(OrchestrationFlags.Flags.ONLY_PREFERRED)) {
-      List<PreferredProvider> tmp = new ArrayList<>();
-      for (PreferredProvider provider : preferredProviders) {
-        if (!provider.isValid()) {
-          tmp.add(provider);
+        public Builder(ArrowheadSystem requesterSystem) {
+            this.requesterSystem = requesterSystem;
         }
-      }
-      preferredProviders.removeAll(tmp);
-      if (preferredProviders.isEmpty()) {
-        throw new BadPayloadException("There is no valid PreferredProvider, but \"onlyPreferred\" is set to true");
-      }
+
+        public Builder requesterCloud(ArrowheadCloud cloud) {
+            requesterCloud = cloud;
+            return this;
+        }
+
+        public Builder requestedService(ArrowheadService service) {
+            requestedService = service;
+            return this;
+        }
+
+        public Builder flag(OrchestrationFlags.Flags flag, Boolean value) {
+            this.orchestrationFlags.put(flag, value);
+            return this;
+        }
+
+        public Builder flag(String key, Boolean value) {
+            this.orchestrationFlags.put(key, value);
+            return this;
+        }
+
+        public Builder flags(Map<String, Boolean> flags) {
+            this.orchestrationFlags.putAll(flags);
+            return this;
+        }
+
+        public Builder flags(OrchestrationFlags flags) {
+            this.orchestrationFlags.putAll(flags);
+            return this;
+        }
+
+        public Builder preferredProviders(List<PreferredProvider> providers) {
+            preferredProviders = providers;
+            return this;
+        }
+
+        public Builder requestedQoS(Map<String, String> qos) {
+            requestedQoS = qos;
+            return this;
+        }
+
+        public Builder commands(Map<String, String> commands) {
+            this.commands = commands;
+            return this;
+        }
+
+        public ServiceRequestForm build() {
+            return new ServiceRequestForm(this).validateCrossParameterConstraints();
+        }
     }
 
-    if (orchestrationFlags.get(OrchestrationFlags.Flags.ENABLE_QOS) && (requestedQoS.isEmpty() || commands.isEmpty())) {
-      throw new BadPayloadException("RequestedQoS or commands hashmap is empty while \"enableQoS\" is set to true");
-    }
+    public ServiceRequestForm validateCrossParameterConstraints() {
+        if (requestedService == null && orchestrationFlags.get(OrchestrationFlags.Flags.OVERRIDE_STORE)) {
+            throw new BadPayloadException("RequestedService can not be null when overrideStore is TRUE");
+        }
 
-    return this;
-  }
+        if (orchestrationFlags.get(OrchestrationFlags.Flags.ONLY_PREFERRED)) {
+            List<PreferredProvider> tmp = new ArrayList<>();
+            for (PreferredProvider provider : preferredProviders) {
+                if (!provider.isValid()) {
+                    tmp.add(provider);
+                }
+            }
+            preferredProviders.removeAll(tmp);
+            if (preferredProviders.isEmpty()) {
+                throw new BadPayloadException("There is no valid PreferredProvider, but \"onlyPreferred\" is set to true");
+            }
+        }
+
+        if (orchestrationFlags.get(OrchestrationFlags.Flags.ENABLE_QOS) && (requestedQoS.isEmpty() || commands.isEmpty())) {
+            throw new BadPayloadException("RequestedQoS or commands hashmap is empty while \"enableQoS\" is set to true");
+        }
+
+        return this;
+    }
 
 }
