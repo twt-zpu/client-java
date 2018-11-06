@@ -85,12 +85,13 @@ public final class Utility {
         if (truststore != null) sslContextConfigurator.setTrustStoreFile(truststore);
         if (truststorepass != null) sslContextConfigurator.setTrustStorePass(truststorepass);
 
-        if (!sslContextConfigurator.validateConfiguration(needsKeyStore)) {
-            throw new AuthException("Provided SSL context is not valid, check the certificate or the config files!");
+        try {
+            SSLContext sslContext = sslContextConfigurator.createSSLContext(true);
+            setSSLContext(sslContext);
+        } catch (SSLContextConfigurator.GenericStoreException e) {
+            throw new AuthException("Provided SSLContext is not valid", e);
         }
 
-        SSLContext sslContext = sslContextConfigurator.createSSLContext();
-        setSSLContext(sslContext);
         return sslContextConfigurator;
     }
 
