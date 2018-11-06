@@ -181,10 +181,10 @@ public final class CertificateAuthorityClient extends ArrowheadSystem {
 
         // Update app.conf with the new values
         Map<String, String> secureParameters = new HashMap<>();
-        secureParameters.put("keystore", (certDir != null ? certDir + File.separator : "") + systemName + ".p12");
+        secureParameters.put("keystore", systemName + ".p12");
         secureParameters.put("keystorepass", keyStorePassword);
         secureParameters.put("keypass", keyStorePassword);
-        secureParameters.put("truststore", (certDir != null ? certDir + File.separator : "") + "truststore.p12");
+        secureParameters.put("truststore", "truststore.p12");
         secureParameters.put("truststorepass", trustStorePassword);
         if (needAuth) {
             secureParameters.put("auth_pub", authFile);
