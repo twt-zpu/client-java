@@ -18,24 +18,55 @@ import java.util.*;
  */
 public class ServiceRequestForm {
 
-  private static final List<String> flagKeys = new ArrayList<>(Arrays.asList("triggerInterCloud", "externalServiceRequest", "enableInterCloud",
-                                                                             "metadataSearch", "pingProviders", "overrideStore", "matchmaking",
-                                                                             "onlyPreferred", "enableQoS"));
+  public enum Flags {
+    TRIGGER_INTER_CLOUD("triggerInterCloud"),
+    EXTERNAL_SERVICE_REQUEST("externalServiceRequest"),
+    ENABLE_INTER_CLOUD("enableInterCloud"),
+    METADATA_SEARCH("metadataSearch"),
+    PING_PROVIDERS("pingProviders"),
+    OVERRIDE_STORE("overrideStore"),
+    MATCHMAKING("matchmaking"),
+    ONLY_PREFERRED("onlyPreferred"),
+    ENABLE_QOS("enableQoS"),
+    ;
+
+    private final String flag;
+
+    Flags(final String flag) {
+      this.flag = flag;
+    }
+
+    @Override
+    public String toString() {
+      return flag;
+    }
+  }
+
+  public static class OrchestrationFlags extends HashMap<String, Boolean> {
+    public OrchestrationFlags() {
+      for (Flags flag : Flags.values()) {
+        put(flag, false);
+      }
+    }
+
+    public Boolean get(Flags flag) {
+      return get(flag.toString());
+    }
+
+    public Boolean put(Flags flag, Boolean value) {
+      return super.put(flag.toString(), value);
+    }
+  }
 
   private ArrowheadSystem requesterSystem;
   private ArrowheadCloud requesterCloud;
   private ArrowheadService requestedService;
-  private Map<String, Boolean> orchestrationFlags = new HashMap<>();
+  private OrchestrationFlags orchestrationFlags = new OrchestrationFlags();
   private List<PreferredProvider> preferredProviders = new ArrayList<>();
   private Map<String, String> requestedQoS = new HashMap<>();
   private Map<String, String> commands = new HashMap<>();
 
   public ServiceRequestForm() {
-    for (String key : flagKeys) {
-      if (!orchestrationFlags.containsKey(key)) {
-        orchestrationFlags.put(key, false);
-      }
-    }
   }
 
   private ServiceRequestForm(Builder builder) {
@@ -77,13 +108,20 @@ public class ServiceRequestForm {
     return orchestrationFlags;
   }
 
+  public void setOrchestrationFlags(OrchestrationFlags orchestrationFlags) {
+    orchestrationFlags.forEach((k, v)->this.orchestrationFlags.put(k, v));
+  }
+
   public void setOrchestrationFlags(Map<String, Boolean> orchestrationFlags) {
-    for (String key : flagKeys) {
-      if (!orchestrationFlags.containsKey(key)) {
-        orchestrationFlags.put(key, false);
-      }
-    }
-    this.orchestrationFlags = orchestrationFlags;
+    orchestrationFlags.forEach((k, v)->this.orchestrationFlags.put(k, v));
+  }
+
+  public void setFlag(Flags flag, Boolean value) {
+    this.orchestrationFlags.put(flag, value);
+  }
+
+  public void setFlag(String key, Boolean value) {
+    this.orchestrationFlags.put(key, value);
   }
 
   public List<PreferredProvider> getPreferredProviders() {
@@ -118,7 +156,7 @@ public class ServiceRequestForm {
     private ArrowheadCloud requesterCloud;
     private ArrowheadService requestedService;
 
-    private Map<String, Boolean> orchestrationFlags = new HashMap<>();
+    private OrchestrationFlags orchestrationFlags = new OrchestrationFlags();
     private List<PreferredProvider> preferredProviders = new ArrayList<>();
     private Map<String, String> requestedQoS = new HashMap<>();
     private Map<String, String> commands = new HashMap<>();
@@ -137,13 +175,13 @@ public class ServiceRequestForm {
       return this;
     }
 
-    public Builder orchestrationFlags(Map<String, Boolean> flags) {
-      for (String key : flagKeys) {
-        if (!flags.containsKey(key)) {
-          flags.put(key, false);
-        }
-      }
-      orchestrationFlags = flags;
+    public Builder flag(Flags flag, Boolean value) {
+      this.orchestrationFlags.put(flag, value);
+      return this;
+    }
+
+    public Builder flag(String key, Boolean value) {
+      this.orchestrationFlags.put(key, value);
       return this;
     }
 
@@ -168,11 +206,11 @@ public class ServiceRequestForm {
   }
 
   public void validateCrossParameterConstraints() {
-    if (requestedService == null && orchestrationFlags.get("overrideStore")) {
+    if (requestedService == null && orchestrationFlags.get(Flags.OVERRIDE_STORE)) {
       throw new BadPayloadException("RequestedService can not be null when overrideStore is TRUE");
     }
 
-    if (orchestrationFlags.get("onlyPreferred")) {
+    if (orchestrationFlags.get(Flags.ONLY_PREFERRED)) {
       List<PreferredProvider> tmp = new ArrayList<>();
       for (PreferredProvider provider : preferredProviders) {
         if (!provider.isValid()) {
@@ -185,7 +223,7 @@ public class ServiceRequestForm {
       }
     }
 
-    if (orchestrationFlags.get("enableQoS") && (requestedQoS.isEmpty() || commands.isEmpty())) {
+    if (orchestrationFlags.get(Flags.ENABLE_QOS) && (requestedQoS.isEmpty() || commands.isEmpty())) {
       throw new BadPayloadException("RequestedQoS or commands hashmap is empty while \"enableQoS\" is set to true");
     }
   }

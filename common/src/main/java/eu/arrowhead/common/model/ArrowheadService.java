@@ -71,6 +71,12 @@ public class ArrowheadService {
     this.serviceMetadata = serviceMetadata;
   }
 
+  public ArrowheadService(String serviceDefinition, String aInterface, Map<String, String> serviceMetadata) {
+    this.serviceDefinition = serviceDefinition;
+    this.interfaces = Collections.singleton(aInterface);
+    this.serviceMetadata = serviceMetadata;
+  }
+
   public Long getId() {
     return id;
   }

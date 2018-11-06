@@ -19,7 +19,6 @@ import eu.arrowhead.common.model.ServiceRequestForm;
 import eu.arrowhead.demo.model.TemperatureReadout;
 
 import javax.ws.rs.core.Response;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,12 +31,13 @@ public class ConsumerMain extends ArrowheadClient {
     private ConsumerMain(String[] args) {
         super(args, CertificateAuthorityClient.createFromProperties());
 
-        OrchestrationClient orchestration = OrchestrationClient.createFromProperties();
+        final OrchestrationClient orchestration = OrchestrationClient.createFromProperties();
 
-        ServiceRequestForm srf = compileSRF();
-        String uri = orchestration.requestService(srf);
+        final ArrowheadSystem me = ArrowheadSystem.createFromProperties();
+        final ServiceRequestForm srf = compileSRF(me);
+        final String uri = orchestration.requestService(srf);
 
-        Response getResponse = Utility.sendRequest(uri, "GET", null);
+        final Response getResponse = Utility.sendRequest(uri, "GET", null);
 
         TemperatureReadout readout = new TemperatureReadout();
         try {
@@ -54,22 +54,21 @@ public class ConsumerMain extends ArrowheadClient {
         }
     }
 
-    private ServiceRequestForm compileSRF() {
-        ArrowheadSystem consumer = ArrowheadSystem.createFromProperties();
-
-        Map<String, String> metadata = new HashMap<>();
+    private ServiceRequestForm compileSRF(ArrowheadSystem consumer) {
+        final Map<String, String> metadata = new HashMap<>();
         metadata.put("unit", "celsius");
         if (props.isSecure()) metadata.put("security", "token");
 
-        ArrowheadService service = new ArrowheadService("temperature", Collections.singleton("json"), metadata);
+        final ArrowheadService service = new ArrowheadService("temperature", "json", metadata);
 
-        Map<String, Boolean> orchestrationFlags = new HashMap<>();
-        orchestrationFlags.put("overrideStore", true);
-        orchestrationFlags.put("pingProviders", false);
-        orchestrationFlags.put("metadataSearch", true);
-        orchestrationFlags.put("enableInterCloud", true);
+        final ServiceRequestForm srf = new ServiceRequestForm.Builder(consumer)
+                .requestedService(service)
+                .flag(ServiceRequestForm.Flags.OVERRIDE_STORE, true)
+                .flag(ServiceRequestForm.Flags.PING_PROVIDERS, false)
+                .flag(ServiceRequestForm.Flags.METADATA_SEARCH, true)
+                .flag(ServiceRequestForm.Flags.ENABLE_INTER_CLOUD, true)
+                .build();
 
-        ServiceRequestForm srf = new ServiceRequestForm.Builder(consumer).requestedService(service).orchestrationFlags(orchestrationFlags).build();
         log.info("Service Request payload: " + Utility.toPrettyJson(null, srf));
         return srf;
     }
