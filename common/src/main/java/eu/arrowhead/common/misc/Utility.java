@@ -35,6 +35,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -367,12 +368,17 @@ public final class Utility {
      Updates the given properties file with the given key-value pairs.
      */
     public static void updateConfigurationFiles(String configLocation, Map<String, String> configValues) {
-        // TODO Create file if it doesn't exist!
         try {
-            FileInputStream in = new FileInputStream(configLocation);
+            final Path path = Paths.get(configLocation);
             ArrowheadProperties props = new ArrowheadProperties();
-            props.load(in);
-            in.close();
+
+            if (Files.exists(path)) {
+                FileInputStream in = new FileInputStream(configLocation);
+                props.load(in);
+                in.close();
+            } else {
+                Files.createFile(path);
+            }
 
             FileOutputStream out = new FileOutputStream(configLocation);
             for (Map.Entry<String, String> entry : configValues.entrySet()) {
