@@ -10,7 +10,6 @@ import java.util.Set;
 
 public class ArrowheadProperties extends TypeSafeProperties {
     public static String getConfDir() {
-        // TODO Should probably document this new feature somewhere, Thomas
         return System.getProperty("confDir");
     }
 

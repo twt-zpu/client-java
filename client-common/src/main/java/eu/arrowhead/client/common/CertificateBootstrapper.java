@@ -78,7 +78,7 @@ public final class CertificateBootstrapper {
         .obtainSystemAndCloudKeyStore(systemName, cloudCN, keyStorePassword.toCharArray(), trustStorePassword.toCharArray());
 
     //Save the keystores to file
-    String certPathPrefix = "config"; // TODO This should be more flexible, Thomas
+    String certPathPrefix = "config";
     CertificateBootstrapper.saveKeyStoreToFile(keyStores[0], keyStorePassword.toCharArray(), systemName + ".p12", certPathPrefix);
     CertificateBootstrapper.saveKeyStoreToFile(keyStores[1], trustStorePassword.toCharArray(), "truststore.p12", certPathPrefix);
 
