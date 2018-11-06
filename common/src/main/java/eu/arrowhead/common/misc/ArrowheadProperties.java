@@ -1,5 +1,7 @@
 package eu.arrowhead.common.misc;
 
+import eu.arrowhead.common.model.ServiceMetadata;
+
 import java.io.File;
 import java.time.ZonedDateTime;
 
@@ -164,8 +166,17 @@ public class ArrowheadProperties extends TypeSafeProperties {
         return getProperty("interfaces");
     }
 
-    public String getMetadata() {
-        return getProperty("metadata");
+    public ServiceMetadata getServiceMetadata() {
+        ServiceMetadata metadata = new ServiceMetadata();
+        String metadataString = getProperty("service_metadata");
+        if (metadataString != null && !metadataString.isEmpty()) {
+            String[] parts = metadataString.split(",");
+            for (String part : parts) {
+                String[] pair = part.split("-");
+                metadata.put(pair[0], pair[1]);
+            }
+        }
+        return metadata;
     }
 
     public String getEventType() {

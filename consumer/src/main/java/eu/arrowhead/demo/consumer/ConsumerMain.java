@@ -13,15 +13,10 @@ import eu.arrowhead.common.api.ArrowheadClient;
 import eu.arrowhead.common.api.clients.CertificateAuthorityClient;
 import eu.arrowhead.common.api.clients.OrchestrationClient;
 import eu.arrowhead.common.misc.Utility;
-import eu.arrowhead.common.model.ArrowheadService;
-import eu.arrowhead.common.model.ArrowheadSystem;
-import eu.arrowhead.common.model.OrchestrationFlags;
-import eu.arrowhead.common.model.ServiceRequestForm;
+import eu.arrowhead.common.model.*;
 import eu.arrowhead.demo.model.TemperatureReadout;
 
 import javax.ws.rs.core.Response;
-import java.util.HashMap;
-import java.util.Map;
 
 public class ConsumerMain extends ArrowheadClient {
 
@@ -56,9 +51,9 @@ public class ConsumerMain extends ArrowheadClient {
     }
 
     private ServiceRequestForm compileSRF(ArrowheadSystem consumer) {
-        final Map<String, String> metadata = new HashMap<>();
-        metadata.put("unit", "celsius");
-        if (props.isSecure()) metadata.put("security", "token");
+        final ServiceMetadata metadata = new ServiceMetadata();
+        metadata.put(ServiceMetadata.Keys.UNIT, "celsius");
+        if (props.isSecure()) metadata.setSecurity(ServiceMetadata.Security.TOKEN);
 
         final ArrowheadService service = new ArrowheadService("temperature", "json", metadata);
 

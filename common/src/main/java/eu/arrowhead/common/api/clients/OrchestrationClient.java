@@ -2,10 +2,7 @@ package eu.arrowhead.common.api.clients;
 
 import eu.arrowhead.common.misc.ArrowheadProperties;
 import eu.arrowhead.common.misc.Utility;
-import eu.arrowhead.common.model.ArrowheadSystem;
-import eu.arrowhead.common.model.OrchestrationForm;
-import eu.arrowhead.common.model.OrchestrationResponse;
-import eu.arrowhead.common.model.ServiceRequestForm;
+import eu.arrowhead.common.model.*;
 
 import javax.ws.rs.core.UriBuilder;
 
@@ -85,7 +82,7 @@ public class OrchestrationClient extends ArrowheadSystem {
         if (provider.getPort() != null && provider.getPort() > 0) {
             ub.port(provider.getPort());
         }
-        if (entry.getService().getServiceMetadata().containsKey("security")) {
+        if (entry.getService().getServiceMetadata().containsKey(ServiceMetadata.Keys.SECURITY)) {
             ub.scheme("https");
             ub.queryParam("token", entry.getAuthorizationToken());
             ub.queryParam("signature", entry.getSignature());
