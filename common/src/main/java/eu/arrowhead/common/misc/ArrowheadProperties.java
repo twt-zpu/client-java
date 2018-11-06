@@ -4,6 +4,9 @@ import eu.arrowhead.common.model.ServiceMetadata;
 
 import java.io.File;
 import java.time.ZonedDateTime;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ArrowheadProperties extends TypeSafeProperties {
     public static String getConfDir() {
@@ -162,8 +165,13 @@ public class ArrowheadProperties extends TypeSafeProperties {
         return getProperty("service_name");
     }
 
-    public String getInterfaces() {
-        return getProperty("interfaces");
+    public Set<String> getInterfaces() {
+        String interfaceList = getProperty("interfaces");
+        Set<String> interfaces = new HashSet<>();
+        if (interfaceList != null && !interfaceList.isEmpty()) {
+            interfaces.addAll(Arrays.asList(interfaceList.replaceAll("\\s+", "").split(",")));
+        }
+        return interfaces;
     }
 
     public ServiceMetadata getServiceMetadata() {

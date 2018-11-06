@@ -28,13 +28,7 @@ public class ArrowheadService {
     public static ArrowheadService createFromProperties(ArrowheadProperties props) {
         boolean isSecure = props.isSecure();
         String serviceDef = props.getServiceName();
-
-        String interfaceList = props.getInterfaces();
-        Set<String> interfaces = new HashSet<>();
-        if (interfaceList != null && !interfaceList.isEmpty()) {
-            interfaces.addAll(Arrays.asList(interfaceList.replaceAll("\\s+", "").split(",")));
-        }
-
+        final Set<String> interfaces = props.getInterfaces();
         final ServiceMetadata metadata = props.getServiceMetadata();
 
         if (isSecure) {
@@ -136,7 +130,6 @@ public class ArrowheadService {
         return sb.toString();
     }
 
-    // TODO This does not copy entries - changing one list changes the other, Thomas
     public void partialUpdate(ArrowheadService other) {
         this.serviceDefinition = other.getServiceDefinition() != null ? other.getServiceDefinition() : this.serviceDefinition;
         this.interfaces = other.getInterfaces().isEmpty() ? this.interfaces : other.getInterfaces();
