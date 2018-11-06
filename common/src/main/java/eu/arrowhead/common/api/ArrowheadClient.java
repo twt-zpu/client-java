@@ -74,7 +74,7 @@ public abstract class ArrowheadClient {
                         props.getTruststorePass(),
                         true);
             } catch (AuthException e) {
-                System.out.println("Moving to certificate bootstrapping.");
+                log.info("Moving to certificate bootstrapping.", e);
                 if (ca != null) {
                     try {
                         ca.bootstrap(props.getSystemName(), true);

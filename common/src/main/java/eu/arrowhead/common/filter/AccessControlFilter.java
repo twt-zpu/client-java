@@ -12,6 +12,7 @@ package eu.arrowhead.common.filter;
 import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.common.misc.SecurityUtils;
 import eu.arrowhead.common.misc.Utility;
+import org.apache.log4j.Logger;
 
 import javax.annotation.Priority;
 import javax.inject.Inject;
@@ -28,6 +29,7 @@ import javax.ws.rs.ext.Provider;
 @Priority(Priorities.AUTHORIZATION) //2nd highest priority constant, this filter gets executed after the SecurityFilter
 //This class is meant to block incoming requests that are not authorized, based on the client certificate
 public class AccessControlFilter implements ContainerRequestFilter {
+  protected final Logger log = Logger.getLogger(getClass());
 
   @Context
   Configuration configuration;
@@ -41,7 +43,7 @@ public class AccessControlFilter implements ContainerRequestFilter {
     if (sc.isSecure()) {
       String subjectName = sc.getUserPrincipal().getName();
       if (isClientAuthorized(subjectName)) {
-        System.out.println("SSL identification is successful! Cert: " + subjectName);
+        log.info("SSL identification is successful! Cert: " + subjectName);
       } else {
         throw new AuthException(SecurityUtils.getCertCNFromSubject(subjectName) + " is unauthorized to access " + requestTarget);
       }
@@ -57,7 +59,7 @@ public class AccessControlFilter implements ContainerRequestFilter {
     String serverCN = (String) configuration.getProperty("server_common_name");
 
     if (!SecurityUtils.isKeyStoreCNArrowheadValid(clientCN)) {
-      System.out.println("Client cert does not have 5 parts, so the access will be denied.");
+      log.warn("Client cert does not have 5 parts, so the access will be denied.");
       return false;
     }
     // All requests from the local cloud are allowed, so omit the first part of the common names (systemName)
