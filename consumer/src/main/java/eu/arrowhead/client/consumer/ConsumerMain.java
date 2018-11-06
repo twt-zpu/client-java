@@ -29,6 +29,7 @@ import javax.swing.JOptionPane;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import org.glassfish.grizzly.ssl.SSLContextConfigurator;
+import org.glassfish.grizzly.ssl.SSLContextConfigurator.GenericStoreException;
 
 public class ConsumerMain {
 
@@ -161,12 +162,17 @@ public class ConsumerMain {
         sslCon.setKeyPass(props.getProperty("keypass"));
         sslCon.setTrustStoreFile(props.getProperty("truststore"));
         sslCon.setTrustStorePass(props.getProperty("truststorepass"));
-        if (!sslCon.validateConfiguration(true)) {
+
+        try {
+          SSLContext sslContext = sslCon.createSSLContext(true);
+          Utility.setSSLContext(sslContext);
+        } catch (GenericStoreException e) {
+          System.out.println("Provided SSLContext is not valid, moving to certificate bootstrapping.");
+          e.printStackTrace();
           sslCon = CertificateBootstrapper.bootstrap(ClientType.CONSUMER, consumerSystemName);
           props = Utility.getProp();
+          Utility.setSSLContext(sslCon.createSSLContext(true));
         }
-        SSLContext sslContext = sslCon.createSSLContext();
-        Utility.setSSLContext(sslContext);
         break;
       }
     }

@@ -30,6 +30,7 @@ import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.UriBuilder;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.ssl.SSLContextConfigurator;
+import org.glassfish.grizzly.ssl.SSLContextConfigurator.GenericStoreException;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -141,18 +142,19 @@ public abstract class ArrowheadClientMain {
     sslCon.setKeyPass(props.getProperty("keypass"));
     sslCon.setTrustStoreFile(props.getProperty("truststore"));
     sslCon.setTrustStorePass(props.getProperty("truststorepass"));
-    if (!sslCon.validateConfiguration(true)) {
+    SSLContext sslContext;
+    try {
+      sslContext = sslCon.createSSLContext(true);
+    } catch (GenericStoreException e) {
+      System.out.println("Provided SSLContext is not valid, moving to certificate bootstrapping.");
       try {
         sslCon = CertificateBootstrapper.bootstrap(clientType, props.getProperty("secure_system_name"));
-        props = Utility.getProp();
-      } catch (ArrowheadException e) {
-        throw new AuthException(
-            "Provided SSL context is not valid, check the certificate or the config files! Certificate bootstrapping failed with: " + e.getMessage(),
-            e);
+      } catch (ArrowheadException e1) {
+        throw new AuthException("Certificate bootstrapping failed with: " + e.getMessage(), e);
       }
+      sslContext = sslCon.createSSLContext(true);
+      props = Utility.getProp();
     }
-
-    SSLContext sslContext = sslCon.createSSLContext();
     Utility.setSSLContext(sslContext);
 
     KeyStore keyStore = SecurityUtils.loadKeyStore(props.getProperty("keystore"), props.getProperty("keystorepass"));
