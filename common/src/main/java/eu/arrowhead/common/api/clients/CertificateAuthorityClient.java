@@ -173,10 +173,10 @@ public final class CertificateAuthorityClient extends ArrowheadSystem {
         SecurityUtils.saveKeyStoreToFile(trustStore, trustStorePassword.toCharArray(), "truststore.p12", certDir);
 
         // Get authorization public key if requested
-        final String authFile = (certDir != null ? certDir + File.separator : "") + "authorization.pub";
+        final String authFile = "authorization.pub";
         if (needAuth) {
             final PublicKey publicKey = getAuthorizationPublicKeyFromCa();
-            SecurityUtils.savePEM(publicKey, authFile);
+            SecurityUtils.savePEM(publicKey, (certDir != null ? certDir + File.separator : "") + authFile);
         }
 
         // Update app.conf with the new values

@@ -66,7 +66,7 @@ public class ArrowheadProperties extends TypeSafeProperties {
     }
 
     public static String getDefaultAuthKey() {
-        return getDefaultCertDir() + File.separator + "authorization.pub";
+        return "authorization.pub";
     }
 
     public static String createDefaultSystemName() {
