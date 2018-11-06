@@ -77,7 +77,6 @@ public abstract class ArrowheadClient {
                 if (ca != null) {
                     try {
                         ca.bootstrap(props.getSystemName(), true);
-                        // TODO Reloading props like this (and here only) could cause problems in other classes, Thomas
                         props = Utility.getProp();
                     } catch (ArrowheadException e2) {
                         throw new AuthException("Certificate bootstrapping failed with: " + e2.getMessage(), e2);

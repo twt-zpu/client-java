@@ -71,7 +71,6 @@ public class EventHandlerClient extends ArrowheadSystem {
     }
 
     private void updateUris() {
-        // TODO Uris should be built from the service registry, Thomas
         String baseUri = Utility.getUri(getAddress(), getPort(), "eventhandler", isSecure, false);
         publishUri = UriBuilder.fromPath(baseUri).path("publish").toString();
         subscribeUri = UriBuilder.fromPath(baseUri).path("subscription").toString();
