@@ -15,6 +15,7 @@ import eu.arrowhead.common.api.clients.OrchestrationClient;
 import eu.arrowhead.common.misc.Utility;
 import eu.arrowhead.common.model.ArrowheadService;
 import eu.arrowhead.common.model.ArrowheadSystem;
+import eu.arrowhead.common.model.OrchestrationFlags;
 import eu.arrowhead.common.model.ServiceRequestForm;
 import eu.arrowhead.demo.model.TemperatureReadout;
 
@@ -63,10 +64,10 @@ public class ConsumerMain extends ArrowheadClient {
 
         final ServiceRequestForm srf = new ServiceRequestForm.Builder(consumer)
                 .requestedService(service)
-                .flag(ServiceRequestForm.Flags.OVERRIDE_STORE, true)
-                .flag(ServiceRequestForm.Flags.PING_PROVIDERS, false)
-                .flag(ServiceRequestForm.Flags.METADATA_SEARCH, true)
-                .flag(ServiceRequestForm.Flags.ENABLE_INTER_CLOUD, true)
+                .flag(OrchestrationFlags.Flags.OVERRIDE_STORE, true)
+                .flag(OrchestrationFlags.Flags.PING_PROVIDERS, false)
+                .flag(OrchestrationFlags.Flags.METADATA_SEARCH, true)
+                .flag(OrchestrationFlags.Flags.ENABLE_INTER_CLOUD, true)
                 .build();
 
         log.info("Service Request payload: " + Utility.toPrettyJson(null, srf));
