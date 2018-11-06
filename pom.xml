@@ -137,6 +137,12 @@
         <version>${log4j.version}</version>
       </dependency>
 
+      <dependency>
+        <groupId>com.sun.istack</groupId>
+        <artifactId>istack-commons-runtime</artifactId>
+        <version>3.0.7</version>
+      </dependency>
+
     </dependencies>
   </dependencyManagement>
 
