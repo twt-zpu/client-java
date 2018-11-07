@@ -17,11 +17,13 @@ class ProviderMain extends ArrowheadClient {
   private ProviderMain(String[] args) {
     super(args);
 
-    ArrowheadSecurityContext securityContext;
-    try {
-      securityContext = ArrowheadSecurityContext.createFromProperties();
-    } catch (KeystoreException e) {
-      securityContext = CertificateAuthorityClient.createFromProperties().bootstrap(true);
+    ArrowheadSecurityContext securityContext = null;
+    if (props.isSecure()) {
+      try {
+        securityContext = ArrowheadSecurityContext.createFromProperties();
+      } catch (KeystoreException e) {
+        securityContext = CertificateAuthorityClient.createFromProperties().bootstrap(true);
+      }
     }
 
     final ArrowheadServer server = ArrowheadServer.createFromProperties(securityContext);
