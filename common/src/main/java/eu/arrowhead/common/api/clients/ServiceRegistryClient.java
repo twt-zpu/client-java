@@ -4,7 +4,6 @@ import eu.arrowhead.common.api.ArrowheadSecurityContext;
 import eu.arrowhead.common.exception.ArrowheadRuntimeException;
 import eu.arrowhead.common.exception.ExceptionType;
 import eu.arrowhead.common.misc.ArrowheadProperties;
-import eu.arrowhead.common.misc.Utility;
 import eu.arrowhead.common.model.ServiceRegistryEntry;
 
 import java.util.*;
@@ -13,7 +12,7 @@ public class ServiceRegistryClient extends RestClient {
     private static final Map<ServiceRegistryClient, Set<ServiceRegistryEntry>> entries = new HashMap<>();
 
     public static ServiceRegistryClient createFromProperties(ArrowheadSecurityContext securityContext) {
-        return createFromProperties(Utility.getProp(), securityContext);
+        return createFromProperties(ArrowheadProperties.loadDefault(), securityContext);
     }
 
     public static ServiceRegistryClient createFromProperties(ArrowheadProperties props, ArrowheadSecurityContext securityContext) {

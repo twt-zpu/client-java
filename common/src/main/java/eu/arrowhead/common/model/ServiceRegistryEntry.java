@@ -11,7 +11,6 @@ package eu.arrowhead.common.model;
 
 import eu.arrowhead.common.api.ArrowheadServer;
 import eu.arrowhead.common.misc.ArrowheadProperties;
-import eu.arrowhead.common.misc.Utility;
 
 import java.time.LocalDateTime;
 
@@ -26,7 +25,7 @@ public class ServiceRegistryEntry {
   private Integer version = 1;
 
   public static ServiceRegistryEntry createFromProperties(ArrowheadServer server) {
-    return createFromProperties(Utility.getProp(), server);
+    return createFromProperties(ArrowheadProperties.loadDefault(), server);
   }
 
   private static ServiceRegistryEntry createFromProperties(ArrowheadProperties props, ArrowheadServer server) {

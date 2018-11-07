@@ -34,7 +34,7 @@ public class ArrowheadServer {
     private ArrowheadSecurityContext securityContext;
 
     public static ArrowheadServer createFromProperties(ArrowheadSecurityContext securityContext) {
-        return createFromProperties(Utility.getProp(), securityContext);
+        return createFromProperties(ArrowheadProperties.loadDefault(), securityContext);
     }
 
     public static ArrowheadServer createFromProperties(ArrowheadProperties props, ArrowheadSecurityContext securityContext) {

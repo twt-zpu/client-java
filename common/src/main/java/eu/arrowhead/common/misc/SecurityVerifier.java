@@ -21,7 +21,7 @@ public class SecurityVerifier {
     private PublicKey authKey;
 
     public static SecurityVerifier createFromProperties() {
-        return createFromProperties(Utility.getProp());
+        return createFromProperties(ArrowheadProperties.loadDefault());
     }
 
     public static SecurityVerifier createFromProperties(ArrowheadProperties props) {
