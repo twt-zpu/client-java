@@ -15,18 +15,12 @@ import java.io.InputStreamReader;
 
 public abstract class ArrowheadClient {
     protected final Logger log = Logger.getLogger(getClass());
-    protected final ArrowheadProperties props = Utility.getProp();
-    private final boolean isDaemon;
+    private boolean isDaemon;
+    private boolean isSecure, isBootstrap;
+    private ArrowheadProperties props;
 
     public ArrowheadClient(String[] args) {
-        props.putIfAbsent("log4j.rootLogger", "INFO, CONSOLE");
-        props.putIfAbsent("log4j.appender.CONSOLE", "org.apache.log4j.ConsoleAppender");
-        props.putIfAbsent("log4j.appender.CONSOLE.target", "System.err");
-        props.putIfAbsent("log4j.appender.CONSOLE.ImmediateFlush", "true");
-        props.putIfAbsent("log4j.appender.CONSOLE.Threshold", "debug");
-        props.putIfAbsent("log4j.appender.CONSOLE.layout", "org.apache.log4j.PatternLayout");
-        props.putIfAbsent("log4j.appender.CONSOLE.layout.conversionPattern", "%d{yyyy-MM-dd HH:mm:ss}  %c{1}.%M(%F:%L)  %p  %m%n");
-        PropertyConfigurator.configure(props);
+        setProperties(Utility.getProp());
 
         boolean daemon = false;
         for (String arg : args) {
@@ -36,7 +30,7 @@ public abstract class ArrowheadClient {
                     log.info("Starting server as daemon!");
                     break;
                 case "-d":
-                    System.setProperty("debug_mode", "true");
+                    setDebug(true);
                     log.info("Starting server in debug mode!");
                     break;
                 case "-tls":
@@ -46,6 +40,64 @@ public abstract class ArrowheadClient {
                     log.warn("-------------------------------------------------------");
             }
         }
+        isDaemon = daemon;
+    }
+
+    public ArrowheadClient setProperties(ArrowheadProperties props) {
+        if (props != null) {
+            props.putIfAbsent("log4j.rootLogger", "INFO, CONSOLE");
+            props.putIfAbsent("log4j.appender.CONSOLE", "org.apache.log4j.ConsoleAppender");
+            props.putIfAbsent("log4j.appender.CONSOLE.target", "System.err");
+            props.putIfAbsent("log4j.appender.CONSOLE.ImmediateFlush", "true");
+            props.putIfAbsent("log4j.appender.CONSOLE.Threshold", "debug");
+            props.putIfAbsent("log4j.appender.CONSOLE.layout", "org.apache.log4j.PatternLayout");
+            props.putIfAbsent("log4j.appender.CONSOLE.layout.conversionPattern", "%d{yyyy-MM-dd HH:mm:ss}  %c{1}.%M(%F:%L)  %p  %m%n");
+            PropertyConfigurator.configure(props);
+
+            isSecure = props.isSecure();
+            isBootstrap = props.isBootstrap();
+        }
+        this.props = props;
+
+        return this;
+    }
+
+    public ArrowheadProperties getProps() {
+        return props;
+    }
+
+    public ArrowheadClient setDebug(boolean debug) {
+        System.setProperty("debug_mode", debug ? "true" : "false");
+        return this;
+    }
+
+    public boolean isDebug() {
+        return System.getProperty("debug_mode", "false").equals("true");
+    }
+
+    public boolean isDaemon() {
+        return isDaemon;
+    }
+
+    public boolean isSecure() {
+        return isSecure;
+    }
+
+    public ArrowheadClient setSecure(boolean secure) {
+        isSecure = secure;
+        return this;
+    }
+
+    public boolean isBootstrap() {
+        return isBootstrap;
+    }
+
+    public ArrowheadClient setBootstrap(boolean bootstrap) {
+        isBootstrap = bootstrap;
+        return this;
+    }
+
+    public void setDaemon(boolean daemon) {
         isDaemon = daemon;
     }
 
@@ -86,11 +138,11 @@ public abstract class ArrowheadClient {
             }));
 
             ArrowheadSecurityContext securityContext = null;
-            if (props.isSecure()) {
+            if (isSecure) {
                 try {
                     securityContext = ArrowheadSecurityContext.createFromProperties();
                 } catch (KeystoreException e) {
-                    if (props.isBootstrap()) {
+                    if (isBootstrap) {
                         securityContext = CertificateAuthorityClient.createFromProperties().bootstrap(true);
                     } else {
                         throw e;
