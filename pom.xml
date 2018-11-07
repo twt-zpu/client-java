@@ -21,6 +21,7 @@
     <module>cert_request</module>
     <module>client-common</module>
     <module>consumer</module>
+    <module>digital_twin</module>
     <module>provider</module>
     <module>publisher</module>
     <module>subscriber</module>

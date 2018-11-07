@@ -26,3 +26,4 @@
 *.properties
 */target
 *app.conf
+*.mvn
