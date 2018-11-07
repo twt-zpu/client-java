@@ -9,6 +9,7 @@
   <packaging>jar</packaging>
 
   <name>digital_twin</name>
+  <description>Arrowhead demo client which "mirrors" a physical device and requests services based on event triggers.</description>
 
   <parent>
     <groupId>org.springframework.boot</groupId>
@@ -37,6 +38,11 @@
 
     <dependency>
       <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
     </dependency>
@@ -48,9 +54,11 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
+        <configuration>
+          <layout>ZIP</layout> <!-- to facilitate the use of external application.properties -->
+        </configuration>
       </plugin>
     </plugins>
   </build>
-
 
 </project>
