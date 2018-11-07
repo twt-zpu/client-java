@@ -17,3 +17,17 @@ This is a multi module maven project, the [root `pom.xml`](https://github.com/ar
 * **publisher**: client skeleton which publishes events to the Event Handler core system
 * **subscriber**: client skeleton which subscribes to specific event types at the Event Handler core system
 * **cert_request**: stand-alone proof of concept Spring Boot app which requests a new Application System certificate from the Certificate Authority core system
+
+### Application Arguments
+
+The Arrowhead systems built against the new ArrowheadClient (that includes the consumer, provider, publisher, and
+subscriber demos) have the following arguments:
+
+* **-daemon**: Start in daemon mode. In this mode the application will only terminate on the TERM signal, otherwise you
+can type `stop` to shutdown the process.
+* **-d**: Start in debug mode.
+* **-DconfDir=\<dir\>**: Location of `default.conf` and `app.conf` files, relative to the current working directory.
+Note this is a Java VM option.
+
+The remain settings (that includes the previous `-tls` argument) are set in the configuration files `default.conf` and
+`app.conf`. 

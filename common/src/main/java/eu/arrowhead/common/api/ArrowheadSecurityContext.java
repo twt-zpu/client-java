@@ -1,0 +1,122 @@
+package eu.arrowhead.common.api;
+
+import eu.arrowhead.common.exception.KeystoreException;
+import eu.arrowhead.common.misc.ArrowheadProperties;
+import eu.arrowhead.common.misc.SecurityUtils;
+import eu.arrowhead.common.misc.Utility;
+import org.apache.log4j.Logger;
+import org.glassfish.grizzly.ssl.SSLContextConfigurator;
+
+import javax.net.ssl.SSLContext;
+import java.security.KeyStore;
+import java.security.cert.X509Certificate;
+import java.util.Base64;
+
+public class ArrowheadSecurityContext {
+    protected final Logger log = Logger.getLogger(getClass());
+    private String keystore, keystorePass, keyPass, truststore, truststorePass;
+    private SSLContext sslContext;
+    private SSLContextConfigurator sslContextConfigurator;
+
+    public static ArrowheadSecurityContext createFromProperties() throws KeystoreException {
+        return createFromProperties(Utility.getProp());
+    }
+
+    public static ArrowheadSecurityContext createFromProperties(ArrowheadProperties props) throws KeystoreException {
+        return new ArrowheadSecurityContext()
+                .setKeystore(props.getKeystore())
+                .setKeystorePass(props.getKeystorePass())
+                .setKeyPass(props.getKeyPass())
+                .setTruststore(props.getTruststore())
+                .setTruststorePass(props.getTruststorePass())
+                .load();
+    }
+
+    public static ArrowheadSecurityContext create(String keystore, String keystorePass, String keyPass, String truststore, String truststorePass) throws KeystoreException {
+        return new ArrowheadSecurityContext()
+                .setKeystore(keystore)
+                .setKeystorePass(keystorePass)
+                .setKeyPass(keyPass)
+                .setTruststore(truststore)
+                .setTruststorePass(truststorePass)
+                .load();
+    }
+
+    private ArrowheadSecurityContext load() throws KeystoreException {
+        sslContextConfigurator = new SSLContextConfigurator();
+        if (keystore != null) sslContextConfigurator.setKeyStoreFile(keystore);
+        if (keystorePass != null) sslContextConfigurator.setKeyStorePass(keystorePass);
+        if (keyPass != null) sslContextConfigurator.setKeyPass(keyPass);
+        if (truststore != null) sslContextConfigurator.setTrustStoreFile(truststore);
+        if (truststorePass != null) sslContextConfigurator.setTrustStorePass(truststorePass);
+
+        try {
+            sslContext = sslContextConfigurator.createSSLContext(true);
+        } catch (SSLContextConfigurator.GenericStoreException e) {
+            throw new KeystoreException("Provided SSLContext is not valid", e);
+        }
+
+        KeyStore keyStore = SecurityUtils.loadKeyStore(keystore, keystorePass);
+        X509Certificate serverCert = SecurityUtils.getFirstCertFromKeyStore(keyStore);
+        String base64PublicKey = Base64.getEncoder().encodeToString(serverCert.getPublicKey().getEncoded());
+        log.info("PublicKey Base64: " + base64PublicKey);
+
+        return this;
+    }
+
+    private ArrowheadSecurityContext() {
+    }
+
+    public String getKeystore() {
+        return keystore;
+    }
+
+    public ArrowheadSecurityContext setKeystore(String keystore) {
+        this.keystore = keystore;
+        return this;
+    }
+
+    public String getKeystorePass() {
+        return keystorePass;
+    }
+
+    public ArrowheadSecurityContext setKeystorePass(String keystorePass) {
+        this.keystorePass = keystorePass;
+        return this;
+    }
+
+    public String getKeyPass() {
+        return keyPass;
+    }
+
+    public ArrowheadSecurityContext setKeyPass(String keyPass) {
+        this.keyPass = keyPass;
+        return this;
+    }
+
+    public String getTruststore() {
+        return truststore;
+    }
+
+    public ArrowheadSecurityContext setTruststore(String truststore) {
+        this.truststore = truststore;
+        return this;
+    }
+
+    public String getTruststorePass() {
+        return truststorePass;
+    }
+
+    public ArrowheadSecurityContext setTruststorePass(String truststorePass) {
+        this.truststorePass = truststorePass;
+        return this;
+    }
+
+    public SSLContext getSslContext() {
+        return sslContext;
+    }
+
+    public SSLContextConfigurator getSSLContextConfigurator() {
+        return sslContextConfigurator;
+    }
+}
