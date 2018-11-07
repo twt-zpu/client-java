@@ -17,9 +17,6 @@ import java.util.Set;
 
 public class EventHandlerClient extends RestClient {
     private static final Map<EventHandlerClient, Map<ArrowheadSystem, Set<String>>> subscriptions = new HashMap<>();
-    private String publishUri;
-    private String subscribeUri;
-    private boolean isSecure;
 
     public static EventHandlerClient createFromProperties(ArrowheadSecurityContext securityContext) {
         return createFromProperties(Utility.getProp(), securityContext);
@@ -28,47 +25,30 @@ public class EventHandlerClient extends RestClient {
     public static EventHandlerClient createFromProperties(ArrowheadProperties props, ArrowheadSecurityContext securityContext) {
         final boolean isSecure = props.isSecure();
         return new EventHandlerClient()
-                .setSecure(isSecure)
                 .setAddress(props.getEhAddress())
                 .setPort(props.getEhPort())
-                .setSecurityContext(securityContext);
+                .setSecurityContext(securityContext)
+                .setServicePath("eventhandler");
     }
 
     public static EventHandlerClient createDefault(ArrowheadSecurityContext securityContext) {
         final boolean isSecure = ArrowheadProperties.getDefaultIsSecure();
         return new EventHandlerClient()
-                .setSecure(isSecure)
                 .setAddress(ArrowheadProperties.getDefaultEhAddress())
                 .setPort(ArrowheadProperties.getDefaultEhPort(isSecure))
-                .setSecurityContext(securityContext);
-    }
-
-    private EventHandlerClient() {
-        super("0.0.0.0", 80);
-        isSecure = false;
-    }
-
-    public boolean isSecure() {
-        return isSecure;
-    }
-
-    public EventHandlerClient setSecure(boolean secure) {
-        isSecure = secure;
-        updateUris();
-        return this;
+                .setSecurityContext(securityContext)
+                .setServicePath("eventhandler");
     }
 
     @Override
     public EventHandlerClient setAddress(String address) {
         super.setAddress(address);
-        updateUris();
         return this;
     }
 
     @Override
-    public EventHandlerClient setPort(Integer port) {
+    public EventHandlerClient setPort(int port) {
         super.setPort(port);
-        updateUris();
         return this;
     }
 
@@ -78,16 +58,15 @@ public class EventHandlerClient extends RestClient {
         return this;
     }
 
-    private void updateUris() {
-        String baseUri = Utility.getUri(getAddress(), getPort(), "eventhandler", isSecure, false);
-        publishUri = UriBuilder.fromPath(baseUri).path("publish").toString();
-        subscribeUri = UriBuilder.fromPath(baseUri).path("subscription").toString();
-
+    @Override
+    public EventHandlerClient setServicePath(String path) {
+        super.setServicePath(path);
+        return this;
     }
 
     public void publish(Event event, ArrowheadSystem eventSource) {
         PublishEvent eventPublishing = new PublishEvent(eventSource, event, "publisher/feedback");
-        sendRequest(publishUri, "POST", eventPublishing);
+        sendRequest(Method.POST, "publish", eventPublishing);
         log.info("Event published to EH.");
     }
 
@@ -107,7 +86,7 @@ public class EventHandlerClient extends RestClient {
             throw new ArrowheadRuntimeException("Already subscribed to " + eventType);
 
         EventFilter filter = new EventFilter(eventType, consumer, notifyPath);
-        sendRequest(subscribeUri, "POST", filter);
+        sendRequest(Method.POST, "subscription", filter);
 
         if (!subscriptions.containsKey(this)) subscriptions.put(this, new HashMap<>());
         handlerSubscriptions = subscriptions.get(this);
@@ -120,8 +99,8 @@ public class EventHandlerClient extends RestClient {
     public void unsubscribe(ArrowheadSystem consumer, String eventType) {
         String consumerName = consumer.getSystemName();
 
-        String url = UriBuilder.fromPath(subscribeUri).path("type").path(eventType).path("consumer").path(consumerName).toString();
-        sendRequest(url, "DELETE", null);
+        String url = UriBuilder.fromPath("subscription").path("type").path(eventType).path("consumer").path(consumerName).toString();
+        sendRequest(Method.DELETE, url, null);
 
         final Map<ArrowheadSystem, Set<String>> handlerSubscriptions = subscriptions.get(this);
         final Set<String> consumerSubscriptions = handlerSubscriptions != null ? handlerSubscriptions.get(consumer) : null;

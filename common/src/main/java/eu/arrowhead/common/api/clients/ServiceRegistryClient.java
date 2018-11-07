@@ -12,58 +12,37 @@ import java.util.*;
 
 public class ServiceRegistryClient extends RestClient {
     private static final Map<ServiceRegistryClient, Set<ServiceRegistryEntry>> entries = new HashMap<>();
-    private String registerUri;
-    private String removeUri;
-    private boolean isSecure;
 
     public static ServiceRegistryClient createFromProperties(ArrowheadSecurityContext securityContext) {
         return createFromProperties(Utility.getProp(), securityContext);
     }
 
     public static ServiceRegistryClient createFromProperties(ArrowheadProperties props, ArrowheadSecurityContext securityContext) {
-        boolean isSecure = props.isSecure();
         return new ServiceRegistryClient()
-                .setSecure(isSecure)
                 .setAddress(props.getSrAddress())
                 .setPort(props.getSrPort())
-                .setSecurityContext(securityContext);
+                .setSecurityContext(securityContext)
+                .setServicePath("serviceregistry");
     }
 
     public static ServiceRegistryClient createDefault(ArrowheadSecurityContext securityContext) {
         final boolean isSecure = ArrowheadProperties.getDefaultIsSecure();
         return new ServiceRegistryClient()
-                .setSecure(isSecure)
                 .setAddress(ArrowheadProperties.getDefaultSrAddress())
                 .setPort(ArrowheadProperties.getDefaultSrPort(isSecure))
-                .setSecurityContext(securityContext);
-    }
-
-    private ServiceRegistryClient() {
-        super("0.0.0.0", 80);
-        isSecure = false;
-    }
-
-    public boolean isSecure() {
-        return isSecure;
-    }
-
-    public ServiceRegistryClient setSecure(boolean secure) {
-        isSecure = secure;
-        updateUris();
-        return this;
+                .setSecurityContext(securityContext)
+                .setServicePath("serviceregistry");
     }
 
     @Override
     public ServiceRegistryClient setAddress(String address) {
         super.setAddress(address);
-        updateUris();
         return this;
     }
 
     @Override
-    public ServiceRegistryClient setPort(Integer port) {
+    public ServiceRegistryClient setPort(int port) {
         super.setPort(port);
-        updateUris();
         return this;
     }
 
@@ -73,21 +52,21 @@ public class ServiceRegistryClient extends RestClient {
         return this;
     }
 
-    private void updateUris() {
-        String baseUri = Utility.getUri(getAddress(), getPort(), "serviceregistry", isSecure, false);
-        registerUri = UriBuilder.fromPath(baseUri).path("register").toString();
-        removeUri = UriBuilder.fromPath(baseUri).path("remove").toString();
+    @Override
+    public ServiceRegistryClient setServicePath(String path) {
+        super.setServicePath(path);
+        return this;
     }
 
     public ServiceRegistryEntry register(ServiceRegistryEntry srEntry) {
         try {
-            sendRequest(registerUri, "POST", srEntry);
+            sendRequest(Method.POST, "register", srEntry);
         } catch (ArrowheadRuntimeException e) {
             if (e.getExceptionType() == ExceptionType.DUPLICATE_ENTRY) {
                 log.warn("Received DuplicateEntryException from SR, sending delete request and then " +
                         "registering again.");
                 unregister(srEntry);
-                sendRequest(registerUri, "POST", srEntry);
+                sendRequest(Method.POST, "register", srEntry);
             } else {
                 throw e;
             }
@@ -103,7 +82,7 @@ public class ServiceRegistryClient extends RestClient {
 
     public void unregister(ServiceRegistryEntry srEntry) {
         if (srEntry != null) {
-            sendRequest(removeUri, "PUT", srEntry);
+            sendRequest(Method.PUT, "remove", srEntry);
             if (entries.containsKey(this))
                 entries.get(this).remove(srEntry);
             log.info("Removing service is successful!");

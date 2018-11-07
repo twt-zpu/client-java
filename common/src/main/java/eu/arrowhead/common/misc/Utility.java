@@ -11,7 +11,6 @@ package eu.arrowhead.common.misc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.arrowhead.common.exception.ArrowheadRuntimeException;
-import org.apache.log4j.Logger;
 
 import javax.ws.rs.core.UriBuilder;
 import java.io.*;

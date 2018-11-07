@@ -13,7 +13,6 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.net.ssl.SSLContext;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
 import java.io.File;
 import java.security.KeyPair;
 import java.security.KeyStore;
@@ -24,10 +23,8 @@ import java.util.Map;
 
 public final class CertificateAuthorityClient extends RestClient {
     private String keyPass, truststore, truststorePass, keystorePass;
-    private String cloudCnUri, authPubKeyUri, certSignUri;
     private String confDir, certDir;
     private String clientName;
-    private boolean isSecure;
 
     static {
         Security.addProvider(new BouncyCastleProvider());
@@ -40,7 +37,6 @@ public final class CertificateAuthorityClient extends RestClient {
     public static CertificateAuthorityClient createFromProperties(ArrowheadProperties props) {
         final boolean isSecure = props.isSecure();
         return new CertificateAuthorityClient()
-                .setSecure(isSecure)
                 .setAddress(props.getCaAddress())
                 .setPort(props.getCaPort())
                 .setKeyPass(props.getKeyPass())
@@ -49,23 +45,23 @@ public final class CertificateAuthorityClient extends RestClient {
                 .setKeystorePass(props.getKeystorePass())
                 .setConfDir(ArrowheadProperties.getConfDir())
                 .setCertDir(props.getCertDir())
-                .setClientName(props.getSystemName());
+                .setClientName(props.getSystemName())
+                .setServicePath("ca");
     }
 
     public static CertificateAuthorityClient createDefault(String clientName) {
         final boolean isSecure = ArrowheadProperties.getDefaultIsSecure();
         return new CertificateAuthorityClient()
-                .setSecure(isSecure)
                 .setAddress(ArrowheadProperties.getDefaultCaAddress())
                 .setPort(ArrowheadProperties.getDefaultCaPort(isSecure))
                 .setConfDir(ArrowheadProperties.getConfDir())
                 .setCertDir(ArrowheadProperties.getDefaultCertDir())
-                .setClientName(clientName);
+                .setClientName(clientName)
+                .setServicePath("ca");
     }
 
     private CertificateAuthorityClient() {
-        super("0.0.0.0", 80);
-        isSecure = false;
+        super();
     }
 
     public String getKeyPass() {
@@ -104,27 +100,21 @@ public final class CertificateAuthorityClient extends RestClient {
         return this;
     }
 
-    public boolean isSecure() {
-        return isSecure;
-    }
-
-    public CertificateAuthorityClient setSecure(boolean secure) {
-        isSecure = secure;
-        updateUris();
-        return this;
-    }
-
     @Override
     public CertificateAuthorityClient setAddress(String address) {
         super.setAddress(address);
-        updateUris();
         return this;
     }
 
     @Override
-    public CertificateAuthorityClient setPort(Integer port) {
+    public CertificateAuthorityClient setPort(int port) {
         super.setPort(port);
-        updateUris();
+        return this;
+    }
+
+    @Override
+    public CertificateAuthorityClient setServicePath(String path) {
+        super.setServicePath(path);
         return this;
     }
 
@@ -155,19 +145,8 @@ public final class CertificateAuthorityClient extends RestClient {
         return this;
     }
 
-    private void updateUris() {
-        String baseUri = Utility.getUri(getAddress(), getPort(), "ca", isSecure, false);
-        cloudCnUri = baseUri;
-        certSignUri = baseUri;
-        authPubKeyUri = UriBuilder.fromPath(baseUri).path("auth").toString();
-    }
-
     // TODO Can we skip the needAuth parameter?, Thomas
     public ArrowheadSecurityContext bootstrap(boolean needAuth) {
-        if (!Utility.isHostAvailable(getAddress(), getPort(), 3000)) {
-            throw new ArrowheadRuntimeException("CA Core System is unavailable at " + getAddress() + ":" + getPort());
-        }
-
         if (clientName == null) throw new ArrowheadRuntimeException("System name is required to generate " +
                 "certificates - have you set \"system_name\" in the config file?");
 
@@ -232,7 +211,7 @@ public final class CertificateAuthorityClient extends RestClient {
      * @param sslContext
      */
     private String getCloudCN(SSLContext sslContext) {
-        Response caResponse = sendRequest(cloudCnUri, "GET", null);
+        Response caResponse = sendRequest(Method.GET, null, null);
         return caResponse.readEntity(String.class);
     }
 
@@ -241,7 +220,7 @@ public final class CertificateAuthorityClient extends RestClient {
      * @param sslContext
      */
     private PublicKey getAuthorizationPublicKeyFromCa(SSLContext sslContext) {
-        Response caResponse = sendRequest(authPubKeyUri, "GET", null);
+        Response caResponse = sendRequest(Method.GET, "auth", null);
         return SecurityUtils.getPublicKey(caResponse.readEntity(String.class), false);
     }
 
@@ -249,7 +228,7 @@ public final class CertificateAuthorityClient extends RestClient {
         //Get a new locally generated public/private key pair
         KeyPair keyPair = SecurityUtils.generateRSAKeyPair();
         final CertificateSigningRequest request = SecurityUtils.createSigningRequest(commonName, keyPair);
-        Response caResponse = sendRequest(certSignUri, "POST", request);
+        Response caResponse = sendRequest(Method.POST, null, request);
         CertificateSigningResponse signingResponse = caResponse.readEntity(CertificateSigningResponse.class);
         signingResponse.setLocalPrivateKey(keyPair.getPrivate());
         return signingResponse;

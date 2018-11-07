@@ -41,11 +41,11 @@ public class ConsumerMain extends ArrowheadClient {
 
         final ArrowheadSystem me = ArrowheadSystem.createFromProperties();
         final ServiceRequestForm srf = compileSRF(me);
+
         final String uri = orchestration.requestService(srf);
+        final RestClient restClient = RestClient.create(uri, securityContext);
 
-        final RestClient restClient = RestClient.create(securityContext);
-
-        final Response getResponse = restClient.sendRequest(uri, "GET", null);
+        final Response getResponse = restClient.sendRequest(RestClient.Method.GET, null, null);
 
         TemperatureReadout readout = new TemperatureReadout();
         try {

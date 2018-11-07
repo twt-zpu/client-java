@@ -13,42 +13,53 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+import java.net.URI;
 
 public class RestClient {
+    public enum Method {
+        GET, PUT, POST, DELETE;
+    }
+
     private static final Client insecureClient = SecurityUtils.createClient(null);
     protected final Logger log = Logger.getLogger(getClass());
-    private String address;
-    private Integer port;
     private ArrowheadSecurityContext securityContext;
     private Client secureClient;
+    private UriBuilder uriBuilder = UriBuilder.fromPath("");
 
-    // TODO Address and port are currently used very weirdly by sendRequest, Thomas
-    public static RestClient create(ArrowheadSecurityContext securityContext) {
-        return new RestClient(null, null)
+    public static RestClient create(String uri, ArrowheadSecurityContext securityContext) {
+        return new RestClient()
+                .setUri(uri)
                 .setSecurityContext(securityContext);
     }
 
-    // TODO Remove parameters and use set functions?, Thomas
-    protected RestClient(String address, Integer port) {
-        this.address = address;
-        this.port = port;
-    }
-
-    public String getAddress() {
-        return address;
+    protected RestClient() {
     }
 
     public RestClient setAddress(String address) {
-        this.address = address;
+        uriBuilder.host(address);
         return this;
     }
 
-    public Integer getPort() {
-        return port;
+    public RestClient setPort(int port) {
+        uriBuilder.port(port);
+        return this;
     }
 
-    public RestClient setPort(Integer port) {
-        this.port = port;
+    public RestClient setSecurityContext(ArrowheadSecurityContext securityContext) {
+        this.securityContext = securityContext;
+        if (securityContext != null)
+            secureClient = SecurityUtils.createClient(securityContext.getSslContext());
+        uriBuilder.scheme(securityContext == null ? "http" : "https");
+        return this;
+    }
+
+    public RestClient setServicePath(String path) {
+        uriBuilder.replacePath(path);
+        return this;
+    }
+
+    public RestClient setUri(String path) {
+        uriBuilder = UriBuilder.fromUri(path);
         return this;
     }
 
@@ -56,23 +67,15 @@ public class RestClient {
         return securityContext;
     }
 
-    public RestClient setSecurityContext(ArrowheadSecurityContext securityContext) {
-        this.securityContext = securityContext;
-        secureClient = SecurityUtils.createClient(securityContext.getSslContext());
-        return this;
-    }
-
     /**
      * Sends a HTTP request to the given url, with the given HTTP method type and given payload
      */
-    public <T> Response sendRequest(String uri, String method, T payload) {
-        boolean isSecure = false;
-        if (uri == null) {
-            throw new NullPointerException("send (HTTP) request method received null URL");
-        }
-        if (uri.startsWith("https")) {
-            isSecure = true;
-        }
+    public <T> Response sendRequest(Method method, String path, T payload) {
+        boolean isSecure = securityContext != null;
+
+        URI uri = path != null ?
+                uriBuilder.clone().path(path).build() :
+                uriBuilder.build();
 
         if (isSecure && (securityContext == null || securityContext.getSslContext() == null)) {
             throw new AuthException(
@@ -85,16 +88,16 @@ public class RestClient {
         Response response; // will not be null after the switch-case
         try {
             switch (method) {
-                case "GET":
+                case GET:
                     response = request.get();
                     break;
-                case "POST":
+                case POST:
                     response = request.post(Entity.json(payload));
                     break;
-                case "PUT":
+                case PUT:
                     response = request.put(Entity.json(payload));
                     break;
-                case "DELETE":
+                case DELETE:
                     response = request.delete();
                     break;
                 default:
@@ -111,7 +114,7 @@ public class RestClient {
 
         // If the response status code does not start with 2 the request was not successful
         if (!(response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL)) {
-            handleException(response, uri);
+            handleException(response, uri.toString());
         }
 
         return response;
