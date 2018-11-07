@@ -7,7 +7,6 @@ import eu.arrowhead.common.misc.ArrowheadProperties;
 import eu.arrowhead.common.misc.Utility;
 import eu.arrowhead.common.model.ServiceRegistryEntry;
 
-import javax.ws.rs.core.UriBuilder;
 import java.util.*;
 
 public class ServiceRegistryClient extends RestClient {

@@ -17,7 +17,7 @@ import eu.arrowhead.common.api.clients.EventHandlerClient;
 import eu.arrowhead.common.exception.KeystoreException;
 import eu.arrowhead.common.model.ArrowheadSystem;
 
-public class SubscriberMain extends ArrowheadClient {
+class SubscriberMain extends ArrowheadClient {
 
   public static void main(String[] args) {
     new SubscriberMain(args);

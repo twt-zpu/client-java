@@ -17,7 +17,7 @@ import java.net.URI;
 
 public class RestClient {
     public enum Method {
-        GET, PUT, POST, DELETE;
+        GET, PUT, POST, DELETE
     }
 
     private static final Client insecureClient = SecurityUtils.createClient(null);

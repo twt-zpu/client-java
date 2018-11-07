@@ -38,8 +38,8 @@ public class SecurityFilter implements ContainerRequestFilter {
 
   class Authorizer implements SecurityContext {
 
-    private String user;
-    private Principal principal;
+    private final String user;
+    private final Principal principal;
 
     Authorizer(final String user) {
       this.user = user;

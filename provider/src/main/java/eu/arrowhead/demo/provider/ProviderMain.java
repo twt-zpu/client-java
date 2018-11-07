@@ -8,7 +8,7 @@ import eu.arrowhead.common.api.clients.ServiceRegistryClient;
 import eu.arrowhead.common.exception.KeystoreException;
 import eu.arrowhead.common.model.ServiceRegistryEntry;
 
-public class ProviderMain extends ArrowheadClient {
+class ProviderMain extends ArrowheadClient {
 
   public static void main(String[] args) {
     new ProviderMain(args);

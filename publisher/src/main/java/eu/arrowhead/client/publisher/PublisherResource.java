@@ -24,7 +24,7 @@ import javax.ws.rs.core.Response;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class PublisherResource implements ArrowheadPublisherResource {
-  protected final Logger log = Logger.getLogger(getClass());
+  private final Logger log = Logger.getLogger(getClass());
 
   @GET
   public Response getIt() {

@@ -79,7 +79,7 @@ public class ServiceRequestForm {
         private ArrowheadService requestedService;
 
         @Size(max = 9, message = "There are only 9 orchestration flags, map size must not be bigger than 9")
-        private OrchestrationFlags orchestrationFlags = new OrchestrationFlags();
+        private final OrchestrationFlags orchestrationFlags = new OrchestrationFlags();
         private List<PreferredProvider> preferredProviders = new ArrayList<>();
         private Map<String, String> requestedQoS = new HashMap<>();
         private Map<String, String> commands = new HashMap<>();

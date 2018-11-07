@@ -1,6 +1,5 @@
 package eu.arrowhead.common.api;
 
-import eu.arrowhead.common.api.clients.CertificateAuthorityClient;
 import eu.arrowhead.common.api.clients.EventHandlerClient;
 import eu.arrowhead.common.api.clients.ServiceRegistryClient;
 import eu.arrowhead.common.misc.ArrowheadProperties;
@@ -14,7 +13,7 @@ import java.io.InputStreamReader;
 
 public abstract class ArrowheadClient {
     protected final Logger log = Logger.getLogger(getClass());
-    protected ArrowheadProperties props = Utility.getProp();
+    protected final ArrowheadProperties props = Utility.getProp();
     private final boolean isDaemon;
 
     public ArrowheadClient(String[] args) {

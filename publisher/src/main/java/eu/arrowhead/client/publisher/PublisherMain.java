@@ -20,7 +20,7 @@ import eu.arrowhead.common.model.Event;
 
 import java.util.*;
 
-public class PublisherMain extends ArrowheadClient {
+class PublisherMain extends ArrowheadClient {
 
   public static void main(String[] args) {
     new PublisherMain(args);

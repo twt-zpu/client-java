@@ -21,7 +21,7 @@ import eu.arrowhead.demo.model.TemperatureReadout;
 
 import javax.ws.rs.core.Response;
 
-public class ConsumerMain extends ArrowheadClient {
+class ConsumerMain extends ArrowheadClient {
 
     public static void main(String[] args) {
         new ConsumerMain(args);

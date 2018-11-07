@@ -13,7 +13,6 @@ import eu.arrowhead.common.misc.Utility;
 import org.apache.log4j.Logger;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import javax.annotation.Priority;
@@ -28,7 +27,7 @@ public class InboundDebugFilter implements ContainerRequestFilter {
   protected final Logger log = Logger.getLogger(getClass());
 
   @Override
-  public void filter(ContainerRequestContext requestContext) throws IOException {
+  public void filter(ContainerRequestContext requestContext) {
     if (Boolean.valueOf(System.getProperty("debug_mode", "false"))) {
       log.info("New " + requestContext.getMethod() + " request at: " + requestContext.getUriInfo().getRequestUri().toString());
       String prettyJson = Utility.getRequestPayload(requestContext.getEntityStream());
