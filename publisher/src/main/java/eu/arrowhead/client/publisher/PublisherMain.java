@@ -12,9 +12,7 @@ package eu.arrowhead.client.publisher;
 import eu.arrowhead.common.api.ArrowheadClient;
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
 import eu.arrowhead.common.api.ArrowheadServer;
-import eu.arrowhead.common.api.clients.CertificateAuthorityClient;
 import eu.arrowhead.common.api.clients.EventHandlerClient;
-import eu.arrowhead.common.exception.KeystoreException;
 import eu.arrowhead.common.model.ArrowheadSystem;
 import eu.arrowhead.common.model.Event;
 
@@ -23,21 +21,15 @@ import java.util.*;
 class PublisherMain extends ArrowheadClient {
 
   public static void main(String[] args) {
-    new PublisherMain(args);
+    new PublisherMain(args).start();
   }
 
   private PublisherMain(String[] args) {
     super(args);
+  }
 
-    ArrowheadSecurityContext securityContext = null;
-    if (props.isSecure()) {
-      try {
-        securityContext = ArrowheadSecurityContext.createFromProperties();
-      } catch (KeystoreException e) {
-        securityContext = CertificateAuthorityClient.createFromProperties().bootstrap(true);
-      }
-    }
-
+  @Override
+  protected void onStart(ArrowheadSecurityContext securityContext) {
     final ArrowheadServer server = ArrowheadServer.createFromProperties(securityContext);
     server.start(new Class[] { PublisherResource.class });
 
@@ -52,8 +44,11 @@ class PublisherMain extends ArrowheadClient {
       }
     };
     timer.schedule(authTask, 2L * 1000L, 8L * 1000L);
+  }
 
-    listenForInput();
+  @Override
+  protected void onStop() {
+
   }
 
 }

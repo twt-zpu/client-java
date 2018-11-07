@@ -11,10 +11,8 @@ package eu.arrowhead.demo.consumer;
 
 import eu.arrowhead.common.api.ArrowheadClient;
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
-import eu.arrowhead.common.api.clients.CertificateAuthorityClient;
 import eu.arrowhead.common.api.clients.OrchestrationClient;
 import eu.arrowhead.common.api.clients.RestClient;
-import eu.arrowhead.common.exception.KeystoreException;
 import eu.arrowhead.common.misc.Utility;
 import eu.arrowhead.common.model.*;
 import eu.arrowhead.demo.model.TemperatureReadout;
@@ -24,21 +22,15 @@ import javax.ws.rs.core.Response;
 class ConsumerMain extends ArrowheadClient {
 
     public static void main(String[] args) {
-        new ConsumerMain(args);
+        new ConsumerMain(args).start();
     }
 
-    private ConsumerMain(String[] args) {
+    public ConsumerMain(String[] args) {
         super(args);
+    }
 
-        ArrowheadSecurityContext securityContext = null;
-        if (props.isSecure()) {
-            try {
-                securityContext = ArrowheadSecurityContext.createFromProperties();
-            } catch (KeystoreException e) {
-                securityContext = CertificateAuthorityClient.createFromProperties().bootstrap(true);
-            }
-        }
-
+    @Override
+    protected void onStart(ArrowheadSecurityContext securityContext) {
         final OrchestrationClient orchestration = OrchestrationClient.createFromProperties(securityContext);
 
         final ArrowheadSystem me = ArrowheadSystem.createFromProperties();
@@ -62,6 +54,11 @@ class ConsumerMain extends ArrowheadClient {
         } else {
             log.info("The indoor temperature is " + readout.getE().get(0).getV() + " degrees celsius.");
         }
+    }
+
+    @Override
+    protected void onStop() {
+
     }
 
     private ServiceRequestForm compileSRF(ArrowheadSystem consumer) {

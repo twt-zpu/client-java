@@ -3,29 +3,21 @@ package eu.arrowhead.demo.provider;
 import eu.arrowhead.common.api.ArrowheadClient;
 import eu.arrowhead.common.api.ArrowheadServer;
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
-import eu.arrowhead.common.api.clients.CertificateAuthorityClient;
 import eu.arrowhead.common.api.clients.ServiceRegistryClient;
-import eu.arrowhead.common.exception.KeystoreException;
 import eu.arrowhead.common.model.ServiceRegistryEntry;
 
 class ProviderMain extends ArrowheadClient {
 
   public static void main(String[] args) {
-    new ProviderMain(args);
+    new ProviderMain(args).start();
   }
 
-  private ProviderMain(String[] args) {
+  public ProviderMain(String[] args) {
     super(args);
+  }
 
-    ArrowheadSecurityContext securityContext = null;
-    if (props.isSecure()) {
-      try {
-        securityContext = ArrowheadSecurityContext.createFromProperties();
-      } catch (KeystoreException e) {
-        securityContext = CertificateAuthorityClient.createFromProperties().bootstrap(true);
-      }
-    }
-
+  @Override
+  protected void onStart(ArrowheadSecurityContext securityContext) {
     final ArrowheadServer server = ArrowheadServer.createFromProperties(securityContext);
     server.start(
             new Class[] { TemperatureResource.class, RestResource.class },
@@ -34,8 +26,11 @@ class ProviderMain extends ArrowheadClient {
 
     final ServiceRegistryClient registry = ServiceRegistryClient.createFromProperties(securityContext);
     registry.register(ServiceRegistryEntry.createFromProperties(server));
+  }
 
-    listenForInput();
+  @Override
+  protected void onStop() {
+    
   }
 
 }

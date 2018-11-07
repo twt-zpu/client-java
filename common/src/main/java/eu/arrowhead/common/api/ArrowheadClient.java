@@ -1,7 +1,9 @@
 package eu.arrowhead.common.api;
 
+import eu.arrowhead.common.api.clients.CertificateAuthorityClient;
 import eu.arrowhead.common.api.clients.EventHandlerClient;
 import eu.arrowhead.common.api.clients.ServiceRegistryClient;
+import eu.arrowhead.common.exception.KeystoreException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
 import eu.arrowhead.common.misc.Utility;
 import org.apache.log4j.Logger;
@@ -25,13 +27,6 @@ public abstract class ArrowheadClient {
         props.putIfAbsent("log4j.appender.CONSOLE.layout", "org.apache.log4j.PatternLayout");
         props.putIfAbsent("log4j.appender.CONSOLE.layout.conversionPattern", "%d{yyyy-MM-dd HH:mm:ss}  %c{1}.%M(%F:%L)  %p  %m%n");
         PropertyConfigurator.configure(props);
-
-        log.info("Working directory: " + System.getProperty("user.dir"));
-
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            log.info("Received TERM signal, shutting down...");
-            shutdown();
-        }));
 
         boolean daemon = false;
         for (String arg : args) {
@@ -58,6 +53,7 @@ public abstract class ArrowheadClient {
         EventHandlerClient.unsubscribeAll();
         ServiceRegistryClient.unregisterAll();
         ArrowheadServer.stopAll();
+        onStop();
         System.exit(0);
     }
 
@@ -79,4 +75,42 @@ public abstract class ArrowheadClient {
             shutdown();
         }
     }
+
+    protected void start(boolean listen) {
+        try {
+            log.info("Working directory: " + System.getProperty("user.dir"));
+
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                log.info("Received TERM signal, shutting down...");
+                shutdown();
+            }));
+
+            ArrowheadSecurityContext securityContext = null;
+            if (props.isSecure()) {
+                try {
+                    securityContext = ArrowheadSecurityContext.createFromProperties();
+                } catch (KeystoreException e) {
+                    if (props.isBootstrap()) {
+                        securityContext = CertificateAuthorityClient.createFromProperties().bootstrap(true);
+                    } else {
+                        throw e;
+                    }
+                }
+            }
+
+            onStart(securityContext);
+
+            if (listen) listenForInput();
+        } catch (Throwable e) {
+            log.error("Starting client failed", e);
+        }
+    }
+
+    protected void start() {
+        start(true);
+    }
+
+    protected abstract void onStart(ArrowheadSecurityContext securityContext);
+
+    protected abstract void onStop();
 }

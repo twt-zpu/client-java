@@ -12,29 +12,21 @@ package eu.arrowhead.client.subscriber;
 import eu.arrowhead.common.api.ArrowheadClient;
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
 import eu.arrowhead.common.api.ArrowheadServer;
-import eu.arrowhead.common.api.clients.CertificateAuthorityClient;
 import eu.arrowhead.common.api.clients.EventHandlerClient;
-import eu.arrowhead.common.exception.KeystoreException;
 import eu.arrowhead.common.model.ArrowheadSystem;
 
 class SubscriberMain extends ArrowheadClient {
 
   public static void main(String[] args) {
-    new SubscriberMain(args);
+    new SubscriberMain(args).start();
   }
 
   private SubscriberMain(String[] args) {
     super(args);
+  }
 
-    ArrowheadSecurityContext securityContext = null;
-    if (props.isSecure()) {
-      try {
-        securityContext = ArrowheadSecurityContext.createFromProperties();
-      } catch (KeystoreException e) {
-        securityContext = CertificateAuthorityClient.createFromProperties().bootstrap(true);
-      }
-    }
-
+  @Override
+  protected void onStart(ArrowheadSecurityContext securityContext) {
     final ArrowheadServer server = ArrowheadServer.createFromProperties(securityContext);
     server.start(new Class[] { SubscriberResource.class });
 
@@ -42,8 +34,11 @@ class SubscriberMain extends ArrowheadClient {
 
     final EventHandlerClient eventHandler = EventHandlerClient.createFromProperties(securityContext);
     eventHandler.subscribe(props.getEventType(), me);
+  }
 
-    listenForInput();
+  @Override
+  protected void onStop() {
+
   }
 
 }

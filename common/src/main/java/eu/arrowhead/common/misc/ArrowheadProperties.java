@@ -81,6 +81,10 @@ public class ArrowheadProperties extends TypeSafeProperties {
         return "config/certificates";
     }
 
+    public static boolean getDefaultBootstrap() {
+        return false;
+    }
+
     public boolean isSecure() {
         return getBooleanProperty("secure", getDefaultIsSecure());
     }
@@ -196,5 +200,9 @@ public class ArrowheadProperties extends TypeSafeProperties {
 
     public String getCertDir() {
         return getProperty("cert_dir", getDefaultCertDir());
+    }
+
+    public boolean isBootstrap() {
+        return getBooleanProperty("bootstrap", getDefaultBootstrap());
     }
 }
