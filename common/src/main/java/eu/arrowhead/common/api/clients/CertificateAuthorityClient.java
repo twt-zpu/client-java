@@ -31,7 +31,7 @@ public final class CertificateAuthorityClient extends ArrowheadSystem {
     }
 
     public static CertificateAuthorityClient createFromProperties(ArrowheadProperties props) {
-        final boolean isSecure = ArrowheadProperties.getDefaultIsSecure();
+        final boolean isSecure = props.isSecure();
         return new CertificateAuthorityClient()
                 .setSecure(isSecure)
                 .setAddress(props.getCaAddress())
