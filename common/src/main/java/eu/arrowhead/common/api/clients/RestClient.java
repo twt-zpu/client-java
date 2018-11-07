@@ -27,6 +27,7 @@ public class RestClient {
     private UriBuilder uriBuilder = UriBuilder.fromPath("");
 
     public static RestClient create(String uri, ArrowheadSecurityContext securityContext) {
+        // TODO If uri starts with https and securityContext is null we go to insecure mode!, Thomas
         return new RestClient()
                 .setUri(uri)
                 .setSecurityContext(securityContext);
