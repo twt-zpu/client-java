@@ -9,7 +9,7 @@ import javax.ws.rs.core.UriBuilder;
 
 public class OrchestrationClient extends RestClient {
     public static OrchestrationClient createFromProperties(ArrowheadSecurityContext securityContext) {
-        return createFromProperties(Utility.getProp(), securityContext);
+        return createFromProperties(ArrowheadProperties.loadDefault(), securityContext);
     }
 
     public static OrchestrationClient createFromProperties(ArrowheadProperties props, ArrowheadSecurityContext securityContext) {

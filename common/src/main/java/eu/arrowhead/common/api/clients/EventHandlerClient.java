@@ -3,7 +3,6 @@ package eu.arrowhead.common.api.clients;
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
 import eu.arrowhead.common.exception.ArrowheadRuntimeException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
-import eu.arrowhead.common.misc.Utility;
 import eu.arrowhead.common.model.ArrowheadSystem;
 import eu.arrowhead.common.model.Event;
 import eu.arrowhead.common.model.EventFilter;
@@ -19,7 +18,7 @@ public class EventHandlerClient extends RestClient {
     private static final Map<EventHandlerClient, Map<ArrowheadSystem, Set<String>>> subscriptions = new HashMap<>();
 
     public static EventHandlerClient createFromProperties(ArrowheadSecurityContext securityContext) {
-        return createFromProperties(Utility.getProp(), securityContext);
+        return createFromProperties(ArrowheadProperties.loadDefault(), securityContext);
     }
 
     public static EventHandlerClient createFromProperties(ArrowheadProperties props, ArrowheadSecurityContext securityContext) {
@@ -71,7 +70,7 @@ public class EventHandlerClient extends RestClient {
     }
 
     public void subscribe(String eventType, ArrowheadSystem consumer) {
-        subscribe(eventType, consumer, Utility.getProp());
+        subscribe(eventType, consumer, ArrowheadProperties.loadDefault());
     }
 
     public void subscribe(String eventType, ArrowheadSystem consumer, ArrowheadProperties props) {

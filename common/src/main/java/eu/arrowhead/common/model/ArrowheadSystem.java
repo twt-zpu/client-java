@@ -12,7 +12,6 @@ package eu.arrowhead.common.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import eu.arrowhead.common.api.ArrowheadServer;
 import eu.arrowhead.common.misc.ArrowheadProperties;
-import eu.arrowhead.common.misc.Utility;
 import org.apache.log4j.Logger;
 
 import java.net.URI;
@@ -28,15 +27,15 @@ public class ArrowheadSystem {
     private String authenticationInfo;
 
     public static ArrowheadSystem createFromProperties(ArrowheadServer server) {
-        return createFromProperties(Utility.getProp(), server);
+        return createFromProperties(ArrowheadProperties.loadDefault(), server);
     }
 
     public static ArrowheadSystem createFromProperties() {
-        return createFromProperties(Utility.getProp(), null);
+        return createFromProperties(ArrowheadProperties.loadDefault(), null);
     }
 
     public static ArrowheadSystem createFromProperties(ArrowheadProperties props) {
-        return createFromProperties(Utility.getProp(), null);
+        return createFromProperties(ArrowheadProperties.loadDefault(), null);
     }
 
     public static ArrowheadSystem createFromProperties(ArrowheadProperties props, ArrowheadServer server) {

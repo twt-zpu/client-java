@@ -22,7 +22,7 @@ public class ArrowheadService {
     private ServiceMetadata serviceMetadata = new ServiceMetadata();
 
     public static ArrowheadService createFromProperties() {
-        return createFromProperties(Utility.getProp());
+        return createFromProperties(ArrowheadProperties.loadDefault());
     }
 
     public static ArrowheadService createFromProperties(ArrowheadProperties props) {

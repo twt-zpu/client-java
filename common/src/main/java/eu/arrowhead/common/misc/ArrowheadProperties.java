@@ -1,12 +1,17 @@
 package eu.arrowhead.common.misc;
 
+import eu.arrowhead.common.exception.ArrowheadRuntimeException;
 import eu.arrowhead.common.model.ServiceMetadata;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.ZonedDateTime;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class ArrowheadProperties extends TypeSafeProperties {
     public static String getConfDir() {
@@ -83,6 +88,25 @@ public class ArrowheadProperties extends TypeSafeProperties {
 
     public static boolean getDefaultBootstrap() {
         return false;
+    }
+
+    public static ArrowheadProperties load(String fileName) {
+        ArrowheadProperties prop = new ArrowheadProperties();
+        prop.loadFromFile(fileName);
+        return prop;
+    }
+
+    public static ArrowheadProperties loadDefault() {
+        final String confDir = getConfDir();
+
+        ArrowheadProperties prop = new ArrowheadProperties();
+        prop.loadFromFile((confDir != null ? confDir + File.separator : "") + "default.conf");
+        final String appConf = (confDir != null ? confDir + File.separator : "") + "app.conf";
+        if (Files.isReadable(Paths.get(appConf))) {
+            prop.loadFromFile(appConf);
+        }
+
+        return prop;
     }
 
     public boolean isSecure() {
@@ -204,5 +228,47 @@ public class ArrowheadProperties extends TypeSafeProperties {
 
     public boolean isBootstrap() {
         return getBooleanProperty("bootstrap", getDefaultBootstrap());
+    }
+
+    public void checkProperties(List<String> mandatoryProperties) {
+        if (mandatoryProperties == null || mandatoryProperties.isEmpty()) {
+            return;
+        }
+
+        final Set<Object> propertyNames = keySet();
+
+        //Arrays.asList() returns immutable lists, so we have to copy it first
+        List<String> properties = new ArrayList<>(mandatoryProperties);
+        if (!propertyNames.containsAll(mandatoryProperties)) {
+            properties.removeIf(propertyNames::contains);
+            throw new ServiceConfigurationError("Missing field(s) from config file: " + properties.toString());
+        }
+    }
+
+    /**
+     Updates the given properties file with the given key-value pairs.
+     */
+    public static void updateConfigurationFiles(String configLocation, Map<String, String> configValues) {
+        try {
+            final Path path = Paths.get(configLocation);
+            ArrowheadProperties props = new ArrowheadProperties();
+
+            if (Files.exists(path)) {
+                FileInputStream in = new FileInputStream(configLocation);
+                props.load(in);
+                in.close();
+            } else {
+                Files.createFile(path);
+            }
+
+            FileOutputStream out = new FileOutputStream(configLocation);
+            for (Map.Entry<String, String> entry : configValues.entrySet()) {
+                props.setProperty(entry.getKey(), entry.getValue());
+            }
+            props.store(out, null);
+            out.close();
+        } catch (IOException e) {
+            throw new ArrowheadRuntimeException("IOException during configuration file update", e);
+        }
     }
 }

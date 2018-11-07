@@ -5,7 +5,6 @@ import eu.arrowhead.common.api.clients.EventHandlerClient;
 import eu.arrowhead.common.api.clients.ServiceRegistryClient;
 import eu.arrowhead.common.exception.KeystoreException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
-import eu.arrowhead.common.misc.Utility;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -20,7 +19,7 @@ public abstract class ArrowheadClient {
     private ArrowheadProperties props;
 
     public ArrowheadClient(String[] args) {
-        setProperties(Utility.getProp());
+        setProperties(ArrowheadProperties.loadDefault());
 
         boolean daemon = false;
         for (String arg : args) {

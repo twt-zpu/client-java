@@ -31,7 +31,7 @@ public final class CertificateAuthorityClient extends RestClient {
     }
 
     public static CertificateAuthorityClient createFromProperties() {
-        return createFromProperties(Utility.getProp());
+        return createFromProperties(ArrowheadProperties.loadDefault());
     }
 
     public static CertificateAuthorityClient createFromProperties(ArrowheadProperties props) {
@@ -197,7 +197,7 @@ public final class CertificateAuthorityClient extends RestClient {
         if (needAuth) {
             secureParameters.put("auth_pub", authFile);
         }
-        Utility.updateConfigurationFiles(confDir + File.separator + "app.conf", secureParameters);
+        ArrowheadProperties.updateConfigurationFiles(confDir + File.separator + "app.conf", secureParameters);
 
         try {
             return ArrowheadSecurityContext.create(newKeystore, keyStorePassword, keyStorePassword, newTruststore, truststorePass);

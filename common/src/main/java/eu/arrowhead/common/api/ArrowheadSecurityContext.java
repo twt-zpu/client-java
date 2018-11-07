@@ -3,7 +3,6 @@ package eu.arrowhead.common.api;
 import eu.arrowhead.common.exception.KeystoreException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
 import eu.arrowhead.common.misc.SecurityUtils;
-import eu.arrowhead.common.misc.Utility;
 import org.apache.log4j.Logger;
 import org.glassfish.grizzly.ssl.SSLContextConfigurator;
 
@@ -19,7 +18,7 @@ public class ArrowheadSecurityContext {
     private SSLContextConfigurator sslContextConfigurator;
 
     public static ArrowheadSecurityContext createFromProperties() throws KeystoreException {
-        return createFromProperties(Utility.getProp());
+        return createFromProperties(ArrowheadProperties.loadDefault());
     }
 
     public static ArrowheadSecurityContext createFromProperties(ArrowheadProperties props) throws KeystoreException {

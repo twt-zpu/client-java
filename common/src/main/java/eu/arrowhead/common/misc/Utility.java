@@ -147,37 +147,6 @@ public final class Utility {
         }
     }
 
-    public static ArrowheadProperties getProp(String fileName) {
-        ArrowheadProperties prop = new ArrowheadProperties();
-        prop.loadFromFile(fileName);
-        return prop;
-    }
-
-    public static ArrowheadProperties getProp() {
-        final String confDir = ArrowheadProperties.getConfDir();
-
-        ArrowheadProperties prop = new ArrowheadProperties();
-        prop.loadFromFile((confDir != null ? confDir + File.separator : "") + "default.conf");
-        final String appConf = (confDir != null ? confDir + File.separator : "") + "app.conf";
-        if (Files.isReadable(Paths.get(appConf))) {
-            prop.loadFromFile(appConf);
-        }
-
-        return prop;
-    }
-
-    public static void checkProperties(Set<String> propertyNames, List<String> mandatoryProperties) {
-        if (mandatoryProperties == null || mandatoryProperties.isEmpty()) {
-            return;
-        }
-        //Arrays.asList() returns immutable lists, so we have to copy it first
-        List<String> properties = new ArrayList<>(mandatoryProperties);
-        if (!propertyNames.containsAll(mandatoryProperties)) {
-            properties.removeIf(propertyNames::contains);
-            throw new ServiceConfigurationError("Missing field(s) from config file: " + properties.toString());
-        }
-    }
-
     public static boolean isHostAvailable(String host, int port, int timeout) {
         try (Socket socket = new Socket()) {
             socket.connect(new InetSocketAddress(host, port), timeout);
@@ -196,30 +165,4 @@ public final class Utility {
         return (str == null || "".equals(str.trim()));
     }
 
-    /**
-     Updates the given properties file with the given key-value pairs.
-     */
-    public static void updateConfigurationFiles(String configLocation, Map<String, String> configValues) {
-        try {
-            final Path path = Paths.get(configLocation);
-            ArrowheadProperties props = new ArrowheadProperties();
-
-            if (Files.exists(path)) {
-                FileInputStream in = new FileInputStream(configLocation);
-                props.load(in);
-                in.close();
-            } else {
-                Files.createFile(path);
-            }
-
-            FileOutputStream out = new FileOutputStream(configLocation);
-            for (Map.Entry<String, String> entry : configValues.entrySet()) {
-                props.setProperty(entry.getKey(), entry.getValue());
-            }
-            props.store(out, null);
-            out.close();
-        } catch (IOException e) {
-            throw new ArrowheadRuntimeException("IOException during configuration file update", e);
-        }
-    }
 }
