@@ -33,7 +33,7 @@ class SubscriberMain extends ArrowheadClient {
     final ArrowheadSystem me = ArrowheadSystem.createFromProperties(server);
 
     final EventHandlerClient eventHandler = EventHandlerClient.createFromProperties(securityContext);
-    eventHandler.subscribe(props.getEventType(), me);
+    eventHandler.subscribe(getProps().getEventType(), me);
   }
 
   @Override

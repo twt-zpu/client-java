@@ -18,8 +18,6 @@ import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.PublicKey;
 import java.security.Security;
-import java.util.HashMap;
-import java.util.Map;
 
 public final class CertificateAuthorityClient extends RestClient {
     private String keyPass, truststore, truststorePass, keystorePass;
@@ -35,7 +33,6 @@ public final class CertificateAuthorityClient extends RestClient {
     }
 
     public static CertificateAuthorityClient createFromProperties(ArrowheadProperties props) {
-        final boolean isSecure = props.isSecure();
         return new CertificateAuthorityClient()
                 .setAddress(props.getCaAddress())
                 .setPort(props.getCaPort())
@@ -188,16 +185,17 @@ public final class CertificateAuthorityClient extends RestClient {
         }
 
         // Update app.conf with the new values
-        Map<String, String> secureParameters = new HashMap<>();
-        secureParameters.put("keystore", newKeystore);
-        secureParameters.put("keystorepass", keyStorePassword);
-        secureParameters.put("keypass", keyStorePassword);
-        secureParameters.put("truststore", newTruststore);
-        secureParameters.put("truststorepass", trustStorePassword);
+        final ArrowheadProperties props = ArrowheadProperties
+                .load(confDir + File.separator + "app.conf")
+                .setKeystore(newKeystore)
+                .setKeystorePass(keyStorePassword)
+                .setKeyPass(keyStorePassword)
+                .setTruststore(newTruststore)
+                .setTruststorePass(trustStorePassword);
         if (needAuth) {
-            secureParameters.put("auth_pub", authFile);
+            props.setAuthKey(authFile);
         }
-        ArrowheadProperties.updateConfigurationFiles(confDir + File.separator + "app.conf", secureParameters);
+        props.storeToFile(confDir + File.separator + "app.conf");
 
         try {
             return ArrowheadSecurityContext.create(newKeystore, keyStorePassword, keyStorePassword, newTruststore, truststorePass);
