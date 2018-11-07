@@ -13,7 +13,7 @@ package eu.arrowhead.common.exception;
  * Usually thrown by the Core System resources if a crucial database query (for example the query of the Service Registry or the Authorization) comes
  * back empty during the servicing of the request.
  */
-public class DataNotFoundException extends ArrowheadException {
+public class DataNotFoundException extends ArrowheadRuntimeException {
 
   public DataNotFoundException(final String msg, final int errorCode, final String origin, final Throwable cause) {
     super(msg, errorCode, origin, cause);

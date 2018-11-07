@@ -14,7 +14,7 @@ package eu.arrowhead.common.exception;
  * object with the same unique constraint fields as an already existing entry, or when trying to delete an entry which has foreign key constraints in
  * other tables.
  */
-public class DuplicateEntryException extends ArrowheadException {
+public class DuplicateEntryException extends ArrowheadRuntimeException {
 
   public DuplicateEntryException(final String msg, final int errorCode, final String origin, final Throwable cause) {
     super(msg, errorCode, origin, cause);

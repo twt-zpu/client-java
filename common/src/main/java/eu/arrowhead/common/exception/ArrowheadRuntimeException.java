@@ -9,43 +9,44 @@
 
 package eu.arrowhead.common.exception;
 
-public class ArrowheadException extends Exception {
+// TODO Shouldn't really inherit from RuntimeException, forcing people to do try-catch is good in some cases, Thomas
+public class ArrowheadRuntimeException extends RuntimeException {
 
   private ExceptionType exceptionType = ExceptionType.ARROWHEAD;
   private final int errorCode;
   private final String origin;
 
-  public ArrowheadException(final String msg, final int errorCode, final String origin, final Throwable cause) {
+  public ArrowheadRuntimeException(final String msg, final int errorCode, final String origin, final Throwable cause) {
     super(msg, cause);
     this.errorCode = errorCode;
     this.origin = origin;
   }
 
-  public ArrowheadException(final String msg, final int errorCode, final String origin) {
+  public ArrowheadRuntimeException(final String msg, final int errorCode, final String origin) {
     super(msg);
     this.errorCode = errorCode;
     this.origin = origin;
   }
 
-  public ArrowheadException(final String msg, final int errorCode, final Throwable cause) {
+  public ArrowheadRuntimeException(final String msg, final int errorCode, final Throwable cause) {
     super(msg, cause);
     this.errorCode = errorCode;
     this.origin = null;
   }
 
-  public ArrowheadException(final String msg, final int errorCode) {
+  public ArrowheadRuntimeException(final String msg, final int errorCode) {
     super(msg);
     this.errorCode = errorCode;
     this.origin = null;
   }
 
-  public ArrowheadException(final String msg, final Throwable cause) {
+  public ArrowheadRuntimeException(final String msg, final Throwable cause) {
     super(msg, cause);
     this.errorCode = 0;
     this.origin = null;
   }
 
-  public ArrowheadException(final String msg) {
+  public ArrowheadRuntimeException(final String msg) {
     super(msg);
     this.errorCode = 0;
     this.origin = null;

@@ -19,7 +19,7 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 @Provider
-public class ArrowheadExceptionMapper implements ExceptionMapper<ArrowheadException> {
+public class ArrowheadExceptionMapper implements ExceptionMapper<ArrowheadRuntimeException> {
 
   @Inject
   private javax.inject.Provider<ContainerRequest> requestContext;
@@ -27,7 +27,7 @@ public class ArrowheadExceptionMapper implements ExceptionMapper<ArrowheadExcept
   private javax.inject.Provider<ContainerResponse> responseContext;
 
   @Override
-  public Response toResponse(ArrowheadException ex) {
+  public Response toResponse(ArrowheadRuntimeException ex) {
     ex.printStackTrace();
     String origin =
         ex.getOrigin() != null ? ex.getOrigin() : (requestContext.get() != null ? requestContext.get().getAbsolutePath().toString() : "unknown");

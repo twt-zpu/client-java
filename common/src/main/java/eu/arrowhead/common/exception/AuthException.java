@@ -15,7 +15,7 @@ package eu.arrowhead.common.exception;
  * a certificate file. Runtime example can be when a system tries to access an existing resource which is not allowed by the
  * <i>AccessControlFilter</i> of the core system.
  */
-public class AuthException extends ArrowheadException {
+public class AuthException extends ArrowheadRuntimeException {
 
   public AuthException(final String msg, final int errorCode, final String origin, final Throwable cause) {
     super(msg, errorCode, origin, cause);

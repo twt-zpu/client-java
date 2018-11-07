@@ -3,10 +3,7 @@ package eu.arrowhead.common.api;
 import eu.arrowhead.common.api.clients.CertificateAuthorityClient;
 import eu.arrowhead.common.api.clients.EventHandlerClient;
 import eu.arrowhead.common.api.clients.ServiceRegistryClient;
-import eu.arrowhead.common.exception.ArrowheadException;
-import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
-import eu.arrowhead.common.misc.SecurityUtils;
 import eu.arrowhead.common.misc.Utility;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
@@ -14,9 +11,6 @@ import org.apache.log4j.PropertyConfigurator;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.security.KeyStore;
-import java.security.cert.X509Certificate;
-import java.util.Base64;
 
 public abstract class ArrowheadClient {
     protected final Logger log = Logger.getLogger(getClass());
@@ -24,10 +18,6 @@ public abstract class ArrowheadClient {
     private final boolean isDaemon;
 
     public ArrowheadClient(String[] args) {
-        this(args, null);
-    }
-
-    public ArrowheadClient(String[] args, CertificateAuthorityClient ca) {
         props.putIfAbsent("log4j.rootLogger", "INFO, CONSOLE");
         props.putIfAbsent("log4j.appender.CONSOLE", "org.apache.log4j.ConsoleAppender");
         props.putIfAbsent("log4j.appender.CONSOLE.target", "System.err");
@@ -63,35 +53,6 @@ public abstract class ArrowheadClient {
             }
         }
         isDaemon = daemon;
-
-        if (props.isSecure()) {
-            try {
-                Utility.setSSLContext(
-                        props.getKeystore(),
-                        props.getKeystorePass(),
-                        props.getKeyPass(),
-                        props.getTruststore(),
-                        props.getTruststorePass(),
-                        true);
-            } catch (AuthException e) {
-                log.info("Moving to certificate bootstrapping.", e);
-                if (ca != null) {
-                    try {
-                        ca.bootstrap(props.getSystemName(), true);
-                        props = Utility.getProp();
-                    } catch (ArrowheadException e2) {
-                        throw new AuthException("Certificate bootstrapping failed with: " + e2.getMessage(), e2);
-                    }
-                } else {
-                    throw new AuthException("No certificates available for secure mode: " + e.getMessage(), e);
-                }
-            }
-
-            KeyStore keyStore = SecurityUtils.loadKeyStore(props.getKeystore(), props.getKeystorePass());
-            X509Certificate serverCert = SecurityUtils.getFirstCertFromKeyStore(keyStore);
-            String base64PublicKey = Base64.getEncoder().encodeToString(serverCert.getPublicKey().getEncoded());
-            log.info("PublicKey Base64: " + base64PublicKey);
-        }
     }
 
     protected void shutdown() {

@@ -1,13 +1,13 @@
 package eu.arrowhead.common.api.clients;
 
-import eu.arrowhead.common.exception.ArrowheadException;
+import eu.arrowhead.common.api.ArrowheadSecurityContext;
+import eu.arrowhead.common.exception.ArrowheadRuntimeException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
 import eu.arrowhead.common.misc.Utility;
 import eu.arrowhead.common.model.ArrowheadSystem;
 import eu.arrowhead.common.model.Event;
 import eu.arrowhead.common.model.EventFilter;
 import eu.arrowhead.common.model.PublishEvent;
-import org.apache.log4j.Logger;
 
 import javax.ws.rs.core.UriBuilder;
 import java.util.HashMap;
@@ -15,34 +15,36 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class EventHandlerClient extends ArrowheadSystem {
+public class EventHandlerClient extends RestClient {
     private static final Map<EventHandlerClient, Map<ArrowheadSystem, Set<String>>> subscriptions = new HashMap<>();
     private String publishUri;
     private String subscribeUri;
     private boolean isSecure;
 
-    public static EventHandlerClient createFromProperties() {
-        return createFromProperties(Utility.getProp());
+    public static EventHandlerClient createFromProperties(ArrowheadSecurityContext securityContext) {
+        return createFromProperties(Utility.getProp(), securityContext);
     }
 
-    public static EventHandlerClient createFromProperties(ArrowheadProperties props) {
+    public static EventHandlerClient createFromProperties(ArrowheadProperties props, ArrowheadSecurityContext securityContext) {
         final boolean isSecure = props.isSecure();
         return new EventHandlerClient()
                 .setSecure(isSecure)
                 .setAddress(props.getEhAddress())
-                .setPort(props.getEhPort());
+                .setPort(props.getEhPort())
+                .setSecurityContext(securityContext);
     }
 
-    public static EventHandlerClient createDefault() {
+    public static EventHandlerClient createDefault(ArrowheadSecurityContext securityContext) {
         final boolean isSecure = ArrowheadProperties.getDefaultIsSecure();
         return new EventHandlerClient()
                 .setSecure(isSecure)
                 .setAddress(ArrowheadProperties.getDefaultEhAddress())
-                .setPort(ArrowheadProperties.getDefaultEhPort(isSecure));
+                .setPort(ArrowheadProperties.getDefaultEhPort(isSecure))
+                .setSecurityContext(securityContext);
     }
 
     private EventHandlerClient() {
-        super(null, "0.0.0.0", 80, null);
+        super("0.0.0.0", 80);
         isSecure = false;
     }
 
@@ -70,6 +72,12 @@ public class EventHandlerClient extends ArrowheadSystem {
         return this;
     }
 
+    @Override
+    public EventHandlerClient setSecurityContext(ArrowheadSecurityContext securityContext) {
+        super.setSecurityContext(securityContext);
+        return this;
+    }
+
     private void updateUris() {
         String baseUri = Utility.getUri(getAddress(), getPort(), "eventhandler", isSecure, false);
         publishUri = UriBuilder.fromPath(baseUri).path("publish").toString();
@@ -79,7 +87,7 @@ public class EventHandlerClient extends ArrowheadSystem {
 
     public void publish(Event event, ArrowheadSystem eventSource) {
         PublishEvent eventPublishing = new PublishEvent(eventSource, event, "publisher/feedback");
-        Utility.sendRequest(publishUri, "POST", eventPublishing);
+        sendRequest(publishUri, "POST", eventPublishing);
         log.info("Event published to EH.");
     }
 
@@ -96,10 +104,10 @@ public class EventHandlerClient extends ArrowheadSystem {
         final Set<String> consumerSubscriptions = handlerSubscriptions != null ? handlerSubscriptions.get(consumer) : null;
 
         if (consumerSubscriptions != null && consumerSubscriptions.contains(eventType))
-            throw new ArrowheadException("Already subscribed to " + eventType);
+            throw new ArrowheadRuntimeException("Already subscribed to " + eventType);
 
         EventFilter filter = new EventFilter(eventType, consumer, notifyPath);
-        Utility.sendRequest(subscribeUri, "POST", filter);
+        sendRequest(subscribeUri, "POST", filter);
 
         if (!subscriptions.containsKey(this)) subscriptions.put(this, new HashMap<>());
         handlerSubscriptions = subscriptions.get(this);
@@ -113,7 +121,7 @@ public class EventHandlerClient extends ArrowheadSystem {
         String consumerName = consumer.getSystemName();
 
         String url = UriBuilder.fromPath(subscribeUri).path("type").path(eventType).path("consumer").path(consumerName).toString();
-        Utility.sendRequest(url, "DELETE", null);
+        sendRequest(url, "DELETE", null);
 
         final Map<ArrowheadSystem, Set<String>> handlerSubscriptions = subscriptions.get(this);
         final Set<String> consumerSubscriptions = handlerSubscriptions != null ? handlerSubscriptions.get(consumer) : null;

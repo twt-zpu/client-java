@@ -10,8 +10,11 @@
 package eu.arrowhead.demo.consumer;
 
 import eu.arrowhead.common.api.ArrowheadClient;
+import eu.arrowhead.common.api.ArrowheadSecurityContext;
 import eu.arrowhead.common.api.clients.CertificateAuthorityClient;
 import eu.arrowhead.common.api.clients.OrchestrationClient;
+import eu.arrowhead.common.api.clients.RestClient;
+import eu.arrowhead.common.exception.KeystoreException;
 import eu.arrowhead.common.misc.Utility;
 import eu.arrowhead.common.model.*;
 import eu.arrowhead.demo.model.TemperatureReadout;
@@ -25,15 +28,24 @@ public class ConsumerMain extends ArrowheadClient {
     }
 
     private ConsumerMain(String[] args) {
-        super(args, CertificateAuthorityClient.createFromProperties());
+        super(args);
 
-        final OrchestrationClient orchestration = OrchestrationClient.createFromProperties();
+        ArrowheadSecurityContext securityContext;
+        try {
+            securityContext = ArrowheadSecurityContext.createFromProperties();
+        } catch (KeystoreException e) {
+            securityContext = CertificateAuthorityClient.createFromProperties().bootstrap(true);
+        }
+
+        final OrchestrationClient orchestration = OrchestrationClient.createFromProperties(securityContext);
 
         final ArrowheadSystem me = ArrowheadSystem.createFromProperties();
         final ServiceRequestForm srf = compileSRF(me);
         final String uri = orchestration.requestService(srf);
 
-        final Response getResponse = Utility.sendRequest(uri, "GET", null);
+        final RestClient restClient = RestClient.create(securityContext);
+
+        final Response getResponse = restClient.sendRequest(uri, "GET", null);
 
         TemperatureReadout readout = new TemperatureReadout();
         try {

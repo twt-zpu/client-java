@@ -12,7 +12,7 @@ package eu.arrowhead.common.exception;
 /**
  * Thrown when a HTTP request times out because the endpoint is not available.
  */
-public class UnavailableServerException extends ArrowheadException {
+public class UnavailableServerException extends ArrowheadRuntimeException {
 
   public UnavailableServerException(final String msg, final int errorCode, final String origin, final Throwable cause) {
     super(msg, errorCode, origin, cause);

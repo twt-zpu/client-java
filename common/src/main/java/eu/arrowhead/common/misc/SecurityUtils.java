@@ -9,7 +9,8 @@
 
 package eu.arrowhead.common.misc;
 
-import eu.arrowhead.common.exception.ArrowheadException;
+import eu.arrowhead.common.exception.KeystoreException;
+import eu.arrowhead.common.exception.ArrowheadRuntimeException;
 import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.common.model.CertificateSigningRequest;
 import eu.arrowhead.common.model.CertificateSigningResponse;
@@ -21,13 +22,19 @@ import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
+import org.glassfish.grizzly.ssl.SSLContextConfigurator;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
 
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
@@ -46,6 +53,12 @@ import java.util.regex.Pattern;
 @SuppressWarnings("unused")
 public final class SecurityUtils {
   private static final Logger log = Logger.getLogger(SecurityUtils.class);
+
+  // TODO FIX THIS?, Thomas
+  private static final HostnameVerifier allHostsValid = (hostname, session) -> {
+    // Decide whether to allow the connection...
+    return true;
+  };
 
   public static KeyStore loadKeyStore(String filePath, String pass) {
     try {
@@ -251,7 +264,7 @@ public final class SecurityUtils {
       String encoded = parse.matcher(pem).replaceFirst("$1");
       return Base64.getMimeDecoder().decode(encoded);
     } catch (IOException e) {
-      throw new ArrowheadException("IOException occurred during PEM file loading from " + filePath, e);
+      throw new ArrowheadRuntimeException("IOException occurred during PEM file loading from " + filePath, e);
     }
   }
 
@@ -306,7 +319,7 @@ public final class SecurityUtils {
     try (FileOutputStream fos = new FileOutputStream(fileName)) {
       keyStore.store(fos, keyStorePassword);
     } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e) {
-      throw new ArrowheadException("Saving keystore to file " + fileName + " failed!", e);
+      throw new ArrowheadRuntimeException("Saving keystore to file " + fileName + " failed!", e);
     }
   }
 
@@ -352,7 +365,7 @@ public final class SecurityUtils {
       ks.setKeyEntry(commonName, signingResponse.getLocalPrivateKey(), systemKsPassword, chain);
       return ks;
     } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e) {
-      throw new ArrowheadException("System key store creation failed!", e);
+      throw new ArrowheadRuntimeException("System key store creation failed!", e);
     }
   }
 
@@ -386,7 +399,7 @@ public final class SecurityUtils {
       ks.setEntry(cloudCN, certEntry, null);
       return ks;
     } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e) {
-      throw new ArrowheadException("System key store creation failed!", e);
+      throw new ArrowheadRuntimeException("System key store creation failed!", e);
     }
   }
 
@@ -399,7 +412,7 @@ public final class SecurityUtils {
       pemWriter.close();
       osw.close();
     } catch (IOException e) {
-      throw new ArrowheadException("IO exception during Authorization public key save!", e);
+      throw new ArrowheadRuntimeException("IO exception during Authorization public key save!", e);
     }
   }
 
@@ -421,5 +434,20 @@ public final class SecurityUtils {
       throw new AuthException("Failed to encode certificate signing request!", e);
     }
     return new CertificateSigningRequest(encodedCertRequest);
+  }
+
+  public static Client createClient(SSLContext context) {
+      ClientConfig configuration = new ClientConfig();
+      configuration.property(ClientProperties.CONNECT_TIMEOUT, 30000);
+      configuration.property(ClientProperties.READ_TIMEOUT, 30000);
+
+      Client client;
+      if (context != null) {
+          client = ClientBuilder.newBuilder().sslContext(context).withConfig(configuration).hostnameVerifier(allHostsValid).build();
+      } else {
+          client = ClientBuilder.newClient(configuration);
+      }
+      client.register(JacksonJsonProviderAtRest.class);
+      return client;
   }
 }

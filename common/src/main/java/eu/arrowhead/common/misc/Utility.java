@@ -10,23 +10,9 @@
 package eu.arrowhead.common.misc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.arrowhead.common.exception.*;
+import eu.arrowhead.common.exception.ArrowheadRuntimeException;
 import org.apache.log4j.Logger;
-import org.glassfish.grizzly.ssl.SSLContextConfigurator;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.ClientProperties;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import javax.ws.rs.NotAllowedException;
-import javax.ws.rs.ProcessingException;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation.Builder;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.Response.Status.Family;
 import javax.ws.rs.core.UriBuilder;
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -41,164 +27,10 @@ import java.util.*;
 
 //Contains static utility methods for the project, most important one is the sendRequest method!
 public final class Utility {
-    private static final Logger log = Logger.getLogger(Utility.class);
-
-    private static final Client client = createClient(null);
-    private static Client sslClient;
-    private static SSLContextConfigurator sslContextConfigurator;
-
     private static final ObjectMapper mapper = JacksonJsonProviderAtRest.getMapper();
-    private static final HostnameVerifier allHostsValid = (hostname, session) -> {
-        // Decide whether to allow the connection...
-        return true;
-    };
 
     private Utility() throws AssertionError {
         throw new AssertionError("Arrowhead Common:Utility is a non-instantiable class");
-    }
-
-    private static Client createClient(SSLContext context) {
-        ClientConfig configuration = new ClientConfig();
-        configuration.property(ClientProperties.CONNECT_TIMEOUT, 30000);
-        configuration.property(ClientProperties.READ_TIMEOUT, 30000);
-
-        Client client;
-        if (context != null) {
-            client = ClientBuilder.newBuilder().sslContext(context).withConfig(configuration).hostnameVerifier(allHostsValid).build();
-        } else {
-            client = ClientBuilder.newClient(configuration);
-        }
-        client.register(JacksonJsonProviderAtRest.class);
-        return client;
-    }
-
-    public static void setSSLContext(SSLContext context) {
-        sslClient = createClient(context);
-    }
-
-    public static SSLContextConfigurator setSSLContext(String keystore, String keystorepass, String keypass,
-                                                       String truststore, String truststorepass, boolean needsKeyStore) {
-        sslContextConfigurator = new SSLContextConfigurator();
-        if (keystore != null) sslContextConfigurator.setKeyStoreFile(keystore);
-        if (keystorepass != null) sslContextConfigurator.setKeyStorePass(keystorepass);
-        if (keypass != null) sslContextConfigurator.setKeyPass(keypass);
-        if (truststore != null) sslContextConfigurator.setTrustStoreFile(truststore);
-        if (truststorepass != null) sslContextConfigurator.setTrustStorePass(truststorepass);
-
-        try {
-            SSLContext sslContext = sslContextConfigurator.createSSLContext(true);
-            setSSLContext(sslContext);
-        } catch (SSLContextConfigurator.GenericStoreException e) {
-            throw new AuthException("Provided SSLContext is not valid", e);
-        }
-
-        return sslContextConfigurator;
-    }
-
-    /**
-     * Sends a HTTP request to the given url, with the given HTTP method type and given payload
-     */
-    public static <T> Response sendRequest(String uri, String method, T payload, SSLContext givenContext) {
-        boolean isSecure = false;
-        if (uri == null) {
-            throw new NullPointerException("send (HTTP) request method received null URL");
-        }
-        if (uri.startsWith("https")) {
-            isSecure = true;
-        }
-
-        if (isSecure && sslClient == null) {
-            throw new AuthException(
-                    "SSL Context is not set, but secure request sending was invoked. An insecure module can not send requests to secure modules.",
-                    Status.UNAUTHORIZED.getStatusCode());
-        }
-        Client usedClient = isSecure ? givenContext != null ? createClient(givenContext) : sslClient : client;
-
-        Builder request = usedClient.target(UriBuilder.fromUri(uri).build()).request().header("Content-type", "application/json");
-        Response response; // will not be null after the switch-case
-        try {
-            switch (method) {
-                case "GET":
-                    response = request.get();
-                    break;
-                case "POST":
-                    response = request.post(Entity.json(payload));
-                    break;
-                case "PUT":
-                    response = request.put(Entity.json(payload));
-                    break;
-                case "DELETE":
-                    response = request.delete();
-                    break;
-                default:
-                    throw new NotAllowedException("Invalid method type was given to the Utility.sendRequest() method");
-            }
-        } catch (ProcessingException e) {
-            if (e.getCause().getMessage().contains("PKIX path")) {
-                throw new AuthException("The system at " + uri + " is not part of the same certificate chain of trust!", Status.UNAUTHORIZED.getStatusCode(),
-                        e);
-            } else {
-                throw new UnavailableServerException("Could not get any response from: " + uri, Status.SERVICE_UNAVAILABLE.getStatusCode(), e);
-            }
-        }
-
-        // If the response status code does not start with 2 the request was not successful
-        if (!(response.getStatusInfo().getFamily() == Family.SUCCESSFUL)) {
-            handleException(response, uri);
-        }
-
-        return response;
-    }
-
-    public static <T> Response sendRequest(String uri, String method, T payload) {
-        return sendRequest(uri, method, payload, null);
-    }
-
-    private static void handleException(Response response, String uri) {
-        //The response body has to be extracted before the stream closes
-        String errorMessageBody = toPrettyJson(null, response.getEntity());
-        if (errorMessageBody == null || errorMessageBody.equals("null")) {
-            response.bufferEntity();
-            errorMessageBody = response.readEntity(String.class);
-        }
-
-        ErrorMessage errorMessage;
-        try {
-            errorMessage = response.readEntity(ErrorMessage.class);
-        } catch (RuntimeException e) {
-            throw new ArrowheadException("Unknown error occurred at " + uri, e);
-        }
-        if (errorMessage == null || errorMessage.getExceptionType() == null) {
-            log.warn("Request failed, response status code: " + response.getStatus());
-            log.warn("Request failed, response body: " + errorMessageBody);
-            throw new ArrowheadException("Unknown error occurred at " + uri);
-        } else {
-            log.warn(Utility.toPrettyJson(null, errorMessage));
-            switch (errorMessage.getExceptionType()) {
-                case ARROWHEAD:
-                    throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
-                case AUTH:
-                    throw new AuthException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
-                case BAD_METHOD:
-                    throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
-                case BAD_PAYLOAD:
-                    throw new BadPayloadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
-                case BAD_URI:
-                    throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
-                case DATA_NOT_FOUND:
-                    throw new DataNotFoundException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
-                case DNSSD:
-                    throw new DnsException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getOrigin());
-                case DUPLICATE_ENTRY:
-                    throw new DuplicateEntryException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
-                case GENERIC:
-                    throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
-                case JSON_PROCESSING:
-                    throw new ArrowheadException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
-                case UNAVAILABLE:
-                    throw new UnavailableServerException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
-            }
-        }
     }
 
     public static String getUri(String address, int port, String serviceUri, boolean isSecure, boolean serverStart) {
@@ -226,7 +58,7 @@ public final class Utility {
             if (serverStart) {
                 throw new ServiceConfigurationError(url + " is not a valid URL to start a HTTP server! Please fix the address field in the properties file.");
             } else {
-                throw new ArrowheadException(url + " is not a valid URL!");
+                throw new ArrowheadRuntimeException(url + " is not a valid URL!");
             }
         }
 
@@ -278,7 +110,7 @@ public final class Utility {
                 return mapper.writeValueAsString(obj);
             }
         } catch (IOException e) {
-            throw new ArrowheadException(
+            throw new ArrowheadRuntimeException(
                     "Jackson library threw IOException during JSON serialization! Wrapping it in RuntimeException. Exception message: " + e.getMessage(), e);
         }
         return null;
@@ -288,7 +120,7 @@ public final class Utility {
         try {
             return mapper.readValue(json, parsedClass);
         } catch (IOException e) {
-            throw new ArrowheadException("Jackson library threw exception during JSON parsing!", e);
+            throw new ArrowheadRuntimeException("Jackson library threw exception during JSON parsing!", e);
         }
     }
 
@@ -388,11 +220,7 @@ public final class Utility {
             props.store(out, null);
             out.close();
         } catch (IOException e) {
-            throw new ArrowheadException("IOException during configuration file update", e);
+            throw new ArrowheadRuntimeException("IOException during configuration file update", e);
         }
-    }
-
-    public static SSLContextConfigurator getSSLContextConfigurator() {
-        return sslContextConfigurator;
     }
 }

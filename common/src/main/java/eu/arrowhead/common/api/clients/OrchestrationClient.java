@@ -1,37 +1,40 @@
 package eu.arrowhead.common.api.clients;
 
+import eu.arrowhead.common.api.ArrowheadSecurityContext;
 import eu.arrowhead.common.misc.ArrowheadProperties;
 import eu.arrowhead.common.misc.Utility;
 import eu.arrowhead.common.model.*;
 
 import javax.ws.rs.core.UriBuilder;
 
-public class OrchestrationClient extends ArrowheadSystem {
+public class OrchestrationClient extends RestClient {
     private boolean isSecure;
     private String orchestrationUri;
 
-    public static OrchestrationClient createFromProperties() {
-        return createFromProperties(Utility.getProp());
+    public static OrchestrationClient createFromProperties(ArrowheadSecurityContext securityContext) {
+        return createFromProperties(Utility.getProp(), securityContext);
     }
 
-    public static OrchestrationClient createFromProperties(ArrowheadProperties props) {
+    public static OrchestrationClient createFromProperties(ArrowheadProperties props, ArrowheadSecurityContext securityContext) {
         boolean isSecure = props.isSecure();
         return new OrchestrationClient()
                 .setSecure(isSecure)
                 .setAddress(props.getOrchAddress())
-                .setPort(props.getOrchPort());
+                .setPort(props.getOrchPort())
+                .setSecurityContext(securityContext);
     }
 
-    public static OrchestrationClient createDefault() {
+    public static OrchestrationClient createDefault(ArrowheadSecurityContext securityContext) {
         final boolean isSecure = ArrowheadProperties.getDefaultIsSecure();
         return new OrchestrationClient()
                 .setSecure(isSecure)
                 .setAddress(ArrowheadProperties.getDefaultOrchAddress())
-                .setPort(ArrowheadProperties.getDefaultOrchPort(isSecure));
+                .setPort(ArrowheadProperties.getDefaultOrchPort(isSecure))
+                .setSecurityContext(securityContext);
     }
 
     private OrchestrationClient() {
-        super(null, "0.0.0.0", 80, null);
+        super("0.0.0.0", 80);
         isSecure = false;
     }
 
@@ -59,14 +62,19 @@ public class OrchestrationClient extends ArrowheadSystem {
         return this;
     }
 
+    @Override
+    public OrchestrationClient setSecurityContext(ArrowheadSecurityContext securityContext) {
+        super.setSecurityContext(securityContext);
+        return this;
+    }
+
     private void updateUris() {
         String baseUri = Utility.getUri(getAddress(), getPort(), "orchestrator", isSecure, false);
         orchestrationUri = UriBuilder.fromPath(baseUri).path("orchestration").toString();
     }
 
     public String requestService(ServiceRequestForm srf) {
-        OrchestrationResponse orchResponse = Utility
-                .sendRequest(orchestrationUri, "POST", srf)
+        OrchestrationResponse orchResponse = sendRequest(orchestrationUri, "POST", srf)
                 .readEntity(OrchestrationResponse.class);
 
         log.info("Orchestration Response payload: " + Utility.toPrettyJson(null, orchResponse));

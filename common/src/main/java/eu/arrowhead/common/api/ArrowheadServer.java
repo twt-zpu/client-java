@@ -1,6 +1,6 @@
 package eu.arrowhead.common.api;
 
-import eu.arrowhead.common.exception.ArrowheadException;
+import eu.arrowhead.common.exception.ArrowheadRuntimeException;
 import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
 import eu.arrowhead.common.misc.SecurityUtils;
@@ -31,12 +31,13 @@ public class ArrowheadServer {
     private boolean isSecure;
     private String keystore, keystorePass, keyPass, truststore, truststorePass, systemName, address;
     private int port;
+    private ArrowheadSecurityContext securityContext;
 
-    public static ArrowheadServer createFromProperties() {
-        return createFromProperties(Utility.getProp());
+    public static ArrowheadServer createFromProperties(ArrowheadSecurityContext securityContext) {
+        return createFromProperties(Utility.getProp(), securityContext);
     }
 
-    public static ArrowheadServer createFromProperties(ArrowheadProperties props) {
+    public static ArrowheadServer createFromProperties(ArrowheadProperties props, ArrowheadSecurityContext securityContext) {
         final boolean isSecure = props.isSecure();
         return new ArrowheadServer()
                 .setSecure(isSecure)
@@ -47,17 +48,19 @@ public class ArrowheadServer {
                 .setTruststorePass(props.getTruststorePass())
                 .setSystemName(props.getSystemName())
                 .setAddress(props.getAddress())
-                .setPort(props.getPort());
+                .setPort(props.getPort())
+                .setSecurityContext(securityContext);
     }
 
-    public static ArrowheadServer createDefault() {
+    public static ArrowheadServer createDefault(ArrowheadSecurityContext securityContext) {
         final boolean isSecure = ArrowheadProperties.getDefaultIsSecure();
         final String systemName = ArrowheadProperties.createDefaultSystemName();
         return new ArrowheadServer()
                 .setSecure(isSecure)
                 .setSystemName(systemName)
                 .setAddress(ArrowheadProperties.getDefaultAddress())
-                .setPort(ArrowheadProperties.getDefaultPort(isSecure));
+                .setPort(ArrowheadProperties.getDefaultPort(isSecure))
+                .setSecurityContext(securityContext);
     }
 
     public static void stopAll() {
@@ -148,13 +151,22 @@ public class ArrowheadServer {
         return this;
     }
 
+    public ArrowheadSecurityContext getSecurityContext() {
+        return securityContext;
+    }
+
+    public ArrowheadServer setSecurityContext(ArrowheadSecurityContext securityContext) {
+        this.securityContext = securityContext;
+        return this;
+    }
+
     public ArrowheadServer start(Class<?>[] classes) {
         return start(classes, new String[] { "eu.arrowhead.common" });
     }
 
     public ArrowheadServer start(Class<?>[] classes, String[] packages) {
         if (server != null)
-            throw new ArrowheadException("Server already started");
+            throw new ArrowheadRuntimeException("Server already started");
 
         final ResourceConfig config = new ResourceConfig();
         config.registerClasses(classes);
@@ -174,7 +186,7 @@ public class ArrowheadServer {
 
             base64PublicKey = Base64.getEncoder().encodeToString(serverCert.getPublicKey().getEncoded());
 
-            sslEC = new SSLEngineConfigurator(Utility.getSSLContextConfigurator()).setClientMode(false).setNeedClientAuth(true);
+            sslEC = new SSLEngineConfigurator(securityContext.getSSLContextConfigurator()).setClientMode(false).setNeedClientAuth(true);
         }
 
         baseUri = Utility.getUri(address, port, null, isSecure, true);
