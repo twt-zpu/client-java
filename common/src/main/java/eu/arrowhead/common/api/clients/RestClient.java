@@ -71,13 +71,17 @@ public class RestClient {
      * Sends a HTTP request to the given url, with the given HTTP method type and given payload
      */
     public <T> Response sendRequest(Method method, String path, T payload) {
+        // TODO Not sure if it is clear enough for clients that securityContext dictates whether we use secure or insecure mode, Thomas
         boolean isSecure = securityContext != null;
 
         URI uri = path != null ?
                 uriBuilder.clone().path(path).build() :
                 uriBuilder.build();
 
-        if (isSecure && (securityContext == null || securityContext.getSslContext() == null)) {
+        if (isSecure && !uri.getScheme().equalsIgnoreCase("https"))
+            throw new ArrowheadRuntimeException("Cannot connect to a https service without a security context");
+
+        if (isSecure && securityContext.getSslContext() == null) {
             throw new AuthException(
                     "SSL Context is not set, but secure request sending was invoked. An insecure module can not send requests to secure modules.",
                     Response.Status.UNAUTHORIZED.getStatusCode());

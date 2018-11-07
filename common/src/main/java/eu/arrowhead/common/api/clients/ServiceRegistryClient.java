@@ -16,6 +16,9 @@ public class ServiceRegistryClient extends RestClient {
     }
 
     public static ServiceRegistryClient createFromProperties(ArrowheadProperties props, ArrowheadSecurityContext securityContext) {
+        final boolean isSecure = props.isSecure();
+        if (isSecure ^ securityContext != null)
+            throw new ArrowheadRuntimeException("Both or neither of isSecure and securityContext must be set");
         return new ServiceRegistryClient()
                 .setAddress(props.getSrAddress())
                 .setPort(props.getSrPort())

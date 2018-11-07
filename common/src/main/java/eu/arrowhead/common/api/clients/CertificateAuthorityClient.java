@@ -9,6 +9,7 @@ import eu.arrowhead.common.misc.SecurityUtils;
 import eu.arrowhead.common.misc.Utility;
 import eu.arrowhead.common.model.CertificateSigningRequest;
 import eu.arrowhead.common.model.CertificateSigningResponse;
+import org.apache.log4j.Logger;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.net.ssl.SSLContext;
@@ -20,6 +21,7 @@ import java.security.PublicKey;
 import java.security.Security;
 
 public final class CertificateAuthorityClient extends RestClient {
+    private static final Logger LOG = Logger.getLogger(CertificateAuthorityClient.class);
     private String keyPass, truststore, truststorePass, keystorePass;
     private String confDir, certDir;
     private String clientName;
@@ -33,6 +35,8 @@ public final class CertificateAuthorityClient extends RestClient {
     }
 
     public static CertificateAuthorityClient createFromProperties(ArrowheadProperties props) {
+        if (!props.isSecure())
+            LOG.warn("Trying to create CertificateAuthorityClient but secure=false in config file");
         return new CertificateAuthorityClient()
                 .setAddress(props.getCaAddress())
                 .setPort(props.getCaPort())

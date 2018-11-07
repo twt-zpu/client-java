@@ -39,6 +39,8 @@ public class ArrowheadServer {
 
     public static ArrowheadServer createFromProperties(ArrowheadProperties props, ArrowheadSecurityContext securityContext) {
         final boolean isSecure = props.isSecure();
+        if (isSecure ^ securityContext != null)
+            throw new ArrowheadRuntimeException("Both or neither of isSecure and securityContext must be set");
         return new ArrowheadServer()
                 .setSecure(isSecure)
                 .setKeystore(props.getKeystore())
@@ -167,6 +169,9 @@ public class ArrowheadServer {
     public ArrowheadServer start(Class<?>[] classes, String[] packages) {
         if (server != null)
             throw new ArrowheadRuntimeException("Server already started");
+
+        if (isSecure ^ securityContext != null)
+            throw new ArrowheadRuntimeException("Both or neither of isSecure and securityContext must be set");
 
         final ResourceConfig config = new ResourceConfig();
         config.registerClasses(classes);

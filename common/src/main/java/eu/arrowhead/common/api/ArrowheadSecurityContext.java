@@ -12,6 +12,7 @@ import java.security.cert.X509Certificate;
 import java.util.Base64;
 
 public class ArrowheadSecurityContext {
+    private static final Logger LOG = Logger.getLogger(ArrowheadSecurityContext.class);
     protected final Logger log = Logger.getLogger(getClass());
     private String keystore, keystorePass, keyPass, truststore, truststorePass;
     private SSLContext sslContext;
@@ -22,6 +23,7 @@ public class ArrowheadSecurityContext {
     }
 
     public static ArrowheadSecurityContext createFromProperties(ArrowheadProperties props) throws KeystoreException {
+        if (!props.isSecure()) LOG.warn("Trying to create a Security Context, but secure=false in config file");
         return new ArrowheadSecurityContext()
                 .setKeystore(props.getKeystore())
                 .setKeystorePass(props.getKeystorePass())

@@ -136,6 +136,7 @@ public abstract class ArrowheadClient {
                 shutdown();
             }));
 
+            // TODO Should be possible to set this manually with a set() also, Thomas
             ArrowheadSecurityContext securityContext = null;
             if (isSecure) {
                 try {

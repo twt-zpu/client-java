@@ -1,6 +1,7 @@
 package eu.arrowhead.common.api.clients;
 
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
+import eu.arrowhead.common.exception.ArrowheadRuntimeException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
 import eu.arrowhead.common.misc.Utility;
 import eu.arrowhead.common.model.*;
@@ -13,6 +14,9 @@ public class OrchestrationClient extends RestClient {
     }
 
     public static OrchestrationClient createFromProperties(ArrowheadProperties props, ArrowheadSecurityContext securityContext) {
+        final boolean isSecure = props.isSecure();
+        if (isSecure ^ securityContext != null)
+            throw new ArrowheadRuntimeException("Both or neither of isSecure and securityContext must be set");
         return new OrchestrationClient()
                 .setAddress(props.getOrchAddress())
                 .setPort(props.getOrchPort())
