@@ -15,9 +15,7 @@ public class OrchestrationClient extends RestClient {
 
     public static OrchestrationClient createFromProperties(ArrowheadProperties props, ArrowheadSecurityContext securityContext) {
         final boolean isSecure = props.isSecure();
-        if (isSecure ^ securityContext != null)
-            throw new ArrowheadRuntimeException("Both or neither of isSecure and securityContext must be set");
-        return new OrchestrationClient()
+        return new OrchestrationClient(isSecure)
                 .setAddress(props.getOrchAddress())
                 .setPort(props.getOrchPort())
                 .setSecurityContext(securityContext)
@@ -26,11 +24,15 @@ public class OrchestrationClient extends RestClient {
 
     public static OrchestrationClient createDefault(ArrowheadSecurityContext securityContext) {
         final boolean isSecure = ArrowheadProperties.getDefaultIsSecure();
-        return new OrchestrationClient()
+        return new OrchestrationClient(isSecure)
                 .setAddress(ArrowheadProperties.getDefaultOrchAddress())
                 .setPort(ArrowheadProperties.getDefaultOrchPort(isSecure))
                 .setSecurityContext(securityContext)
                 .setServicePath("orchestrator");
+    }
+
+    private OrchestrationClient(boolean secure) {
+        super(secure);
     }
 
     @Override

@@ -23,9 +23,7 @@ public class EventHandlerClient extends RestClient {
 
     public static EventHandlerClient createFromProperties(ArrowheadProperties props, ArrowheadSecurityContext securityContext) {
         final boolean isSecure = props.isSecure();
-        if (isSecure ^ securityContext != null)
-            throw new ArrowheadRuntimeException("Both or neither of isSecure and securityContext must be set");
-        return new EventHandlerClient()
+        return new EventHandlerClient(isSecure)
                 .setAddress(props.getEhAddress())
                 .setPort(props.getEhPort())
                 .setSecurityContext(securityContext)
@@ -34,11 +32,15 @@ public class EventHandlerClient extends RestClient {
 
     public static EventHandlerClient createDefault(ArrowheadSecurityContext securityContext) {
         final boolean isSecure = ArrowheadProperties.getDefaultIsSecure();
-        return new EventHandlerClient()
+        return new EventHandlerClient(isSecure)
                 .setAddress(ArrowheadProperties.getDefaultEhAddress())
                 .setPort(ArrowheadProperties.getDefaultEhPort(isSecure))
                 .setSecurityContext(securityContext)
                 .setServicePath("eventhandler");
+    }
+
+    private EventHandlerClient(boolean secure) {
+        super(secure);
     }
 
     @Override

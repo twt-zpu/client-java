@@ -69,7 +69,6 @@ public class ServiceRequestForm {
         return commands;
     }
 
-    // TODO Should all forms/classes use builders for consistency?, Thomas
     public static class Builder {
 
         // Required parameters

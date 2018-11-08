@@ -17,7 +17,7 @@ import java.net.URI;
 
 public class RestClient {
     public enum Method {
-        GET, PUT, POST, DELETE
+        GET, PUT, POST, DELETE;
     }
 
     private static final Client insecureClient = SecurityUtils.createClient(null);
@@ -25,15 +25,22 @@ public class RestClient {
     private ArrowheadSecurityContext securityContext;
     private Client secureClient;
     private UriBuilder uriBuilder = UriBuilder.fromPath("");
+    private boolean isSecure;
 
-    public static RestClient create(String uri, ArrowheadSecurityContext securityContext) {
-        // TODO If uri starts with https and securityContext is null we go to insecure mode!, Thomas
-        return new RestClient()
+    public static RestClient create(boolean secure, String uri, ArrowheadSecurityContext securityContext) {
+        return new RestClient(secure)
                 .setUri(uri)
                 .setSecurityContext(securityContext);
     }
 
-    protected RestClient() {
+    /**
+     *
+     * @param secure Requires explicitly setting security, to avoid situations where the user expects a secure
+     *               connection, but it really isn't due to the lack of security context or wrong URI scheme.
+     */
+    protected RestClient(boolean secure) {
+        isSecure = secure;
+        uriBuilder.scheme(secure ? "https" : "http");
     }
 
     public RestClient setAddress(String address) {
@@ -48,9 +55,11 @@ public class RestClient {
 
     public RestClient setSecurityContext(ArrowheadSecurityContext securityContext) {
         this.securityContext = securityContext;
+        if (isSecure ^ securityContext != null)
+            throw new AuthException(String.format("Client is %s, but trying to set security context to %s)",
+                    isSecure ? "secure" : "insecure", securityContext == null ? "null" : "not null"));
         if (securityContext != null)
             secureClient = SecurityUtils.createClient(securityContext.getSslContext());
-        uriBuilder.scheme(securityContext == null ? "http" : "https");
         return this;
     }
 
@@ -59,13 +68,28 @@ public class RestClient {
         return this;
     }
 
-    public RestClient setUri(String path) {
-        uriBuilder = UriBuilder.fromUri(path);
+    public RestClient setUri(String uri) {
+        uriBuilder = UriBuilder.fromUri(uri);
+        final String scheme = uriBuilder.build().getScheme();
+        if (isSecure ^ scheme.equals("https"))
+            throw new AuthException(
+                    String.format("URI scheme does not match security setting (secure = %s, scheme = %s",
+                            isSecure, scheme));
         return this;
     }
 
     public ArrowheadSecurityContext getSecurityContext() {
         return securityContext;
+    }
+
+    public boolean isSecure() {
+        return isSecure;
+    }
+
+    public RestClient setSecure(boolean secure) {
+        isSecure = secure;
+        uriBuilder.scheme(secure ? "https" : "http");
+        return this;
     }
 
     public <T> Response sendRequest(Method method, T payload) {
@@ -80,21 +104,20 @@ public class RestClient {
      * Sends a HTTP request to the given url, with the given HTTP method type and given payload
      */
     public <T> Response sendRequest(Method method, String path, T payload) {
-        // TODO Not sure if it is clear enough for clients that securityContext dictates whether we use secure or insecure mode, Thomas
-        boolean isSecure = securityContext != null;
+        if (isSecure ^ securityContext != null)
+            throw new AuthException(String.format("Client is %s, but security context is %s)",
+                    isSecure ? "secure" : "insecure", securityContext == null ? "null" : "not null"));
 
         URI uri = path != null ?
                 uriBuilder.clone().path(path).build() :
                 uriBuilder.build();
 
-        if (isSecure && !uri.getScheme().equalsIgnoreCase("https"))
-            throw new ArrowheadRuntimeException("Cannot connect to a https service without a security context");
-
-        if (isSecure && securityContext.getSslContext() == null) {
+        final String scheme = uri.getScheme();
+        if (isSecure ^ scheme.equals("https"))
             throw new AuthException(
-                    "SSL Context is not set, but secure request sending was invoked. An insecure module can not send requests to secure modules.",
-                    Response.Status.UNAUTHORIZED.getStatusCode());
-        }
+                    String.format("URI scheme does not match security setting (secure = %s, scheme = %s",
+                            isSecure, scheme));
+
         Client client = isSecure ? secureClient : insecureClient;
 
         Invocation.Builder request = client.target(UriBuilder.fromUri(uri).build()).request().header("Content-type", "application/json");

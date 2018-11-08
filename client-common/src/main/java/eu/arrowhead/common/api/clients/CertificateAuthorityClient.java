@@ -34,9 +34,10 @@ public final class CertificateAuthorityClient extends RestClient {
     }
 
     public static CertificateAuthorityClient createFromProperties(ArrowheadProperties props) {
-        if (!props.isSecure())
+        final boolean isSecure = props.isSecure();
+        if (!isSecure)
             LOG.warn("Trying to create CertificateAuthorityClient but secure=false in config file");
-        return new CertificateAuthorityClient()
+        return new CertificateAuthorityClient(isSecure)
                 .setAddress(props.getCaAddress())
                 .setPort(props.getCaPort())
                 .setKeyPass(props.getKeyPass())
@@ -51,7 +52,7 @@ public final class CertificateAuthorityClient extends RestClient {
 
     public static CertificateAuthorityClient createDefault(String clientName) {
         final boolean isSecure = ArrowheadProperties.getDefaultIsSecure();
-        return new CertificateAuthorityClient()
+        return new CertificateAuthorityClient(isSecure)
                 .setAddress(ArrowheadProperties.getDefaultCaAddress())
                 .setPort(ArrowheadProperties.getDefaultCaPort(isSecure))
                 .setConfDir(ArrowheadProperties.getConfDir())
@@ -60,8 +61,8 @@ public final class CertificateAuthorityClient extends RestClient {
                 .setServicePath("ca");
     }
 
-    private CertificateAuthorityClient() {
-        super();
+    public CertificateAuthorityClient(boolean secure) {
+        super(secure);
     }
 
     public String getKeyPass() {
@@ -145,7 +146,6 @@ public final class CertificateAuthorityClient extends RestClient {
         return this;
     }
 
-    // TODO Can we skip the needAuth parameter?, Thomas
     public ArrowheadSecurityContext bootstrap() {
         if (clientName == null) throw new ArrowheadRuntimeException("System name is required to generate " +
                 "certificates - have you set \"system_name\" in the config file?");

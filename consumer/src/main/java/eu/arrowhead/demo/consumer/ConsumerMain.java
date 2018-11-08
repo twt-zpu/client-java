@@ -37,7 +37,7 @@ class ConsumerMain extends ArrowheadClient {
         final ServiceRequestForm srf = compileSRF(me);
 
         final String uri = orchestration.requestService(srf);
-        final RestClient restClient = RestClient.create(uri, securityContext);
+        final RestClient restClient = RestClient.create(isSecure(), uri, securityContext);
 
         final Response getResponse = restClient.sendRequest(RestClient.Method.GET);
 
