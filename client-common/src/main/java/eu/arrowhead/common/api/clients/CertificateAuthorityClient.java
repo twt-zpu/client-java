@@ -12,7 +12,6 @@ import eu.arrowhead.common.model.CertificateSigningResponse;
 import org.apache.log4j.Logger;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-import javax.net.ssl.SSLContext;
 import javax.ws.rs.core.Response;
 import java.io.File;
 import java.security.KeyPair;
@@ -158,16 +157,15 @@ public final class CertificateAuthorityClient extends RestClient {
             log.error("Failed loading temporary SSL context, are truststore set correctly in your config file?", e);
             setSecurityContext(null);
         }
-        SSLContext sslContext = getSecurityContext() != null ? getSecurityContext().getSslContext() : null;
 
         // Prepare the data needed to generate the certificate(s)
-        String cloudCN = getCloudCN(sslContext);
+        String cloudCN = getCloudCN();
         String keyStorePassword = !Utility.isBlank(keystorePass) ? keystorePass : Utility.getRandomPassword();
         String trustStorePassword = !Utility.isBlank(truststorePass) ? truststorePass : Utility.getRandomPassword();
         String commonName = clientName + "." + cloudCN;
 
         // Obtain signed certificate
-        CertificateSigningResponse signingResponse = getSignedCertificate(commonName, sslContext);
+        CertificateSigningResponse signingResponse = getSignedCertificate(commonName);
 
         // Create the key- and truststore
         final KeyStore keyStore = SecurityUtils.createKeyStore(commonName, signingResponse, keyStorePassword.toCharArray());
@@ -186,7 +184,7 @@ public final class CertificateAuthorityClient extends RestClient {
         // Get authorization public key if requested
         final String authFile = "authorization.pub";
         if (needAuth) {
-            final PublicKey publicKey = getAuthorizationPublicKeyFromCa(sslContext);
+            final PublicKey publicKey = getAuthorizationPublicKeyFromCa();
             SecurityUtils.savePEM(publicKey, certPath + authFile);
         }
 
@@ -215,23 +213,21 @@ public final class CertificateAuthorityClient extends RestClient {
 
     /**
      Gets the Cloud Common Name from the Certificate Authority Core System, proper URL is read from the config file
-     * @param sslContext
      */
-    private String getCloudCN(SSLContext sslContext) {
+    private String getCloudCN() {
         Response caResponse = sendRequest(Method.GET);
         return caResponse.readEntity(String.class);
     }
 
     /**
      Authorization Public Key is used by ArrowheadProviders to verify the signatures by the Authorization Core System in secure mode
-     * @param sslContext
      */
-    private PublicKey getAuthorizationPublicKeyFromCa(SSLContext sslContext) {
+    private PublicKey getAuthorizationPublicKeyFromCa() {
         Response caResponse = sendRequest(Method.GET, "auth", null);
         return SecurityUtils.getPublicKey(caResponse.readEntity(String.class), false);
     }
 
-    private CertificateSigningResponse getSignedCertificate(String commonName, SSLContext sslContext) {
+    private CertificateSigningResponse getSignedCertificate(String commonName) {
         //Get a new locally generated public/private key pair
         KeyPair keyPair = SecurityUtils.generateRSAKeyPair();
         final CertificateSigningRequest request = SecurityUtils.createSigningRequest(commonName, keyPair);
