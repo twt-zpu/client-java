@@ -130,13 +130,7 @@ public abstract class ArrowheadClient {
     protected void start(boolean listen) {
         try {
             log.info("Working directory: " + System.getProperty("user.dir"));
-
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                log.info("Received TERM signal, shutting down...");
-                shutdown();
-            }));
-
-            // TODO Should be possible to set this manually with a set() also, Thomas
+            
             ArrowheadSecurityContext securityContext = null;
             if (isSecure) {
                 try {
@@ -149,6 +143,21 @@ public abstract class ArrowheadClient {
                     }
                 }
             }
+
+            start(listen, securityContext);
+        } catch (Throwable e) {
+            log.error("Starting client failed", e);
+        }
+    }
+
+    public void start(boolean listen, ArrowheadSecurityContext securityContext) {
+        try {
+            log.info("Working directory: " + System.getProperty("user.dir"));
+
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                log.info("Received TERM signal, shutting down...");
+                shutdown();
+            }));
 
             onStart(securityContext);
 
