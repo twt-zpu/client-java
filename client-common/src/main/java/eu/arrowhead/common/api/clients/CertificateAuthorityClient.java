@@ -181,11 +181,13 @@ public final class CertificateAuthorityClient extends RestClient {
         SecurityUtils.saveKeyStoreToFile(keyStore, keyStorePassword.toCharArray(), newKeystore, certDir);
         SecurityUtils.saveKeyStoreToFile(trustStore, trustStorePassword.toCharArray(), newTruststore, certDir);
 
+        final String certPath = certDir != null ? certDir + File.separator : "";
+
         // Get authorization public key if requested
         final String authFile = "authorization.pub";
         if (needAuth) {
             final PublicKey publicKey = getAuthorizationPublicKeyFromCa(sslContext);
-            SecurityUtils.savePEM(publicKey, (certDir != null ? certDir + File.separator : "") + authFile);
+            SecurityUtils.savePEM(publicKey, certPath + authFile);
         }
 
         // Update app.conf with the new values
@@ -202,7 +204,10 @@ public final class CertificateAuthorityClient extends RestClient {
         props.storeToFile(confDir + File.separator + "app.conf");
 
         try {
-            return ArrowheadSecurityContext.create(newKeystore, keyStorePassword, keyStorePassword, newTruststore, truststorePass);
+            return ArrowheadSecurityContext.create(
+                    certPath + newKeystore, keyStorePassword,
+                    keyStorePassword,
+                    certPath + newTruststore, truststorePass);
         } catch (KeystoreException e) {
             throw new AuthException("Failed to create security context, based on the new key-/truststores.");
         }

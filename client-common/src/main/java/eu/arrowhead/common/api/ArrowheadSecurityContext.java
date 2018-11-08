@@ -57,10 +57,12 @@ public class ArrowheadSecurityContext {
             throw new KeystoreException("Provided SSLContext is not valid", e);
         }
 
-        KeyStore keyStore = SecurityUtils.loadKeyStore(keystore, keystorePass);
-        X509Certificate serverCert = SecurityUtils.getFirstCertFromKeyStore(keyStore);
-        String base64PublicKey = Base64.getEncoder().encodeToString(serverCert.getPublicKey().getEncoded());
-        log.info("PublicKey Base64: " + base64PublicKey);
+        if (keystore != null) {
+            KeyStore keyStore = SecurityUtils.loadKeyStore(keystore, keystorePass);
+            X509Certificate serverCert = SecurityUtils.getFirstCertFromKeyStore(keyStore);
+            String base64PublicKey = Base64.getEncoder().encodeToString(serverCert.getPublicKey().getEncoded());
+            log.info("PublicKey Base64: " + base64PublicKey);
+        }
 
         return this;
     }
