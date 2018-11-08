@@ -63,6 +63,12 @@ public class ArrowheadService {
         this.serviceMetadata = serviceMetadata;
     }
 
+    public ArrowheadService(String serviceDefinition, String aInterface, boolean secure) {
+        this.serviceDefinition = serviceDefinition;
+        this.interfaces = Collections.singleton(aInterface);
+        this.serviceMetadata = ServiceMetadata.createDefault(secure);
+    }
+
     public Long getId() {
         return id;
     }

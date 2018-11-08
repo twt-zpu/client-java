@@ -3,6 +3,13 @@ package eu.arrowhead.common.model;
 import java.util.HashMap;
 
 public class ServiceMetadata extends HashMap<String, String> {
+
+    public static ServiceMetadata createDefault(boolean secure) {
+        return secure ?
+        new ServiceMetadata().setSecurity(Security.TOKEN) :
+        new ServiceMetadata();
+    }
+
     public enum Keys {
         UNIT("unit"),
         SECURITY("security");

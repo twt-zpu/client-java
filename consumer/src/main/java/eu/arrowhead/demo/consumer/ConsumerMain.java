@@ -62,9 +62,9 @@ class ConsumerMain extends ArrowheadClient {
     }
 
     private ServiceRequestForm compileSRF(ArrowheadSystem consumer) {
-        final ServiceMetadata metadata = new ServiceMetadata();
-        metadata.put(ServiceMetadata.Keys.UNIT, "celsius");
-        if (isSecure()) metadata.setSecurity(ServiceMetadata.Security.TOKEN);
+        final ServiceMetadata metadata = ServiceMetadata
+                .createDefault(isSecure())
+                .put(ServiceMetadata.Keys.UNIT, "celsius");
 
         final ArrowheadService service = new ArrowheadService("temperature", "json", metadata);
 
