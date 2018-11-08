@@ -18,11 +18,11 @@ class ProviderMain extends ArrowheadClient {
 
   @Override
   protected void onStart(ArrowheadSecurityContext securityContext) {
-    final ArrowheadServer server = ArrowheadServer.createFromProperties(securityContext);
-    server.start(
-            new Class[] { TemperatureResource.class, RestResource.class },
-            new String[] { "eu.arrowhead.common", "eu.arrowhead.demo" }
-    );
+    final ArrowheadServer server = ArrowheadServer
+            .createFromProperties(securityContext)
+            .addClasses(TemperatureResource.class, RestResource.class)
+            .addPackages("eu.arrowhead.demo")
+            .start();
 
     final ServiceRegistryClient registry = ServiceRegistryClient.createFromProperties(securityContext);
     registry.register(ServiceRegistryEntry.createFromProperties(server));

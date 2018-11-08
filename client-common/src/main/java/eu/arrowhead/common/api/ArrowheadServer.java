@@ -17,10 +17,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
-import java.util.Base64;
-import java.util.HashSet;
-import java.util.ServiceConfigurationError;
-import java.util.Set;
+import java.util.*;
 
 public class ArrowheadServer {
     protected final Logger log = Logger.getLogger(getClass());
@@ -32,6 +29,8 @@ public class ArrowheadServer {
     private String keystore, keystorePass, keyPass, truststore, truststorePass, systemName, address;
     private int port;
     private ArrowheadSecurityContext securityContext;
+    private Set<Class<?>> classes = new HashSet<>();
+    private Set<String> packages = new HashSet<>();
 
     public static ArrowheadServer createFromProperties(ArrowheadSecurityContext securityContext) {
         return createFromProperties(ArrowheadProperties.loadDefault(), securityContext);
@@ -70,6 +69,7 @@ public class ArrowheadServer {
     }
 
     private ArrowheadServer() {
+        packages.add("eu.arrowhead.common");
     }
 
     public boolean isSecure() {
@@ -162,13 +162,35 @@ public class ArrowheadServer {
         return this;
     }
 
-    public ArrowheadServer start(Class<?>[] classes) {
-        return start(classes, new String[] { "eu.arrowhead.common" });
+    public ArrowheadServer addClasses(Class<?> ... classes) {
+        return addClasses(Arrays.asList(classes));
     }
 
-    public ArrowheadServer start(Class<?>[] classes, String[] packages) {
-        // TODO Should this check that eu.arrowhead.common is always in packages?, Thomas
+    public ArrowheadServer addPackages(String ... packages) {
+        return addPackages(Arrays.asList(packages));
+    }
 
+    public ArrowheadServer addClasses(Collection<? extends Class<?>> classes) {
+        this.classes.addAll(classes);
+        return this;
+    }
+
+    public ArrowheadServer addPackages(Collection<? extends String> packages) {
+        this.packages.addAll(packages);
+        return this;
+    }
+
+    public ArrowheadServer replaceClasses(Set<Class<?>> classes) {
+        this.classes = classes;
+        return this;
+    }
+
+    public ArrowheadServer replacePackages(Set<String> packages) {
+        this.packages = packages;
+        return this;
+    }
+
+    public ArrowheadServer start() {
         if (server != null)
             throw new ArrowheadRuntimeException("Server already started");
 
@@ -177,7 +199,7 @@ public class ArrowheadServer {
 
         final ResourceConfig config = new ResourceConfig();
         config.registerClasses(classes);
-        config.packages(packages);
+        config.packages(packages.toArray(new String[]{}));
 
         SSLEngineConfigurator sslEC = null;
         if (isSecure) {

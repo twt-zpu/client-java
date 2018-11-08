@@ -27,8 +27,10 @@ class SubscriberMain extends ArrowheadClient {
 
   @Override
   protected void onStart(ArrowheadSecurityContext securityContext) {
-    final ArrowheadServer server = ArrowheadServer.createFromProperties(securityContext);
-    server.start(new Class[] { SubscriberResource.class });
+    final ArrowheadServer server = ArrowheadServer
+            .createFromProperties(securityContext)
+            .addClasses(SubscriberResource.class)
+            .start();
 
     final ArrowheadSystem me = ArrowheadSystem.createFromProperties(server);
 

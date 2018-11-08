@@ -52,7 +52,6 @@ import java.util.regex.Pattern;
 public final class SecurityUtils {
   private static final Logger log = Logger.getLogger(SecurityUtils.class);
 
-  // TODO FIX THIS?, Thomas
   private static final HostnameVerifier allHostsValid = (hostname, session) -> {
     // Decide whether to allow the connection...
     return true;
