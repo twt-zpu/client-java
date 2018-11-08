@@ -146,7 +146,7 @@ public final class CertificateAuthorityClient extends RestClient {
     }
 
     // TODO Can we skip the needAuth parameter?, Thomas
-    public ArrowheadSecurityContext bootstrap(boolean needAuth) {
+    public ArrowheadSecurityContext bootstrap() {
         if (clientName == null) throw new ArrowheadRuntimeException("System name is required to generate " +
                 "certificates - have you set \"system_name\" in the config file?");
 
@@ -183,23 +183,19 @@ public final class CertificateAuthorityClient extends RestClient {
 
         // Get authorization public key if requested
         final String authFile = "authorization.pub";
-        if (needAuth) {
-            final PublicKey publicKey = getAuthorizationPublicKeyFromCa();
-            SecurityUtils.savePEM(publicKey, certPath + authFile);
-        }
+        final PublicKey publicKey = getAuthorizationPublicKeyFromCa();
+        SecurityUtils.savePEM(publicKey, certPath + authFile);
 
         // Update app.conf with the new values
-        final ArrowheadProperties props = ArrowheadProperties
+        ArrowheadProperties
                 .load(confDir + File.separator + "app.conf")
                 .setKeystore(newKeystore)
                 .setKeystorePass(keyStorePassword)
                 .setKeyPass(keyStorePassword)
                 .setTruststore(newTruststore)
-                .setTruststorePass(trustStorePassword);
-        if (needAuth) {
-            props.setAuthKey(authFile);
-        }
-        props.storeToFile(confDir + File.separator + "app.conf");
+                .setTruststorePass(trustStorePassword)
+                .setAuthKey(authFile)
+                .storeToFile(confDir + File.separator + "app.conf");
 
         try {
             return ArrowheadSecurityContext.create(

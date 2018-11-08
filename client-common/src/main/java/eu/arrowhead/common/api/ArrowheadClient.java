@@ -143,7 +143,7 @@ public abstract class ArrowheadClient {
                     securityContext = ArrowheadSecurityContext.createFromProperties();
                 } catch (KeystoreException e) {
                     if (isBootstrap) {
-                        securityContext = CertificateAuthorityClient.createFromProperties().bootstrap(true);
+                        securityContext = CertificateAuthorityClient.createFromProperties().bootstrap();
                     } else {
                         throw e;
                     }
