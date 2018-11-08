@@ -2,6 +2,7 @@ package eu.arrowhead.digital_twin;
 
 import eu.arrowhead.client.common.Utility;
 import eu.arrowhead.client.common.model.ArrowheadSystem;
+import eu.arrowhead.client.common.model.Event;
 import eu.arrowhead.client.common.model.EventFilter;
 import javax.ws.rs.core.UriBuilder;
 import org.slf4j.Logger;
@@ -45,6 +46,26 @@ public class DigitalTwinService {
       String url = UriBuilder.fromPath(eventHandlerUrl).path("type").path(eventType.name()).path("consumer").path(CONSUMER_NAME).toString();
       Utility.sendRequest(url, "DELETE", null);
       log.info("Unsubscribed from " + eventType.name() + " events.");
+    }
+  }
+
+  //TODO RFID metadata logolása és számon tartása az RFID adatnak memóriában
+  void handleArrowheadEvent(Event event) {
+    if (event.getType().equals(EventsToListenFor.area_entered.name())) {
+      //log the entered area
+
+      //Event extra metadata will be the service def needed
+
+      //Compile the SRF from the event and service global variables
+
+      //send Orch request
+
+      //In a new method consume and log the service
+
+    } else if (event.getType().equals(EventsToListenFor.area_left.name())) {
+      log.info("The smart product left the " + event.getPayload() + " area");
+    } else {
+      log.info("Received unknown event type from Event Handler. Type: " + event.getType());
     }
   }
 

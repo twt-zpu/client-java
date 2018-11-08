@@ -25,11 +25,13 @@ public class DigitalTwinApplication {
     }));
   }
 
+  //TODO Register into the SR a "purchase" service
   @PostConstruct
   void onStart() {
     digitalTwinService.subscribeToSmartProductEvents();
   }
 
+  //TODO deregister from SR (should be done in parallel with the unsubscribe)
   @PreDestroy
   void onShutdown() {
     digitalTwinService.unsubscribeFromEvents();
