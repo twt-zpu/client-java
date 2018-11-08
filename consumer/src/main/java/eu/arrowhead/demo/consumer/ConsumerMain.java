@@ -22,7 +22,7 @@ import javax.ws.rs.core.Response;
 class ConsumerMain extends ArrowheadClient {
 
     public static void main(String[] args) {
-        new ConsumerMain(args).start();
+        new ConsumerMain(args).start(false);
     }
 
     public ConsumerMain(String[] args) {
@@ -39,7 +39,7 @@ class ConsumerMain extends ArrowheadClient {
         final String uri = orchestration.requestService(srf);
         final RestClient restClient = RestClient.create(uri, securityContext);
 
-        final Response getResponse = restClient.sendRequest(RestClient.Method.GET, null, null);
+        final Response getResponse = restClient.sendRequest(RestClient.Method.GET);
 
         TemperatureReadout readout = new TemperatureReadout();
         try {

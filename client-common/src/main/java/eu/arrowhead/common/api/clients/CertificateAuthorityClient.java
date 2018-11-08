@@ -218,7 +218,7 @@ public final class CertificateAuthorityClient extends RestClient {
      * @param sslContext
      */
     private String getCloudCN(SSLContext sslContext) {
-        Response caResponse = sendRequest(Method.GET, null, null);
+        Response caResponse = sendRequest(Method.GET);
         return caResponse.readEntity(String.class);
     }
 
@@ -235,7 +235,7 @@ public final class CertificateAuthorityClient extends RestClient {
         //Get a new locally generated public/private key pair
         KeyPair keyPair = SecurityUtils.generateRSAKeyPair();
         final CertificateSigningRequest request = SecurityUtils.createSigningRequest(commonName, keyPair);
-        Response caResponse = sendRequest(Method.POST, null, request);
+        Response caResponse = sendRequest(Method.POST, request);
         CertificateSigningResponse signingResponse = caResponse.readEntity(CertificateSigningResponse.class);
         signingResponse.setLocalPrivateKey(keyPair.getPrivate());
         return signingResponse;

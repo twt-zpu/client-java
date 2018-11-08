@@ -68,6 +68,14 @@ public class RestClient {
         return securityContext;
     }
 
+    public <T> Response sendRequest(Method method, T payload) {
+        return sendRequest(method, null, payload);
+    }
+
+    public <T> Response sendRequest(Method method) {
+        return sendRequest(method, null, null);
+    }
+
     /**
      * Sends a HTTP request to the given url, with the given HTTP method type and given payload
      */
