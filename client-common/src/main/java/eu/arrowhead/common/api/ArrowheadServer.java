@@ -167,6 +167,8 @@ public class ArrowheadServer {
     }
 
     public ArrowheadServer start(Class<?>[] classes, String[] packages) {
+        // TODO Should this check that eu.arrowhead.common is always in packages?, Thomas
+
         if (server != null)
             throw new ArrowheadRuntimeException("Server already started");
 
@@ -204,7 +206,7 @@ public class ArrowheadServer {
             server.start();
         } catch (IOException | ProcessingException e) {
             throw new ServiceConfigurationError("Make sure you gave a valid address in the config file! " +
-                    "(Assignable to this JVM and not in use already)", e);
+                    "(Assignable to this JVM and not in use already), got " + address + ":" + port, e);
         }
 
         servers.add(this);

@@ -38,15 +38,17 @@ public class ServiceMetadata extends HashMap<String, String> {
         return get(key.toString());
     }
 
-    public String put(Keys key, String value) {
-        return put(key.toString(), value);
+    public ServiceMetadata put(Keys key, String value) {
+        put(key.toString(), value);
+        return this;
     }
 
     public boolean containsKey(Keys key) {
         return containsKey(key.toString());
     }
 
-    public String setSecurity(Security value) {
-        return put(Keys.SECURITY, value.toString());
+    public ServiceMetadata setSecurity(Security value) {
+        put(Keys.SECURITY, value.toString());
+        return this;
     }
 }
