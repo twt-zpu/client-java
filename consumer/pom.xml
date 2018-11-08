@@ -12,7 +12,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>arrowheadclient</artifactId>
+    <artifactId>client</artifactId>
     <groupId>eu.arrowhead</groupId>
     <version>4.0</version>
   </parent>
@@ -23,7 +23,7 @@
 
     <dependency>
       <groupId>eu.arrowhead</groupId>
-      <artifactId>common</artifactId>
+      <artifactId>client-common</artifactId>
     </dependency>
 
     <dependency>
