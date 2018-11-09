@@ -1,21 +1,14 @@
 package eu.arrowhead.common.misc;
 
-import eu.arrowhead.common.exception.ArrowheadRuntimeException;
 import eu.arrowhead.common.model.ServiceMetadata;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.util.*;
 
 public class ArrowheadProperties extends TypeSafeProperties {
-
-
 
     private enum Keys {
         SECURE("secure"),
@@ -170,6 +163,10 @@ public class ArrowheadProperties extends TypeSafeProperties {
 
     private synchronized Object setProperty(Keys key, String value) {
         return super.setProperty(key.toString(), value);
+    }
+
+    public boolean containsKey(Keys key) {
+        return super.containsKey(key.toString());
     }
 
     public boolean isSecure() {
