@@ -6,10 +6,15 @@ import eu.arrowhead.common.exception.ExceptionType;
 import eu.arrowhead.common.misc.ArrowheadProperties;
 import eu.arrowhead.common.model.ServiceRegistryEntry;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
-public class ServiceRegistryClient extends RestClient {
+public class ServiceRegistryClient extends StaticRestClient {
     private static final Map<ServiceRegistryClient, Set<ServiceRegistryEntry>> entries = new HashMap<>();
+    private StaticRestClient registerClient;
+    private StaticRestClient removeClient;
 
     public static ServiceRegistryClient createFromProperties(ArrowheadSecurityContext securityContext) {
         return createFromProperties(ArrowheadProperties.loadDefault(), securityContext);
@@ -21,7 +26,7 @@ public class ServiceRegistryClient extends RestClient {
                 .setAddress(props.getSrAddress())
                 .setPort(props.getSrPort())
                 .setSecurityContext(securityContext)
-                .setServicePath("serviceregistry");
+                .replacePath("serviceregistry");
     }
 
     public static ServiceRegistryClient createDefault(ArrowheadSecurityContext securityContext) {
@@ -30,7 +35,7 @@ public class ServiceRegistryClient extends RestClient {
                 .setAddress(ArrowheadProperties.getDefaultSrAddress())
                 .setPort(ArrowheadProperties.getDefaultSrPort(isSecure))
                 .setSecurityContext(securityContext)
-                .setServicePath("serviceregistry");
+                .replacePath("serviceregistry");
     }
 
     private ServiceRegistryClient(boolean secure) {
@@ -38,38 +43,44 @@ public class ServiceRegistryClient extends RestClient {
     }
 
     @Override
-    public ServiceRegistryClient setAddress(String address) {
+    protected ServiceRegistryClient setAddress(String address) {
         super.setAddress(address);
         return this;
     }
 
     @Override
-    public ServiceRegistryClient setPort(int port) {
+    protected ServiceRegistryClient setPort(int port) {
         super.setPort(port);
         return this;
     }
 
     @Override
-    public ServiceRegistryClient setSecurityContext(ArrowheadSecurityContext securityContext) {
-        super.setSecurityContext(securityContext);
+    protected ServiceRegistryClient setUri(String uri) {
+        super.setUri(uri);
         return this;
     }
 
     @Override
-    public ServiceRegistryClient setServicePath(String path) {
-        super.setServicePath(path);
+    protected ServiceRegistryClient setSecure(boolean secure) {
+        super.setSecure(secure);
+        return this;
+    }
+
+    @Override
+    protected ServiceRegistryClient setSecurityContext(ArrowheadSecurityContext securityContext) {
+        super.setSecurityContext(securityContext);
         return this;
     }
 
     public ServiceRegistryEntry register(ServiceRegistryEntry srEntry) {
         try {
-            post().path("register").send(srEntry);
+            registerClient.post().send(srEntry);
         } catch (ArrowheadRuntimeException e) {
             if (e.getExceptionType() == ExceptionType.DUPLICATE_ENTRY) {
                 log.warn("Received DuplicateEntryException from SR, sending delete request and then " +
                         "registering again.");
                 unregister(srEntry);
-                post().path("register").send(srEntry);
+                registerClient.post().send(srEntry);
             } else {
                 throw e;
             }
@@ -85,7 +96,7 @@ public class ServiceRegistryClient extends RestClient {
 
     public void unregister(ServiceRegistryEntry srEntry) {
         if (srEntry != null) {
-            put().path("remove").send(srEntry);
+            removeClient.put().send(srEntry);
             if (entries.containsKey(this))
                 entries.get(this).remove(srEntry);
             log.info("Removing service is successful!");
@@ -98,5 +109,21 @@ public class ServiceRegistryClient extends RestClient {
 
     public static void unregisterAll() {
         entries.forEach(ServiceRegistryClient::unregister);
+    }
+
+    @Override
+    protected ServiceRegistryClient replacePath(String path) {
+        super.replacePath(path);
+        registerClient = clone("register");
+        removeClient = clone("remove");
+        return this;
+    }
+
+    @Override
+    protected ServiceRegistryClient addPath(String path) {
+        super.addPath(path);
+        registerClient = clone("register");
+        removeClient = clone("remove");
+        return this;
     }
 }

@@ -1,14 +1,15 @@
 package eu.arrowhead.common.api.clients;
 
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
-import eu.arrowhead.common.exception.ArrowheadRuntimeException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
 import eu.arrowhead.common.misc.Utility;
 import eu.arrowhead.common.model.*;
 
 import javax.ws.rs.core.UriBuilder;
 
-public class OrchestrationClient extends RestClient {
+public class OrchestrationClient extends StaticRestClient {
+    private StaticRestClient orchestrationClient;
+
     public static OrchestrationClient createFromProperties(ArrowheadSecurityContext securityContext) {
         return createFromProperties(ArrowheadProperties.loadDefault(), securityContext);
     }
@@ -19,7 +20,7 @@ public class OrchestrationClient extends RestClient {
                 .setAddress(props.getOrchAddress())
                 .setPort(props.getOrchPort())
                 .setSecurityContext(securityContext)
-                .setServicePath("orchestrator");
+                .replacePath("orchestrator");
     }
 
     public static OrchestrationClient createDefault(ArrowheadSecurityContext securityContext) {
@@ -28,7 +29,7 @@ public class OrchestrationClient extends RestClient {
                 .setAddress(ArrowheadProperties.getDefaultOrchAddress())
                 .setPort(ArrowheadProperties.getDefaultOrchPort(isSecure))
                 .setSecurityContext(securityContext)
-                .setServicePath("orchestrator");
+                .replacePath("orchestrator");
     }
 
     private OrchestrationClient(boolean secure) {
@@ -36,32 +37,37 @@ public class OrchestrationClient extends RestClient {
     }
 
     @Override
-    public OrchestrationClient setAddress(String address) {
+    protected OrchestrationClient setAddress(String address) {
         super.setAddress(address);
         return this;
     }
 
     @Override
-    public OrchestrationClient setPort(int port) {
+    protected OrchestrationClient setPort(int port) {
         super.setPort(port);
         return this;
     }
 
     @Override
-    public OrchestrationClient setSecurityContext(ArrowheadSecurityContext securityContext) {
-        super.setSecurityContext(securityContext);
+    protected OrchestrationClient setUri(String uri) {
+        super.setUri(uri);
         return this;
     }
 
     @Override
-    public OrchestrationClient setServicePath(String path) {
-        super.setServicePath(path);
+    protected OrchestrationClient setSecure(boolean secure) {
+        super.setSecure(secure);
         return this;
     }
 
-    public String requestService(ServiceRequestForm srf) {
-        OrchestrationResponse orchResponse = post()
-                .path("orchestration")
+    @Override
+    protected OrchestrationClient setSecurityContext(ArrowheadSecurityContext securityContext) {
+        super.setSecurityContext(securityContext);
+        return this;
+    }
+
+    public UriBuilder requestUri(ServiceRequestForm srf) {
+        OrchestrationResponse orchResponse = orchestrationClient.post()
                 .send(srf)
                 .readEntity(OrchestrationResponse.class);
 
@@ -86,7 +92,28 @@ public class OrchestrationClient extends RestClient {
 
         log.info("Received provider system URL: " + ub.toString());
 
-        return ub.toString();
+        return ub;
     }
 
+    @Override
+    protected OrchestrationClient replacePath(String path) {
+        super.replacePath(path);
+        orchestrationClient = clone("orchestration");
+        return this;
+    }
+
+    @Override
+    protected OrchestrationClient addPath(String path) {
+        super.addPath(path);
+        orchestrationClient = clone("orchestration");
+        return this;
+    }
+
+    public RestClient buildClient(ServiceRequestForm serviceRequestForm) {
+        return OrchestrationRestClient.create(
+                isSecure(),
+                this,
+                serviceRequestForm,
+                getSecurityContext());
+    }
 }

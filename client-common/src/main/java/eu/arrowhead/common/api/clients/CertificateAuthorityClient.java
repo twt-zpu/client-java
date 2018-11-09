@@ -19,11 +19,12 @@ import java.security.KeyStore;
 import java.security.PublicKey;
 import java.security.Security;
 
-public final class CertificateAuthorityClient extends RestClient {
+public final class CertificateAuthorityClient extends StaticRestClient {
     private static final Logger LOG = Logger.getLogger(CertificateAuthorityClient.class);
     private String keyPass, truststore, truststorePass, keystorePass;
     private String confDir, certDir;
     private String clientName;
+    private StaticRestClient authClient;
 
     static {
         Security.addProvider(new BouncyCastleProvider());
@@ -47,7 +48,7 @@ public final class CertificateAuthorityClient extends RestClient {
                 .setConfDir(ArrowheadProperties.getConfDir())
                 .setCertDir(props.getCertDir())
                 .setClientName(props.getSystemName())
-                .setServicePath("ca");
+                .replacePath("ca");
     }
 
     public static CertificateAuthorityClient createDefault(String clientName) {
@@ -58,11 +59,41 @@ public final class CertificateAuthorityClient extends RestClient {
                 .setConfDir(ArrowheadProperties.getConfDir())
                 .setCertDir(ArrowheadProperties.getDefaultCertDir())
                 .setClientName(clientName)
-                .setServicePath("ca");
+                .replacePath("ca");
     }
 
-    public CertificateAuthorityClient(boolean secure) {
+    private CertificateAuthorityClient(boolean secure) {
         super(secure);
+    }
+
+    @Override
+    protected CertificateAuthorityClient setAddress(String address) {
+        super.setAddress(address);
+        return this;
+    }
+
+    @Override
+    protected CertificateAuthorityClient setPort(int port) {
+        super.setPort(port);
+        return this;
+    }
+
+    @Override
+    protected CertificateAuthorityClient setUri(String uri) {
+        super.setUri(uri);
+        return this;
+    }
+
+    @Override
+    protected CertificateAuthorityClient setSecure(boolean secure) {
+        super.setSecure(secure);
+        return this;
+    }
+
+    @Override
+    protected CertificateAuthorityClient setSecurityContext(ArrowheadSecurityContext securityContext) {
+        super.setSecurityContext(securityContext);
+        return this;
     }
 
     public String getKeyPass() {
@@ -98,24 +129,6 @@ public final class CertificateAuthorityClient extends RestClient {
 
     public CertificateAuthorityClient setKeystorePass(String keystorePass) {
         this.keystorePass = keystorePass;
-        return this;
-    }
-
-    @Override
-    public CertificateAuthorityClient setAddress(String address) {
-        super.setAddress(address);
-        return this;
-    }
-
-    @Override
-    public CertificateAuthorityClient setPort(int port) {
-        super.setPort(port);
-        return this;
-    }
-
-    @Override
-    public CertificateAuthorityClient setServicePath(String path) {
-        super.setServicePath(path);
         return this;
     }
 
@@ -220,7 +233,7 @@ public final class CertificateAuthorityClient extends RestClient {
      Authorization Public Key is used by ArrowheadProviders to verify the signatures by the Authorization Core System in secure mode
      */
     private PublicKey getAuthorizationPublicKeyFromCa() {
-        Response caResponse = get().path("auth").send();
+        Response caResponse = authClient.get().send();
         return SecurityUtils.getPublicKey(caResponse.readEntity(String.class), false);
     }
 
@@ -234,4 +247,17 @@ public final class CertificateAuthorityClient extends RestClient {
         return signingResponse;
     }
 
+    @Override
+    protected CertificateAuthorityClient replacePath(String path) {
+        super.replacePath(path);
+        authClient = clone("auth");
+        return this;
+    }
+
+    @Override
+    protected CertificateAuthorityClient addPath(String path) {
+        super.addPath(path);
+        authClient = clone("auth");
+        return this;
+    }
 }

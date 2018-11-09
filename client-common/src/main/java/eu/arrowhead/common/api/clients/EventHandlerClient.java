@@ -8,14 +8,15 @@ import eu.arrowhead.common.model.Event;
 import eu.arrowhead.common.model.EventFilter;
 import eu.arrowhead.common.model.PublishEvent;
 
-import javax.ws.rs.core.UriBuilder;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class EventHandlerClient extends RestClient {
+public class EventHandlerClient extends StaticRestClient {
     private static final Map<EventHandlerClient, Map<ArrowheadSystem, Set<String>>> subscriptions = new HashMap<>();
+    private StaticRestClient subscriptionClient;
+    private StaticRestClient publishClient;
 
     public static EventHandlerClient createFromProperties(ArrowheadSecurityContext securityContext) {
         return createFromProperties(ArrowheadProperties.loadDefault(), securityContext);
@@ -27,7 +28,7 @@ public class EventHandlerClient extends RestClient {
                 .setAddress(props.getEhAddress())
                 .setPort(props.getEhPort())
                 .setSecurityContext(securityContext)
-                .setServicePath("eventhandler");
+                .replacePath("eventhandler");
     }
 
     public static EventHandlerClient createDefault(ArrowheadSecurityContext securityContext) {
@@ -36,7 +37,7 @@ public class EventHandlerClient extends RestClient {
                 .setAddress(ArrowheadProperties.getDefaultEhAddress())
                 .setPort(ArrowheadProperties.getDefaultEhPort(isSecure))
                 .setSecurityContext(securityContext)
-                .setServicePath("eventhandler");
+                .replacePath("eventhandler");
     }
 
     private EventHandlerClient(boolean secure) {
@@ -44,32 +45,38 @@ public class EventHandlerClient extends RestClient {
     }
 
     @Override
-    public EventHandlerClient setAddress(String address) {
+    protected EventHandlerClient setAddress(String address) {
         super.setAddress(address);
         return this;
     }
 
     @Override
-    public EventHandlerClient setPort(int port) {
+    protected EventHandlerClient setPort(int port) {
         super.setPort(port);
         return this;
     }
 
     @Override
-    public EventHandlerClient setSecurityContext(ArrowheadSecurityContext securityContext) {
-        super.setSecurityContext(securityContext);
+    protected EventHandlerClient setUri(String uri) {
+        super.setUri(uri);
         return this;
     }
 
     @Override
-    public EventHandlerClient setServicePath(String path) {
-        super.setServicePath(path);
+    protected EventHandlerClient setSecure(boolean secure) {
+        super.setSecure(secure);
+        return this;
+    }
+
+    @Override
+    protected EventHandlerClient setSecurityContext(ArrowheadSecurityContext securityContext) {
+        super.setSecurityContext(securityContext);
         return this;
     }
 
     public void publish(Event event, ArrowheadSystem eventSource) {
         PublishEvent eventPublishing = new PublishEvent(eventSource, event, "publisher/feedback");
-        post().path("publish").send(eventPublishing);
+        publishClient.post().send(eventPublishing);
         log.info("Event published to EH.");
     }
 
@@ -89,7 +96,7 @@ public class EventHandlerClient extends RestClient {
             throw new ArrowheadRuntimeException("Already subscribed to " + eventType);
 
         EventFilter filter = new EventFilter(eventType, consumer, notifyPath);
-        post().path("subscription").send(filter);
+        subscriptionClient.post().send(filter);
 
         if (!subscriptions.containsKey(this)) subscriptions.put(this, new HashMap<>());
         handlerSubscriptions = subscriptions.get(this);
@@ -102,8 +109,7 @@ public class EventHandlerClient extends RestClient {
     public void unsubscribe(ArrowheadSystem consumer, String eventType) {
         String consumerName = consumer.getSystemName();
 
-        String url = UriBuilder.fromPath("subscription").path("type").path(eventType).path("consumer").path(consumerName).toString();
-        delete().path(url).send();
+        subscriptionClient.clone("type", eventType, "consumer", consumerName).delete().send();
 
         final Map<ArrowheadSystem, Set<String>> handlerSubscriptions = subscriptions.get(this);
         final Set<String> consumerSubscriptions = handlerSubscriptions != null ? handlerSubscriptions.get(consumer) : null;
@@ -122,5 +128,21 @@ public class EventHandlerClient extends RestClient {
 
     public static void unsubscribeAll() {
         subscriptions.forEach(EventHandlerClient::unsubscribe);
+    }
+
+    @Override
+    protected EventHandlerClient replacePath(String path) {
+        super.replacePath(path);
+        subscriptionClient = clone("subscription");
+        publishClient = clone("publish");
+        return this;
+    }
+
+    @Override
+    protected EventHandlerClient addPath(String path) {
+        super.addPath(path);
+        subscriptionClient = clone("subscription");
+        publishClient = clone("publish");
+        return this;
     }
 }

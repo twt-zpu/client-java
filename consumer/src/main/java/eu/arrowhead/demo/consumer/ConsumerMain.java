@@ -31,15 +31,21 @@ class ConsumerMain extends ArrowheadClient {
 
     @Override
     protected void onStart(ArrowheadSecurityContext securityContext) {
+        final ArrowheadSystem me = ArrowheadSystem.createFromProperties();
         final OrchestrationClient orchestration = OrchestrationClient.createFromProperties(securityContext);
 
-        final ArrowheadSystem me = ArrowheadSystem.createFromProperties();
-        final ServiceRequestForm srf = compileSRF(me);
+        final ServiceRequestForm srf = new ServiceRequestForm.Builder(me)
+                .requestedService("temperature", "json", isSecure())
+                .metadata(ServiceMetadata.Keys.UNIT, "celsius")
+                .flag(OrchestrationFlags.Flags.OVERRIDE_STORE, true)
+                .flag(OrchestrationFlags.Flags.PING_PROVIDERS, false)
+                .flag(OrchestrationFlags.Flags.METADATA_SEARCH, true)
+                .flag(OrchestrationFlags.Flags.ENABLE_INTER_CLOUD, true)
+                .build();
+        log.info("Service Request payload: " + Utility.toPrettyJson(null, srf));
 
-        final String uri = orchestration.requestService(srf);
-        final RestClient restClient = RestClient.create(isSecure(), uri, securityContext);
-
-        final Response getResponse = restClient.sendRequest(RestClient.Method.GET);
+        final RestClient restClient = orchestration.buildClient(srf);
+        final Response getResponse = restClient.get().send();
 
         TemperatureReadout readout = new TemperatureReadout();
         try {
@@ -59,25 +65,6 @@ class ConsumerMain extends ArrowheadClient {
     @Override
     protected void onStop() {
 
-    }
-
-    private ServiceRequestForm compileSRF(ArrowheadSystem consumer) {
-        final ServiceMetadata metadata = ServiceMetadata
-                .createDefault(isSecure())
-                .put(ServiceMetadata.Keys.UNIT, "celsius");
-
-        final ArrowheadService service = new ArrowheadService("temperature", "json", metadata);
-
-        final ServiceRequestForm srf = new ServiceRequestForm.Builder(consumer)
-                .requestedService(service)
-                .flag(OrchestrationFlags.Flags.OVERRIDE_STORE, true)
-                .flag(OrchestrationFlags.Flags.PING_PROVIDERS, false)
-                .flag(OrchestrationFlags.Flags.METADATA_SEARCH, true)
-                .flag(OrchestrationFlags.Flags.ENABLE_INTER_CLOUD, true)
-                .build();
-
-        log.info("Service Request payload: " + Utility.toPrettyJson(null, srf));
-        return srf;
     }
 
 }

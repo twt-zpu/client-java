@@ -97,6 +97,21 @@ public class ServiceRequestForm {
             return this;
         }
 
+        public Builder requestedService(String serviceDefinition, Set<String> interfaces, ServiceMetadata serviceMetadata) {
+            requestedService = new ArrowheadService(serviceDefinition, interfaces, serviceMetadata);
+            return this;
+        }
+
+        public Builder requestedService(String serviceDefinition, String aInterface, ServiceMetadata serviceMetadata) {
+            requestedService = new ArrowheadService(serviceDefinition, aInterface, serviceMetadata);
+            return this;
+        }
+
+        public Builder requestedService(String serviceDefinition, String aInterface, boolean secure) {
+            requestedService = new ArrowheadService(serviceDefinition, aInterface, secure);
+            return this;
+        }
+
         public Builder flag(OrchestrationFlags.Flags flag, Boolean value) {
             this.orchestrationFlags.put(flag, value);
             return this;
@@ -114,6 +129,11 @@ public class ServiceRequestForm {
 
         public Builder flags(OrchestrationFlags flags) {
             this.orchestrationFlags.putAll(flags);
+            return this;
+        }
+
+        public Builder metadata(ServiceMetadata.Keys key, String value) {
+            this.requestedService.getServiceMetadata().put(key, value);
             return this;
         }
 
