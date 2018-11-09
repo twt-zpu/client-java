@@ -1,5 +1,6 @@
 package eu.arrowhead.common.api;
 
+import eu.arrowhead.common.api.resources.ArrowheadResource;
 import eu.arrowhead.common.exception.ArrowheadRuntimeException;
 import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
@@ -14,8 +15,8 @@ import org.glassfish.jersey.server.ResourceConfig;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.ServerSocket;
-import java.net.URI;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.util.*;
@@ -30,7 +31,7 @@ public class ArrowheadServer {
     private String keystore, keystorePass, keyPass, truststore, truststorePass, systemName, address;
     private int port;
     private ArrowheadSecurityContext securityContext;
-    private Set<Class<?>> classes = new HashSet<>();
+    private Set<Class<? extends ArrowheadResource>> resources = new HashSet<>();
     private Set<String> packages = new HashSet<>();
 
     public static ArrowheadServer createFromProperties(ArrowheadSecurityContext securityContext) {
@@ -163,26 +164,21 @@ public class ArrowheadServer {
         return this;
     }
 
-    public ArrowheadServer addClasses(Class<?> ... classes) {
-        return addClasses(Arrays.asList(classes));
+    public ArrowheadServer addResources(Class<? extends ArrowheadResource> ... resources) {
+        return addResources(Arrays.asList(resources));
     }
 
     public ArrowheadServer addPackages(String ... packages) {
         return addPackages(Arrays.asList(packages));
     }
 
-    public ArrowheadServer addClasses(Collection<? extends Class<?>> classes) {
-        this.classes.addAll(classes);
+    public ArrowheadServer addResources(Collection<? extends Class<? extends ArrowheadResource>> resources) {
+        this.resources.addAll(resources);
         return this;
     }
 
     public ArrowheadServer addPackages(Collection<? extends String> packages) {
         this.packages.addAll(packages);
-        return this;
-    }
-
-    public ArrowheadServer replaceClasses(Set<Class<?>> classes) {
-        this.classes = classes;
         return this;
     }
 
@@ -198,9 +194,20 @@ public class ArrowheadServer {
         if (isSecure ^ securityContext != null)
             throw new ArrowheadRuntimeException("Both or neither of isSecure and securityContext must be set");
 
+        // Port 9803-9874 is the 4-digit largest port range currently marked as unassigned by IANA
+        if (port == 0) port = nextFreePort(9803, 9874);
+        baseUri = Utility.getUri(address, port, null, isSecure, true);
+
         final ResourceConfig config = new ResourceConfig();
-        config.registerClasses(classes);
         config.packages(packages.toArray(new String[]{}));
+
+        for (Class<? extends ArrowheadResource> resource : resources) {
+            try {
+                config.registerInstances(resource.getConstructor(ArrowheadServer.class).newInstance(this));
+            } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+                throw new ArrowheadRuntimeException(String.format("Class %s must inherit and implement default constructor from ArrowheadResource class", resource.getName()), e);
+            }
+        }
 
         SSLEngineConfigurator sslEC = null;
         if (isSecure) {
@@ -219,14 +226,10 @@ public class ArrowheadServer {
             sslEC = new SSLEngineConfigurator(securityContext.getSSLContextConfigurator()).setClientMode(false).setNeedClientAuth(true);
         }
 
-        // Port 9803-9874 is the 4-digit largest port range currently marked as unassigned by IANA
-        if (port == 0) port = nextFreePort(9803, 9874);
-
-        baseUri = Utility.getUri(address, port, null, isSecure, true);
-        final URI uri = UriBuilder.fromUri(baseUri).build();
+        config.property("arrowhead_server", this);
 
         try {
-            server = GrizzlyHttpServerFactory.createHttpServer(uri, config, isSecure, sslEC, false);
+            server = GrizzlyHttpServerFactory.createHttpServer(UriBuilder.fromUri(baseUri).build(), config, isSecure, sslEC, false);
             server.getServerConfiguration().setAllowPayloadForUndefinedHttpMethods(true);
             server.start();
         } catch (IOException | ProcessingException e) {

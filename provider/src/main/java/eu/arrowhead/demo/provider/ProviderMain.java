@@ -20,7 +20,7 @@ class ProviderMain extends ArrowheadClient {
   protected void onStart(ArrowheadSecurityContext securityContext) {
     final ArrowheadServer server = ArrowheadServer
             .createFromProperties(securityContext)
-            .addClasses(TemperatureResource.class, RestResource.class)
+            .addResources(TemperatureResource.class, RestResource.class)
             .addPackages("eu.arrowhead.demo")
             .start();
 

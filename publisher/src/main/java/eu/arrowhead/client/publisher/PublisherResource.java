@@ -9,7 +9,9 @@
 
 package eu.arrowhead.client.publisher;
 
+import eu.arrowhead.common.api.ArrowheadServer;
 import eu.arrowhead.common.api.resources.ArrowheadPublisherResource;
+import eu.arrowhead.common.api.resources.ArrowheadResource;
 import org.apache.log4j.Logger;
 
 import java.util.Map;
@@ -23,8 +25,12 @@ import javax.ws.rs.core.Response;
 @Path("publisher")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class PublisherResource implements ArrowheadPublisherResource {
+public class PublisherResource extends ArrowheadResource implements ArrowheadPublisherResource {
   private final Logger log = Logger.getLogger(getClass());
+
+  public PublisherResource(ArrowheadServer server) {
+    super(server);
+  }
 
   @GET
   public Response getIt() {

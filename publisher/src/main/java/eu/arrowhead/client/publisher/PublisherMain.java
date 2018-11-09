@@ -32,7 +32,7 @@ class PublisherMain extends ArrowheadClient {
   protected void onStart(ArrowheadSecurityContext securityContext) {
     final ArrowheadServer server = ArrowheadServer
             .createFromProperties(securityContext)
-            .addClasses(PublisherResource.class)
+            .addResources(PublisherResource.class)
             .start();
 
     final ArrowheadSystem me = ArrowheadSystem.createFromProperties(server);

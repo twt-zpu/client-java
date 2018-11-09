@@ -9,7 +9,8 @@
 
 package eu.arrowhead.demo.provider;
 
-import eu.arrowhead.common.misc.SecurityVerifier;
+import eu.arrowhead.common.api.ArrowheadServer;
+import eu.arrowhead.common.api.resources.ArrowheadResource;
 import eu.arrowhead.demo.model.MeasurementEntry;
 import eu.arrowhead.demo.model.TemperatureReadout;
 
@@ -24,12 +25,10 @@ import javax.ws.rs.core.SecurityContext;
 
 @Path("temperature")
 @Produces(MediaType.APPLICATION_JSON)
-public class TemperatureResource {
+public class TemperatureResource extends ArrowheadResource {
 
-  private final SecurityVerifier verifier;
-
-  public TemperatureResource() {
-    verifier = SecurityVerifier.createFromProperties();
+  public TemperatureResource(ArrowheadServer server) {
+    super(server);
   }
 
   @GET

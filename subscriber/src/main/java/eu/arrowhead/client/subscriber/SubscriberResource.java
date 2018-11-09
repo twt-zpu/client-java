@@ -9,6 +9,8 @@
 
 package eu.arrowhead.client.subscriber;
 
+import eu.arrowhead.common.api.ArrowheadServer;
+import eu.arrowhead.common.api.resources.ArrowheadResource;
 import eu.arrowhead.common.api.resources.ArrowheadSubscriberResource;
 import eu.arrowhead.common.model.Event;
 import org.apache.log4j.Logger;
@@ -23,8 +25,12 @@ import javax.ws.rs.core.Response;
 @Path("subscriber")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class SubscriberResource implements ArrowheadSubscriberResource {
+public class SubscriberResource extends ArrowheadResource implements ArrowheadSubscriberResource {
   private static final Logger log = Logger.getLogger(SubscriberResource.class);
+
+  public SubscriberResource(ArrowheadServer server) {
+    super(server);
+  }
 
   @GET
   public Response getIt() {

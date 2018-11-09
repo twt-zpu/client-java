@@ -1,17 +1,10 @@
 package eu.arrowhead.demo.provider;
 
-import eu.arrowhead.common.misc.SecurityVerifier;
+import eu.arrowhead.common.api.ArrowheadServer;
+import eu.arrowhead.common.api.resources.ArrowheadResource;
 import eu.arrowhead.demo.model.Car;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -21,12 +14,10 @@ import javax.ws.rs.core.SecurityContext;
 @Path("rest")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class RestResource {
+public class RestResource extends ArrowheadResource {
 
-  private final SecurityVerifier verifier;
-
-  public RestResource() {
-    verifier = SecurityVerifier.createFromProperties();
+  public RestResource(ArrowheadServer server) {
+    super(server);
   }
 
   @GET
