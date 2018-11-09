@@ -1,5 +1,6 @@
 package eu.arrowhead.digital_twin;
 
+import java.util.concurrent.CompletableFuture;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,15 +26,18 @@ public class DigitalTwinApplication {
     }));
   }
 
-  //TODO Register into the SR a "purchase" service
   @PostConstruct
   void onStart() {
+    digitalTwinService.registerPurchaseService();
     digitalTwinService.subscribeToSmartProductEvents();
   }
 
   //TODO deregister from SR (should be done in parallel with the unsubscribe)
   @PreDestroy
   void onShutdown() {
-    digitalTwinService.unsubscribeFromEvents();
+    CompletableFuture<Void> eventHandler = CompletableFuture.runAsync(digitalTwinService::unsubscribeFromEvents);
+    CompletableFuture<Void> serviceRegistry = CompletableFuture.runAsync(digitalTwinService::unregisterPurchaseService);
+    //TODO collect the futures and join them
+
   }
 }
