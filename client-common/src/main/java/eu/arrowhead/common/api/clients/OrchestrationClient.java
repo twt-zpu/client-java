@@ -1,6 +1,7 @@
 package eu.arrowhead.common.api.clients;
 
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
+import eu.arrowhead.common.exception.DataNotFoundException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
 import eu.arrowhead.common.misc.Utility;
 import eu.arrowhead.common.model.*;
@@ -67,32 +68,37 @@ public class OrchestrationClient extends StaticRestClient {
     }
 
     public UriBuilder requestUri(ServiceRequestForm srf) {
-        OrchestrationResponse orchResponse = orchestrationClient.post()
-                .send(srf)
-                .readEntity(OrchestrationResponse.class);
+        try {
+            OrchestrationResponse orchResponse = orchestrationClient.post()
+                    .send(srf)
+                    .readEntity(OrchestrationResponse.class);
 
-        log.info("Orchestration Response payload: " + Utility.toPrettyJson(null, orchResponse));
+            log.info("Orchestration Response payload: " + Utility.toPrettyJson(null, orchResponse));
 
-        final OrchestrationForm entry = orchResponse.getFirst();
-        ArrowheadSystem provider = entry.getProvider();
+            final OrchestrationForm entry = orchResponse.getFirst();
+            ArrowheadSystem provider = entry.getProvider();
 
-        String serviceURI = entry.getServiceURI();
-        UriBuilder ub = UriBuilder.fromPath("").host(provider.getAddress()).scheme("http");
-        if (serviceURI != null) {
-            ub.path(serviceURI);
+            String serviceURI = entry.getServiceURI();
+            UriBuilder ub = UriBuilder.fromPath("").host(provider.getAddress()).scheme("http");
+            if (serviceURI != null) {
+                ub.path(serviceURI);
+            }
+            if (provider.getPort() != null && provider.getPort() > 0) {
+                ub.port(provider.getPort());
+            }
+            if (entry.getService().getServiceMetadata().containsKey(ServiceMetadata.Keys.SECURITY)) {
+                ub.scheme("https");
+                ub.queryParam("token", entry.getAuthorizationToken());
+                ub.queryParam("signature", entry.getSignature());
+            }
+
+            log.info("Received provider system URL: " + ub.toString());
+
+            return ub;
+        } catch (DataNotFoundException e) {
+            log.warn("Failed with requester system: " + srf.getRequesterSystem());
+            throw e;
         }
-        if (provider.getPort() != null && provider.getPort() > 0) {
-            ub.port(provider.getPort());
-        }
-        if (entry.getService().getServiceMetadata().containsKey(ServiceMetadata.Keys.SECURITY)) {
-            ub.scheme("https");
-            ub.queryParam("token", entry.getAuthorizationToken());
-            ub.queryParam("signature", entry.getSignature());
-        }
-
-        log.info("Received provider system URL: " + ub.toString());
-
-        return ub;
     }
 
     @Override
