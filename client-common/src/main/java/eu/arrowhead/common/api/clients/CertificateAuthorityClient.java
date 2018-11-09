@@ -211,15 +211,16 @@ public final class CertificateAuthorityClient extends RestClient {
      Gets the Cloud Common Name from the Certificate Authority Core System, proper URL is read from the config file
      */
     private String getCloudCN() {
-        Response caResponse = sendRequest(Method.GET);
-        return caResponse.readEntity(String.class);
+        return get()
+                .send()
+                .readEntity(String.class);
     }
 
     /**
      Authorization Public Key is used by ArrowheadProviders to verify the signatures by the Authorization Core System in secure mode
      */
     private PublicKey getAuthorizationPublicKeyFromCa() {
-        Response caResponse = sendRequest(Method.GET, "auth", null);
+        Response caResponse = get().path("auth").send();
         return SecurityUtils.getPublicKey(caResponse.readEntity(String.class), false);
     }
 
@@ -227,7 +228,7 @@ public final class CertificateAuthorityClient extends RestClient {
         //Get a new locally generated public/private key pair
         KeyPair keyPair = SecurityUtils.generateRSAKeyPair();
         final CertificateSigningRequest request = SecurityUtils.createSigningRequest(commonName, keyPair);
-        Response caResponse = sendRequest(Method.POST, request);
+        Response caResponse = post().send(request);
         CertificateSigningResponse signingResponse = caResponse.readEntity(CertificateSigningResponse.class);
         signingResponse.setLocalPrivateKey(keyPair.getPrivate());
         return signingResponse;

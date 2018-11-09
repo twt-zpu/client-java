@@ -63,13 +63,13 @@ public class ServiceRegistryClient extends RestClient {
 
     public ServiceRegistryEntry register(ServiceRegistryEntry srEntry) {
         try {
-            sendRequest(Method.POST, "register", srEntry);
+            post().path("register").send(srEntry);
         } catch (ArrowheadRuntimeException e) {
             if (e.getExceptionType() == ExceptionType.DUPLICATE_ENTRY) {
                 log.warn("Received DuplicateEntryException from SR, sending delete request and then " +
                         "registering again.");
                 unregister(srEntry);
-                sendRequest(Method.POST, "register", srEntry);
+                post().path("register").send(srEntry);
             } else {
                 throw e;
             }
@@ -85,7 +85,7 @@ public class ServiceRegistryClient extends RestClient {
 
     public void unregister(ServiceRegistryEntry srEntry) {
         if (srEntry != null) {
-            sendRequest(Method.PUT, "remove", srEntry);
+            put().path("remove").send(srEntry);
             if (entries.containsKey(this))
                 entries.get(this).remove(srEntry);
             log.info("Removing service is successful!");

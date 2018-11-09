@@ -69,7 +69,7 @@ public class EventHandlerClient extends RestClient {
 
     public void publish(Event event, ArrowheadSystem eventSource) {
         PublishEvent eventPublishing = new PublishEvent(eventSource, event, "publisher/feedback");
-        sendRequest(Method.POST, "publish", eventPublishing);
+        post().path("publish").send(eventPublishing);
         log.info("Event published to EH.");
     }
 
@@ -89,7 +89,7 @@ public class EventHandlerClient extends RestClient {
             throw new ArrowheadRuntimeException("Already subscribed to " + eventType);
 
         EventFilter filter = new EventFilter(eventType, consumer, notifyPath);
-        sendRequest(Method.POST, "subscription", filter);
+        post().path("subscription").send(filter);
 
         if (!subscriptions.containsKey(this)) subscriptions.put(this, new HashMap<>());
         handlerSubscriptions = subscriptions.get(this);
@@ -103,7 +103,7 @@ public class EventHandlerClient extends RestClient {
         String consumerName = consumer.getSystemName();
 
         String url = UriBuilder.fromPath("subscription").path("type").path(eventType).path("consumer").path(consumerName).toString();
-        sendRequest(Method.DELETE, url, null);
+        delete().path(url).send();
 
         final Map<ArrowheadSystem, Set<String>> handlerSubscriptions = subscriptions.get(this);
         final Set<String> consumerSubscriptions = handlerSubscriptions != null ? handlerSubscriptions.get(consumer) : null;

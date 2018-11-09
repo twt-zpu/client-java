@@ -60,7 +60,9 @@ public class OrchestrationClient extends RestClient {
     }
 
     public String requestService(ServiceRequestForm srf) {
-        OrchestrationResponse orchResponse = sendRequest(Method.POST, "orchestration", srf)
+        OrchestrationResponse orchResponse = post()
+                .path("orchestration")
+                .send(srf)
                 .readEntity(OrchestrationResponse.class);
 
         log.info("Orchestration Response payload: " + Utility.toPrettyJson(null, orchResponse));
