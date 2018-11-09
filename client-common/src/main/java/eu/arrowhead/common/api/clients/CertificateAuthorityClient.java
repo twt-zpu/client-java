@@ -48,6 +48,7 @@ public final class CertificateAuthorityClient extends StaticRestClient {
                 .setConfDir(ArrowheadProperties.getConfDir())
                 .setCertDir(props.getCertDir())
                 .setClientName(props.getSystemName())
+                .setSecurityContext()
                 .replacePath("ca");
     }
 
@@ -59,6 +60,7 @@ public final class CertificateAuthorityClient extends StaticRestClient {
                 .setConfDir(ArrowheadProperties.getConfDir())
                 .setCertDir(ArrowheadProperties.getDefaultCertDir())
                 .setClientName(clientName)
+                .setSecurityContext()
                 .replacePath("ca");
     }
 
@@ -93,6 +95,21 @@ public final class CertificateAuthorityClient extends StaticRestClient {
     @Override
     protected CertificateAuthorityClient setSecurityContext(ArrowheadSecurityContext securityContext) {
         super.setSecurityContext(securityContext);
+        return this;
+    }
+
+    private CertificateAuthorityClient setSecurityContext() {
+        // Setting temporary truststore if given (for the secure CA)
+        try {
+            setSecurityContext(ArrowheadSecurityContext.create(null, null, keyPass, truststore, truststorePass));
+        } catch (KeystoreException e) {
+            log.error("Failed loading temporary SSL context, are truststore set correctly in your config file?", e);
+            try {
+                setSecurityContext(ArrowheadSecurityContext.create(null, null, null, null, null));
+            } catch (KeystoreException e1) {
+                throw new AuthException("Failed to create temporary SSL context", e1);
+            }
+        }
         return this;
     }
 
@@ -162,14 +179,6 @@ public final class CertificateAuthorityClient extends StaticRestClient {
     public ArrowheadSecurityContext bootstrap() {
         if (clientName == null) throw new ArrowheadRuntimeException("System name is required to generate " +
                 "certificates - have you set \"system_name\" in the config file?");
-
-        // Setting temporary truststore if given (for the secure CA)
-        try {
-            setSecurityContext(ArrowheadSecurityContext.create(null, null, keyPass, truststore, truststorePass));
-        } catch (KeystoreException e) {
-            log.error("Failed loading temporary SSL context, are truststore set correctly in your config file?", e);
-            setSecurityContext(null);
-        }
 
         // Prepare the data needed to generate the certificate(s)
         String cloudCN = getCloudCN();
