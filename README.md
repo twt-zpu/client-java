@@ -30,4 +30,10 @@ can type `stop` to shutdown the process.
 Note this is a Java VM option.
 
 The remain settings (that includes the previous `-tls` argument) are set in the configuration files `default.conf` and
-`app.conf`. 
+`app.conf`.
+
+### Config files
+
+_Incomplete_
+
+* **port=0**: Enable automatic port detection.

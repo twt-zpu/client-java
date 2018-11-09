@@ -42,7 +42,7 @@ public class ArrowheadSystem {
         boolean isSecure = props.isSecure();
 
         String host = props.getAddress();
-        int port = props.getPort();
+        int port = server != null ? server.getPort() : props.getPort();
         if (server != null) {
             try {
                 URI uri = new URI(server.getBaseUri());

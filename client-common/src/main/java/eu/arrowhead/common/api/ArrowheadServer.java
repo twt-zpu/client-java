@@ -14,6 +14,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.net.URI;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
@@ -218,23 +219,43 @@ public class ArrowheadServer {
             sslEC = new SSLEngineConfigurator(securityContext.getSSLContextConfigurator()).setClientMode(false).setNeedClientAuth(true);
         }
 
+        // Port 9803-9874 is the 4-digit largest port range currently marked as unassigned by IANA
+        if (port == 0) port = nextFreePort(9803, 9874);
+
         baseUri = Utility.getUri(address, port, null, isSecure, true);
         final URI uri = UriBuilder.fromUri(baseUri).build();
-
 
         try {
             server = GrizzlyHttpServerFactory.createHttpServer(uri, config, isSecure, sslEC, false);
             server.getServerConfiguration().setAllowPayloadForUndefinedHttpMethods(true);
             server.start();
         } catch (IOException | ProcessingException e) {
-            throw new ServiceConfigurationError("Make sure you gave a valid address in the config file! " +
-                    "(Assignable to this JVM and not in use already), got " + address + ":" + port, e);
+            throw new ServiceConfigurationError(String.format("Make sure you gave a valid address in the config file! " +
+                    "(Assignable to this JVM and not in use already), got %s:%s", address, this.port != 0 ? this.port : "auto"), e);
         }
 
         servers.add(this);
         log.info("Started " + (isSecure ? "secure" : "insecure") + " server at: " + baseUri);
 
         return this;
+    }
+
+    private int nextFreePort(int from, int to) {
+        for (int port = from; port <= to; port++) {
+            ServerSocket s = null;
+            try {
+                s = new ServerSocket(port);
+                return port;
+            } catch (IOException ignored) {
+            } finally {
+                try {
+                    if (s != null) s.close();
+                } catch (IOException e) {
+                    throw new ArrowheadRuntimeException("Error occurred during port detection:", e);
+                }
+            }
+        }
+        throw new ArrowheadRuntimeException("Unable to find a free port");
     }
 
     public ArrowheadServer stop() {
