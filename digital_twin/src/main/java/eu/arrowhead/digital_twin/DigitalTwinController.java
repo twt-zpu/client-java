@@ -1,12 +1,16 @@
 package eu.arrowhead.digital_twin;
 
 import eu.arrowhead.client.common.model.Event;
+import eu.arrowhead.digital_twin.model.ResourceNotFoundException;
+import eu.arrowhead.digital_twin.model.SmartProduct;
 import java.util.concurrent.CompletableFuture;
 import javax.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,5 +39,9 @@ public class DigitalTwinController {
     return ResponseEntity.ok().build();
   }
 
-  //TODO transfer/purchase szolgáltatás, ahol az összegyűjtött RFID adatot átadjuk
+  @GetMapping("purchase/{rfidKey}")
+  public SmartProduct transferSmartProductInformation(@PathVariable String rfidKey) {
+    return digitalTwinService.findSmartProductByFirstPart(rfidKey)
+                             .orElseThrow(() -> new ResourceNotFoundException("Smart product was not found with the following RFID key: " + rfidKey));
+  }
 }

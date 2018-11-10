@@ -26,18 +26,18 @@ public class DigitalTwinApplication {
     }));
   }
 
+  //TODO check if there is a file with state information to use
   @PostConstruct
   void onStart() {
     digitalTwinService.registerPurchaseService();
     digitalTwinService.subscribeToSmartProductEvents();
   }
 
-  //TODO deregister from SR (should be done in parallel with the unsubscribe)
+  //TODO in case of shutdown save the internal state to file + also do it periodically like every minute
   @PreDestroy
   void onShutdown() {
     CompletableFuture<Void> eventHandler = CompletableFuture.runAsync(digitalTwinService::unsubscribeFromEvents);
     CompletableFuture<Void> serviceRegistry = CompletableFuture.runAsync(digitalTwinService::unregisterPurchaseService);
-    //TODO collect the futures and join them
-
+    CompletableFuture.allOf(eventHandler, serviceRegistry).join();
   }
 }
