@@ -6,7 +6,6 @@ import javax.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ConfigurableApplicationContext;
 
 @SpringBootApplication
 public class DigitalTwinApplication {
@@ -19,11 +18,7 @@ public class DigitalTwinApplication {
   }
 
   public static void main(String[] args) {
-    ConfigurableApplicationContext ctx = SpringApplication.run(DigitalTwinApplication.class, args);
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      System.out.println("Received TERM signal, shutting down...");
-      ctx.close();
-    }));
+    SpringApplication.run(DigitalTwinApplication.class, args);
   }
 
   //TODO check if there is a file with state information to use

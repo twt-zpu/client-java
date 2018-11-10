@@ -32,10 +32,7 @@ public class DigitalTwinController {
   public ResponseEntity<?> receiveEvent(@Valid @RequestBody Event event) {
     log.info("Received new event: " + event.toString());
 
-    CompletableFuture.supplyAsync(() -> {
-      digitalTwinService.handleArrowheadEvent(event);
-      return null;
-    });
+    CompletableFuture.runAsync(() -> digitalTwinService.handleArrowheadEvent(event));
     return ResponseEntity.ok().build();
   }
 

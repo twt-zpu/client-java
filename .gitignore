@@ -27,5 +27,6 @@
 */target
 *app.conf
 *.mvn
+*.log
 
 !/digital_twin/src/main/resources/application.properties
