@@ -89,6 +89,7 @@ public class DigitalTwinService {
 
   //TODO log RFID metadata and keep track of state updates in memory, based on incoming events
   void handleArrowheadEvent(Event event) {
+    //TODO use switch case instead
     if (event.getType().equals(EventsToListenFor.area_entered.name())) {
       //log the entered area
 
