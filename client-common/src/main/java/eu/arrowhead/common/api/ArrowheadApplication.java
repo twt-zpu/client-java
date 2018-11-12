@@ -69,15 +69,7 @@ public abstract class ArrowheadApplication {
         isDaemon = daemon;
     }
 
-    protected void shutdown() {
-        EventHandlerClient.unsubscribeAll();
-        ServiceRegistryClient.unregisterAll();
-        ArrowheadServer.stopAll();
-        onStop();
-        System.exit(0);
-    }
-
-    protected void listenForInput() {
+    private void listenForInput() {
         if (isDaemon) {
             log.info("In daemon mode, process will terminate for TERM signal...");
         } else {
@@ -90,13 +82,12 @@ public abstract class ArrowheadApplication {
                 }
                 br.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("IOException", e);
             }
-            shutdown();
         }
     }
 
-    protected void start(boolean listen) {
+    protected void start() {
         log.info("Working directory: " + System.getProperty("user.dir"));
 
         if (!props.contains("log4j.rootLogger")) {
@@ -113,19 +104,18 @@ public abstract class ArrowheadApplication {
         try {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 log.info("Received TERM signal, shutting down...");
-                shutdown();
+                onStop();
+                EventHandlerClient.unsubscribeAll();
+                ServiceRegistryClient.unregisterAll();
+                ArrowheadServer.stopAll();
             }));
 
             onStart();
 
-            if (listen) listenForInput();
+            listenForInput();
         } catch (Throwable e) {
             log.error("Starting client failed", e);
         }
-    }
-
-    protected void start() {
-        start(true);
     }
 
     protected abstract void onStart();

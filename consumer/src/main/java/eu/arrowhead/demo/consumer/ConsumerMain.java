@@ -22,7 +22,7 @@ import javax.ws.rs.core.Response;
 class ConsumerMain extends ArrowheadApplication {
 
     public static void main(String[] args) {
-        new ConsumerMain(args).start(false);
+        new ConsumerMain(args).start();
     }
 
     public ConsumerMain(String[] args) {
