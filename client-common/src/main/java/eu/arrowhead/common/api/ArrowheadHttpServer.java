@@ -87,7 +87,7 @@ public abstract class ArrowheadHttpServer extends ArrowheadServer {
      * @return the uri.
      */
     public String getBaseUri() {
-        if (!isStarted()) throw new InvalidStateException("Server not started yet");
+        if (baseUri == null) throw new InvalidStateException("Server not started yet");
         return baseUri;
     }
 
@@ -96,7 +96,7 @@ public abstract class ArrowheadHttpServer extends ArrowheadServer {
      * @return the key.
      */
     public String getBase64PublicKey() {
-        if (!isStarted()) throw new InvalidStateException("Server not started yet");
+        if (base64PublicKey == null) throw new InvalidStateException("Server not started yet");
         return base64PublicKey;
     }
 
@@ -105,7 +105,7 @@ public abstract class ArrowheadHttpServer extends ArrowheadServer {
      * @return the CN.
      */
     public String getCN() {
-        if (!isStarted()) throw new InvalidStateException("Server not started yet");
+        if (cn == null) throw new InvalidStateException("Server not started yet");
         return cn;
     }
 
@@ -144,6 +144,9 @@ public abstract class ArrowheadHttpServer extends ArrowheadServer {
     @Override
     public ArrowheadHttpServer stop() {
         super.stop();
+        baseUri = null;
+        base64PublicKey = null;
+        cn = null;
         return this;
     }
 }
