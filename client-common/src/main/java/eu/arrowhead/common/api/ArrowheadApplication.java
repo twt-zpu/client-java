@@ -42,13 +42,15 @@ public abstract class ArrowheadApplication {
 
     public ArrowheadApplication setProperties(ArrowheadProperties props) {
         if (props != null) {
-            props.putIfAbsent("log4j.rootLogger", "INFO, CONSOLE");
-            props.putIfAbsent("log4j.appender.CONSOLE", "org.apache.log4j.ConsoleAppender");
-            props.putIfAbsent("log4j.appender.CONSOLE.target", "System.err");
-            props.putIfAbsent("log4j.appender.CONSOLE.ImmediateFlush", "true");
-            props.putIfAbsent("log4j.appender.CONSOLE.Threshold", "debug");
-            props.putIfAbsent("log4j.appender.CONSOLE.layout", "org.apache.log4j.PatternLayout");
-            props.putIfAbsent("log4j.appender.CONSOLE.layout.conversionPattern", "%d{yyyy-MM-dd HH:mm:ss}  %c{1}.%M(%F:%L)  %p  %m%n");
+            if (!props.contains("log4j.rootLogger")) {
+                props.putIfAbsent("log4j.rootLogger", "INFO, CONSOLE");
+                props.putIfAbsent("log4j.appender.CONSOLE", "org.apache.log4j.ConsoleAppender");
+                props.putIfAbsent("log4j.appender.CONSOLE.target", "System.err");
+                props.putIfAbsent("log4j.appender.CONSOLE.ImmediateFlush", "true");
+                props.putIfAbsent("log4j.appender.CONSOLE.Threshold", "debug");
+                props.putIfAbsent("log4j.appender.CONSOLE.layout", "org.apache.log4j.PatternLayout");
+                props.putIfAbsent("log4j.appender.CONSOLE.layout.conversionPattern", "%d{yyyy-MM-dd HH:mm:ss}  %c{1}.%M(%F:%L)  %p  %m%n");
+            }
             PropertyConfigurator.configure(props);
 
             isSecure = props.isSecure();
