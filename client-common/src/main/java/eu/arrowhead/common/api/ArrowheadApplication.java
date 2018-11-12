@@ -1,9 +1,7 @@
 package eu.arrowhead.common.api;
 
-import eu.arrowhead.common.api.clients.CertificateAuthorityClient;
 import eu.arrowhead.common.api.clients.EventHandlerClient;
 import eu.arrowhead.common.api.clients.ServiceRegistryClient;
-import eu.arrowhead.common.exception.KeystoreException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
@@ -12,13 +10,13 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-public abstract class ArrowheadClient {
+public abstract class ArrowheadApplication {
     protected final Logger log = Logger.getLogger(getClass());
     private boolean isDaemon;
-    private boolean isSecure, isBootstrap;
+    private boolean isSecure;
     private ArrowheadProperties props;
 
-    public ArrowheadClient(String[] args) {
+    public ArrowheadApplication(String[] args) {
         setProperties(ArrowheadProperties.loadDefault());
 
         boolean daemon = false;
@@ -42,7 +40,7 @@ public abstract class ArrowheadClient {
         isDaemon = daemon;
     }
 
-    public ArrowheadClient setProperties(ArrowheadProperties props) {
+    public ArrowheadApplication setProperties(ArrowheadProperties props) {
         if (props != null) {
             props.putIfAbsent("log4j.rootLogger", "INFO, CONSOLE");
             props.putIfAbsent("log4j.appender.CONSOLE", "org.apache.log4j.ConsoleAppender");
@@ -54,7 +52,6 @@ public abstract class ArrowheadClient {
             PropertyConfigurator.configure(props);
 
             isSecure = props.isSecure();
-            isBootstrap = props.isBootstrap();
         }
         this.props = props;
 
@@ -65,7 +62,7 @@ public abstract class ArrowheadClient {
         return props;
     }
 
-    public ArrowheadClient setDebug(boolean debug) {
+    public ArrowheadApplication setDebug(boolean debug) {
         System.setProperty("debug_mode", debug ? "true" : "false");
         return this;
     }
@@ -82,17 +79,8 @@ public abstract class ArrowheadClient {
         return isSecure;
     }
 
-    public ArrowheadClient setSecure(boolean secure) {
+    public ArrowheadApplication setSecure(boolean secure) {
         isSecure = secure;
-        return this;
-    }
-
-    public boolean isBootstrap() {
-        return isBootstrap;
-    }
-
-    public ArrowheadClient setBootstrap(boolean bootstrap) {
-        isBootstrap = bootstrap;
         return this;
     }
 
@@ -128,38 +116,14 @@ public abstract class ArrowheadClient {
     }
 
     protected void start(boolean listen) {
+        log.info("Working directory: " + System.getProperty("user.dir"));
         try {
-            log.info("Working directory: " + System.getProperty("user.dir"));
-            
-            ArrowheadSecurityContext securityContext = null;
-            if (isSecure) {
-                try {
-                    securityContext = ArrowheadSecurityContext.createFromProperties();
-                } catch (KeystoreException e) {
-                    if (isBootstrap) {
-                        securityContext = CertificateAuthorityClient.createFromProperties().bootstrap();
-                    } else {
-                        throw e;
-                    }
-                }
-            }
-
-            start(listen, securityContext);
-        } catch (Throwable e) {
-            log.error("Starting client failed", e);
-        }
-    }
-
-    public void start(boolean listen, ArrowheadSecurityContext securityContext) {
-        try {
-            log.info("Working directory: " + System.getProperty("user.dir"));
-
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 log.info("Received TERM signal, shutting down...");
                 shutdown();
             }));
 
-            onStart(securityContext);
+            onStart();
 
             if (listen) listenForInput();
         } catch (Throwable e) {
@@ -171,7 +135,7 @@ public abstract class ArrowheadClient {
         start(true);
     }
 
-    protected abstract void onStart(ArrowheadSecurityContext securityContext);
+    protected abstract void onStart();
 
     protected abstract void onStop();
 }

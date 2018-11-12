@@ -1,12 +1,12 @@
 package eu.arrowhead.demo.provider;
 
-import eu.arrowhead.common.api.ArrowheadClient;
-import eu.arrowhead.common.api.ArrowheadServer;
+import eu.arrowhead.common.api.ArrowheadApplication;
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
+import eu.arrowhead.common.api.ArrowheadServer;
 import eu.arrowhead.common.api.clients.ServiceRegistryClient;
 import eu.arrowhead.common.model.ServiceRegistryEntry;
 
-class ProviderMain extends ArrowheadClient {
+class ProviderMain extends ArrowheadApplication {
 
   public static void main(String[] args) {
     new ProviderMain(args).start();
@@ -17,7 +17,8 @@ class ProviderMain extends ArrowheadClient {
   }
 
   @Override
-  protected void onStart(ArrowheadSecurityContext securityContext) {
+  protected void onStart() {
+    final ArrowheadSecurityContext securityContext = ArrowheadSecurityContext.createFromProperties(true);
     final ArrowheadServer server = ArrowheadServer
             .createFromProperties(securityContext)
             .addResources(TemperatureResource.class, RestResource.class)

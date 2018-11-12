@@ -9,7 +9,7 @@
 
 package eu.arrowhead.demo.consumer;
 
-import eu.arrowhead.common.api.ArrowheadClient;
+import eu.arrowhead.common.api.ArrowheadApplication;
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
 import eu.arrowhead.common.api.clients.OrchestrationClient;
 import eu.arrowhead.common.api.clients.RestClient;
@@ -19,7 +19,7 @@ import eu.arrowhead.demo.model.TemperatureReadout;
 
 import javax.ws.rs.core.Response;
 
-class ConsumerMain extends ArrowheadClient {
+class ConsumerMain extends ArrowheadApplication {
 
     public static void main(String[] args) {
         new ConsumerMain(args).start(false);
@@ -30,7 +30,8 @@ class ConsumerMain extends ArrowheadClient {
     }
 
     @Override
-    protected void onStart(ArrowheadSecurityContext securityContext) {
+    protected void onStart() {
+        final ArrowheadSecurityContext securityContext = ArrowheadSecurityContext.createFromProperties(true);
         final ArrowheadSystem me = ArrowheadSystem.createFromProperties();
         final OrchestrationClient orchestration = OrchestrationClient.createFromProperties(securityContext);
 

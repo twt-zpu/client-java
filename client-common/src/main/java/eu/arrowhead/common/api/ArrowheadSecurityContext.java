@@ -1,5 +1,7 @@
 package eu.arrowhead.common.api;
 
+import eu.arrowhead.common.api.clients.CertificateAuthorityClient;
+import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.common.exception.KeystoreException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
 import eu.arrowhead.common.misc.SecurityUtils;
@@ -18,19 +20,38 @@ public class ArrowheadSecurityContext {
     private SSLContext sslContext;
     private SSLContextConfigurator sslContextConfigurator;
 
-    public static ArrowheadSecurityContext createFromProperties() throws KeystoreException {
-        return createFromProperties(ArrowheadProperties.loadDefault());
+    public static ArrowheadSecurityContext createFromProperties() {
+        return createFromProperties(ArrowheadProperties.loadDefault(), false);
     }
 
-    public static ArrowheadSecurityContext createFromProperties(ArrowheadProperties props) throws KeystoreException {
-        if (!props.isSecure()) LOG.warn("Trying to create a Security Context, but secure=false in config file");
-        return new ArrowheadSecurityContext()
-                .setKeystore(props.getKeystore())
-                .setKeystorePass(props.getKeystorePass())
-                .setKeyPass(props.getKeyPass())
-                .setTruststore(props.getTruststore())
-                .setTruststorePass(props.getTruststorePass())
-                .load();
+    public static ArrowheadSecurityContext createFromProperties(boolean bootstrap) {
+        return createFromProperties(ArrowheadProperties.loadDefault(), bootstrap);
+    }
+
+    public static ArrowheadSecurityContext createFromProperties(ArrowheadProperties props) {
+        return createFromProperties(props, false);
+    }
+
+    public static ArrowheadSecurityContext createFromProperties(ArrowheadProperties props, boolean bootstrap) {
+        final boolean secure = props.isSecure();
+        if (!secure) LOG.warn("Trying to create a Security Context, but secure=false in config file");
+
+        try {
+            return new ArrowheadSecurityContext()
+                    .setKeystore(props.getKeystore())
+                    .setKeystorePass(props.getKeystorePass())
+                    .setKeyPass(props.getKeyPass())
+                    .setTruststore(props.getTruststore())
+                    .setTruststorePass(props.getTruststorePass())
+                    .load();
+        } catch (KeystoreException e) {
+            if (secure && bootstrap) {
+                LOG.info("Bootstrapping certificates...");
+                return CertificateAuthorityClient.createFromProperties(props).bootstrap();
+            } else {
+                throw new AuthException("Creating security context failed", e);
+            }
+        }
     }
 
     public static ArrowheadSecurityContext create(String keystore, String keystorePass, String keyPass, String truststore, String truststorePass) throws KeystoreException {
