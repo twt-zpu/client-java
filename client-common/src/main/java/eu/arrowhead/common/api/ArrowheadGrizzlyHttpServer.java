@@ -26,30 +26,22 @@ public class ArrowheadGrizzlyHttpServer extends ArrowheadHttpServer {
     public static ArrowheadGrizzlyHttpServer createFromProperties(ArrowheadProperties props,
                                                                   ArrowheadSecurityContext securityContext) {
         final boolean isSecure = props.isSecure();
-        if (isSecure ^ securityContext != null)
-            throw new ArrowheadRuntimeException("Both or neither of isSecure and securityContext must be set");
-        final ArrowheadGrizzlyHttpServer server = new ArrowheadGrizzlyHttpServer();
-        server
-                .setSecure(isSecure)
-                .setAddress(props.getAddress())
-                .setPort(props.getPort())
-                .setSecurityContext(securityContext);
-        return server;
+
+        return new ArrowheadGrizzlyHttpServer(isSecure, props.getAddress(), props.getPort(), securityContext);
     }
 
     public static ArrowheadGrizzlyHttpServer createDefault(ArrowheadSecurityContext securityContext) {
         final boolean isSecure = ArrowheadProperties.getDefaultIsSecure();
-        final ArrowheadGrizzlyHttpServer server = new ArrowheadGrizzlyHttpServer();
-        server
-                .setSecure(isSecure)
-                .setAddress(ArrowheadProperties.getDefaultAddress())
-                .setPort(ArrowheadProperties.getDefaultPort(isSecure))
-                .setSecurityContext(securityContext);
-        return server;
+        return new ArrowheadGrizzlyHttpServer(
+                isSecure,
+                ArrowheadProperties.getDefaultAddress(),
+                ArrowheadProperties.getDefaultPort(isSecure),
+                securityContext);
     }
 
-    private ArrowheadGrizzlyHttpServer() {
-        packages.add("eu.arrowhead.common");
+    private ArrowheadGrizzlyHttpServer(boolean isSecure, String address, int port,
+                                       ArrowheadSecurityContext securityContext) {
+        super(isSecure, address, port, securityContext);
     }
 
     public ArrowheadGrizzlyHttpServer addResources(Class<? extends ArrowheadResource> ... resources) {
@@ -92,7 +84,7 @@ public class ArrowheadGrizzlyHttpServer extends ArrowheadHttpServer {
 
         SSLEngineConfigurator sslEC = null;
         if (isSecure()) {
-            config.property("server_common_name", getServerCN());
+            config.property("server_common_name", getCN());
 
             sslEC = new SSLEngineConfigurator(getSecurityContext().getSSLContextConfigurator())
                     .setClientMode(false)
