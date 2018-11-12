@@ -11,6 +11,11 @@ import eu.arrowhead.client.common.model.ServiceRequestForm;
 import eu.arrowhead.digital_twin.model.SmartProduct;
 import eu.arrowhead.digital_twin.model.SmartProductLifeCycle;
 import eu.arrowhead.digital_twin.model.SmartProductPosition;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -26,6 +31,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.supercsv.cellprocessor.constraint.NotNull;
+import org.supercsv.cellprocessor.ift.CellProcessor;
+import org.supercsv.io.CsvBeanReader;
+import org.supercsv.io.CsvBeanWriter;
+import org.supercsv.io.ICsvBeanReader;
+import org.supercsv.io.ICsvBeanWriter;
+import org.supercsv.prefs.CsvPreference;
 
 @Service
 public class DigitalTwinService {
@@ -37,6 +49,7 @@ public class DigitalTwinService {
   private final String serviceRegistryUrl;
   private final String eventHandlerUrl;
   private final String orchestratorUrl;
+  private final String stateSaveLocation;
   private final Logger log = LoggerFactory.getLogger(DigitalTwinService.class);
   private final ArrowheadSystem digitalTwin;
 
@@ -44,12 +57,16 @@ public class DigitalTwinService {
 
   @Autowired
   public DigitalTwinService(@Value("${service_registry_url}") String serviceRegistryUrl, @Value("${event_handler_url}") String eventHandlerUrl,
-                            @Value("${orchestrator_url}") String orchestratorUrl, @Value("${server.address}") String myHost,
-                            @Value("${server.port}") int myPort) {
+                            @Value("${orchestrator_url}") String orchestratorUrl, @Value("${internal_state_save_location}") String stateSaveLocation,
+                            @Value("${server.address}") String myHost, @Value("${server.port}") int myPort) {
     this.serviceRegistryUrl = serviceRegistryUrl;
     //TODO make the digital twin acquire these URLs from the SR?
     this.eventHandlerUrl = eventHandlerUrl;
     this.orchestratorUrl = orchestratorUrl;
+    if (!stateSaveLocation.endsWith(".csv")) {
+      stateSaveLocation = stateSaveLocation.concat(".csv");
+    }
+    this.stateSaveLocation = stateSaveLocation;
 
     digitalTwin = new ArrowheadSystem(CONSUMER_NAME, myHost, myPort, null);
 
@@ -106,11 +123,39 @@ public class DigitalTwinService {
   @Scheduled(fixedRate = 1000 * 600)
     //run this method every 10 minutes
   void saveSmartProductStatesToFile() {
-    //TODO
+    final CellProcessor[] cellProcessors = new CellProcessor[]{new NotNull(), new NotNull(), new NotNull()};
+    try (ICsvBeanWriter beanWriter = new CsvBeanWriter(new FileWriter(stateSaveLocation), CsvPreference.STANDARD_PREFERENCE)) {
+
+      // the header elements are used to map the bean values to each column (names must match)
+      final String[] headers = new String[]{"rfidParts", "lifeCycle", "lastKnownPosition"};
+
+      // write the header
+      beanWriter.writeHeader(headers);
+
+      // write the beans
+      for (final SmartProduct smartProduct : smartProducts) {
+        beanWriter.write(smartProduct, headers, cellProcessors);
+      }
+    } catch (IOException e) {
+      log.error("IOException during state saving.", e);
+    }
   }
 
   void loadSmartProductStatesFromFile() {
-    //TODO
+    if (Files.isReadable(Paths.get(stateSaveLocation))) {
+      final CellProcessor[] cellProcessors = new CellProcessor[]{new NotNull(), new NotNull(), new NotNull()};
+      try (ICsvBeanReader beanReader = new CsvBeanReader(new FileReader(stateSaveLocation), CsvPreference.STANDARD_PREFERENCE)) {
+
+        final String[] header = beanReader.getHeader(true);
+
+        SmartProduct smartProduct;
+        while ((smartProduct = beanReader.read(SmartProduct.class, header, cellProcessors)) != null) {
+          smartProducts.add(smartProduct);
+        }
+      } catch (IOException e) {
+        log.error("IOException during reading in the state from file.", e);
+      }
+    }
   }
 
   void handleArrowheadEvent(Event event) {
