@@ -9,6 +9,7 @@
 
 package eu.arrowhead.common.exception;
 
+import org.apache.log4j.Logger;
 import org.glassfish.jersey.server.ContainerRequest;
 
 import javax.inject.Inject;
@@ -20,12 +21,13 @@ import javax.ws.rs.ext.Provider;
 
 @Provider
 public class BadMethodExceptionMapper implements ExceptionMapper<NotAllowedException> {
+  protected final Logger log = Logger.getLogger(getClass());
 
   @Inject
   private javax.inject.Provider<ContainerRequest> requestContext;
 
   public Response toResponse(NotAllowedException ex) {
-    ex.printStackTrace();
+    log.warn("Replying with error message", ex);
     ErrorMessage errorMessage;
     if (ex.getMessage() != null) {
       errorMessage = new ErrorMessage(ex.getMessage(), 405, ExceptionType.BAD_METHOD, requestContext.get().getBaseUri().toString());

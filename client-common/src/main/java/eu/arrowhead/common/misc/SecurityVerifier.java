@@ -131,7 +131,7 @@ public class SecurityVerifier {
             }
 
         } catch (Exception ex) {
-            ex.printStackTrace();
+            log.warn("Replying with error message", ex);
             ErrorMessage error = new ErrorMessage("Internal Server Error: " + ex.getMessage(), 500, null, Utility.class.toString());
             return Response.status(500).entity(error).build();
         }

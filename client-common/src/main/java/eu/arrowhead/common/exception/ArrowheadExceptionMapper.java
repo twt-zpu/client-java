@@ -9,6 +9,7 @@
 
 package eu.arrowhead.common.exception;
 
+import org.apache.log4j.Logger;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 
@@ -20,6 +21,7 @@ import javax.ws.rs.ext.Provider;
 
 @Provider
 public class ArrowheadExceptionMapper implements ExceptionMapper<ArrowheadRuntimeException> {
+  protected final Logger log = Logger.getLogger(getClass());
 
   @Inject
   private javax.inject.Provider<ContainerRequest> requestContext;
@@ -28,7 +30,7 @@ public class ArrowheadExceptionMapper implements ExceptionMapper<ArrowheadRuntim
 
   @Override
   public Response toResponse(ArrowheadRuntimeException ex) {
-    ex.printStackTrace();
+    log.warn("Replying with error message", ex);
     String origin =
         ex.getOrigin() != null ? ex.getOrigin() : (requestContext.get() != null ? requestContext.get().getAbsolutePath().toString() : "unknown");
     int errorCode = (ex.getErrorCode() == 0 && responseContext.get() != null) ? responseContext.get().getStatus() : ex.getErrorCode();

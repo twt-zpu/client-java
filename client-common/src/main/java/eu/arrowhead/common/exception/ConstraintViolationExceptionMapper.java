@@ -9,6 +9,7 @@
 
 package eu.arrowhead.common.exception;
 
+import org.apache.log4j.Logger;
 import org.glassfish.jersey.server.ContainerRequest;
 
 import javax.inject.Inject;
@@ -19,17 +20,18 @@ import javax.ws.rs.ext.Provider;
 
 @Provider
 public class ConstraintViolationExceptionMapper implements ExceptionMapper<ConstraintViolationException> {
+  protected final Logger log = Logger.getLogger(getClass());
 
   @Inject
   private javax.inject.Provider<ContainerRequest> requestContext;
 
   @Override
-  public Response toResponse(ConstraintViolationException exception) {
-    exception.printStackTrace();
+  public Response toResponse(ConstraintViolationException ex) {
+    log.warn("Replying with error message", ex);
     int errorCode = 404; //Bad Request
     String origin = requestContext.get() != null ? requestContext.get().getAbsolutePath().toString() : "unknown";
 
-    ErrorMessage errorMessage = new ErrorMessage(exception.getMessage(), errorCode, ExceptionType.VALIDATION, origin);
+    ErrorMessage errorMessage = new ErrorMessage(ex.getMessage(), errorCode, ExceptionType.VALIDATION, origin);
     return Response.status(errorCode).entity(errorMessage).header("Content-type", "application/json").build();
   }
 }

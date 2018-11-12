@@ -137,7 +137,6 @@ public final class SecurityUtils {
       keystore.setCertificateEntry(alias, cert);
       return keystore;
     } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e) {
-      e.printStackTrace();
       throw new ServiceConfigurationError("Keystore creation from cert failed...", e);
     }
   }
@@ -173,8 +172,7 @@ public final class SecurityUtils {
     try {
       enumeration = keystore.aliases();
     } catch (KeyStoreException e) {
-      e.printStackTrace();
-      return null;
+      throw new AuthException("Keystore error", e);
     }
 
     while (enumeration.hasMoreElements()) {
@@ -184,7 +182,7 @@ public final class SecurityUtils {
       try {
         clientCert = (X509Certificate) keystore.getCertificate(alias);
       } catch (KeyStoreException e) {
-        e.printStackTrace();
+        log.warn("KeyStoreException", e);
         continue;
       }
       String clientCertCN = getCertCNFromSubject(clientCert.getSubjectDN().getName());

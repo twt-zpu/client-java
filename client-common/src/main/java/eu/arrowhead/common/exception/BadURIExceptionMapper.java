@@ -9,6 +9,7 @@
 
 package eu.arrowhead.common.exception;
 
+import org.apache.log4j.Logger;
 import org.glassfish.jersey.server.ContainerRequest;
 
 import javax.inject.Inject;
@@ -20,12 +21,13 @@ import javax.ws.rs.ext.Provider;
 
 @Provider
 public class BadURIExceptionMapper implements ExceptionMapper<NotFoundException> {
+  protected final Logger log = Logger.getLogger(getClass());
 
   @Inject
   private javax.inject.Provider<ContainerRequest> requestContext;
 
   public Response toResponse(NotFoundException ex) {
-    ex.printStackTrace();
+    log.warn("Replying with error message", ex);
     ErrorMessage errorMessage = new ErrorMessage(requestContext.get().getPath(true) + " is not a valid path!", 400, ExceptionType.BAD_URI,
                                                  requestContext.get().getBaseUri().toString());
     return Response.status(Status.BAD_REQUEST).entity(errorMessage).header("Content-type", "application/json").build();

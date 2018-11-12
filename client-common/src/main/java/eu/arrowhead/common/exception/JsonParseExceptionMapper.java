@@ -10,6 +10,7 @@
 package eu.arrowhead.common.exception;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import org.apache.log4j.Logger;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 
@@ -23,6 +24,7 @@ import javax.ws.rs.ext.Provider;
 @Provider
 @Priority(1) //This is needed in order to give this Mapper higher priority over Jackson's own implementation
 public class JsonParseExceptionMapper implements ExceptionMapper<JsonParseException> {
+  protected final Logger log = Logger.getLogger(getClass());
 
   @Inject
   private javax.inject.Provider<ContainerRequest> requestContext;
@@ -31,7 +33,7 @@ public class JsonParseExceptionMapper implements ExceptionMapper<JsonParseExcept
 
   @Override
   public Response toResponse(JsonParseException ex) {
-    ex.printStackTrace();
+    log.warn("Replying with error message", ex);
     int errorCode = 404; //Bad Request
     String origin = requestContext.get() != null ? requestContext.get().getAbsolutePath().toString() : "unknown";
     if (responseContext.get() != null && responseContext.get().getStatusInfo().getFamily() != Family.OTHER) {

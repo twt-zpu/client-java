@@ -53,8 +53,7 @@ class ConsumerMain extends ArrowheadApplication {
             readout = getResponse.readEntity(TemperatureReadout.class);
             log.info("Provider Response payload: " + Utility.toPrettyJson(null, readout));
         } catch (RuntimeException e) {
-            e.printStackTrace();
-            log.error("Provider did not send the temperature readout in SenML format.");
+            log.error("Provider did not send the temperature readout in SenML format.", e);
         }
         if (readout.getE().get(0) == null) {
             log.error("Provider did not send any MeasurementEntry.");

@@ -9,6 +9,7 @@
 
 package eu.arrowhead.common.exception;
 
+import org.apache.log4j.Logger;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 
@@ -20,6 +21,7 @@ import javax.ws.rs.ext.Provider;
 
 @Provider
 public class GenericExceptionMapper implements ExceptionMapper<Exception> {
+  protected final Logger log = Logger.getLogger(getClass());
 
   @Inject
   private javax.inject.Provider<ContainerRequest> requestContext;
@@ -28,7 +30,7 @@ public class GenericExceptionMapper implements ExceptionMapper<Exception> {
 
   @Override
   public Response toResponse(Exception ex) {
-    ex.printStackTrace();
+    log.warn("Replying with error message", ex);
     int errorCode = 500; //Internal Server Error
     String origin = requestContext.get() != null ? requestContext.get().getAbsolutePath().toString() : "unknown";
     if (responseContext.get() != null && responseContext.get().getStatusInfo().getFamily() != Family.OTHER) {
