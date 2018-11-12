@@ -42,6 +42,7 @@ public class ArrowheadGrizzlyHttpServer extends ArrowheadHttpServer {
     private ArrowheadGrizzlyHttpServer(boolean isSecure, String address, int port,
                                        ArrowheadSecurityContext securityContext) {
         super(isSecure, address, port, securityContext);
+        packages.add("eu.arrowhead.common");
     }
 
     public ArrowheadGrizzlyHttpServer addResources(Class<? extends ArrowheadResource> ... resources) {
