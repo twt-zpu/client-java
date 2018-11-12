@@ -13,6 +13,12 @@ import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
 
+/**
+ * Arrowhead security context. You will probably need one of these if you plan to support secure TLS mode in your
+ * services, and thus is taken as parameter by many of the other API classes.
+ *
+ * To create one, just call one of the static create*() methods in this class.
+ */
 public class ArrowheadSecurityContext {
     private static final Logger LOG = Logger.getLogger(ArrowheadSecurityContext.class);
     protected final Logger log = Logger.getLogger(getClass());
@@ -20,18 +26,39 @@ public class ArrowheadSecurityContext {
     private SSLContext sslContext;
     private SSLContextConfigurator sslContextConfigurator;
 
+    /**
+     * Create a security context using the contents from the default properties files. No certificate bootstrapping will
+     * take place.
+     * @return your shiny new security context.
+     */
     public static ArrowheadSecurityContext createFromProperties() {
         return createFromProperties(ArrowheadProperties.loadDefault(), false);
     }
 
+    /**
+     * Create a security context using the contents from the default properties files.
+     * @param bootstrap Attempt to perform certificate bootstrapping if the key stores are not valid?
+     * @return your shiny new security context.
+     */
     public static ArrowheadSecurityContext createFromProperties(boolean bootstrap) {
         return createFromProperties(ArrowheadProperties.loadDefault(), bootstrap);
     }
 
+    /**
+     * Create a security context using the contents from the given properties object.
+     * @param props The properties object to use.
+     * @return your shiny new security context.
+     */
     public static ArrowheadSecurityContext createFromProperties(ArrowheadProperties props) {
         return createFromProperties(props, false);
     }
 
+    /**
+     * Create a security context using the contents from the given properties object.
+     * @param props The properties object to use.
+     * @param bootstrap Attempt to perform certificate bootstrapping if the key stores are not valid?
+     * @return your shiny new security context.
+     */
     public static ArrowheadSecurityContext createFromProperties(ArrowheadProperties props, boolean bootstrap) {
         final boolean secure = props.isSecure();
         if (!secure) LOG.warn("Trying to create a Security Context, but secure=false in config file");
@@ -54,7 +81,19 @@ public class ArrowheadSecurityContext {
         }
     }
 
-    public static ArrowheadSecurityContext create(String keystore, String keystorePass, String keyPass, String truststore, String truststorePass) throws KeystoreException {
+    /**
+     * Create a security context, by manually supplying key stores and passwords.
+     * @param keystore The key store.
+     * @param keystorePass The password to the key store.
+     * @param keyPass The password to the key.
+     * @param truststore The trust store.
+     * @param truststorePass The password to the trust store.
+     * @return your shiny new security context.
+     * @throws KeystoreException If loading the stores failed. You will have to interact manually with the
+     * CertificateAuthorityClient, if you want to perform bootstrapping as this stage.
+     */
+    public static ArrowheadSecurityContext create(String keystore, String keystorePass, String keyPass,
+                                                  String truststore, String truststorePass) throws KeystoreException {
         return new ArrowheadSecurityContext()
                 .setKeystore(keystore)
                 .setKeystorePass(keystorePass)
@@ -64,6 +103,11 @@ public class ArrowheadSecurityContext {
                 .load();
     }
 
+    /**
+     * Internal function for loading everything.
+     * @return this.
+     * @throws KeystoreException if loading fails.
+     */
     private ArrowheadSecurityContext load() throws KeystoreException {
         sslContextConfigurator = new SSLContextConfigurator();
         if (keystore != null) sslContextConfigurator.setKeyStoreFile(keystore);
@@ -88,6 +132,9 @@ public class ArrowheadSecurityContext {
         return this;
     }
 
+    /**
+     * Private constructor, use one of the static create* methods instead.
+     */
     private ArrowheadSecurityContext() {
     }
 
