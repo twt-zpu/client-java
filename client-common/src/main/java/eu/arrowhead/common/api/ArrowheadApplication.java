@@ -21,7 +21,7 @@ import java.io.InputStreamReader;
  * - In non-daemon mode the application will provide an option to type "stop" to exit, otherwise it will only terminate
  *   for the TERM signal.
  * - Will apply a proper shutdown hook to ensure that all event subscriptions are canceled, services are unregistered,
- *   and all ArrowheadServer instances stop.
+ *   and all ArrowheadServer instances stopped.
  */
 public abstract class ArrowheadApplication {
     protected final Logger log = Logger.getLogger(getClass());
