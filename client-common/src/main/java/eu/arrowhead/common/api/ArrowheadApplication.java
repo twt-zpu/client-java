@@ -10,11 +10,27 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+/**
+ * Main class for Arrowhead applications. In most cases, your main class should inherit from this and your main function
+ * call start(). You can then implement your own logic in the onStart() and onStop() methods.
+ *
+ * This class with help you with the following:
+ * - Configuring log4j according to settings in properties. Per default the standard default.conf and app.conf files
+ *   will be loaded, but these can be overridden.
+ * - Parsing program arguments. Currently, the -daemon and -d (for debug) is supported.
+ * - In non-daemon mode the application will provide an option to type "stop" to exit, otherwise it will only terminate
+ *   for the TERM signal.
+ * - Will apply a proper shutdown hook to ensure that all event subscriptions are canceled, services are unregistered,
+ *   and all ArrowheadServer instances stop.
+ */
 public abstract class ArrowheadApplication {
     protected final Logger log = Logger.getLogger(getClass());
     private boolean isDaemon;
     private ArrowheadProperties props;
 
+    /**
+     * @param args Arguments from main().
+     */
     public ArrowheadApplication(String[] args) {
         setProperties(ArrowheadProperties.loadDefault());
 
@@ -39,6 +55,11 @@ public abstract class ArrowheadApplication {
         isDaemon = daemon;
     }
 
+    /**
+     * Replace properties.
+     * @param props New property set, empty set will be created on null.
+     * @return this.
+     */
     public ArrowheadApplication setProperties(ArrowheadProperties props) {
         if (props == null) {
             this.props = new ArrowheadProperties();
@@ -48,27 +69,53 @@ public abstract class ArrowheadApplication {
         return this;
     }
 
+    /**
+     * Get the current properties.
+     * @return the properties.
+     */
     public ArrowheadProperties getProps() {
         return props;
     }
 
+    /**
+     * Override debug mode.
+     * @param debug true/false.
+     * @return this.
+     */
     public ArrowheadApplication setDebug(boolean debug) {
         System.setProperty("debug_mode", debug ? "true" : "false");
         return this;
     }
 
+    /**
+     * Is debug mode set?
+     * @return true/false.
+     */
     public boolean isDebug() {
         return System.getProperty("debug_mode", "false").equals("true");
     }
 
+    /**
+     * Is daemon mode set?
+     * @return true/false.
+     */
     public boolean isDaemon() {
         return isDaemon;
     }
 
-    public void setDaemon(boolean daemon) {
+    /**
+     * Override daemon mode.
+     * @param daemon tru/false.
+     * @return this.
+     */
+    public ArrowheadApplication setDaemon(boolean daemon) {
         isDaemon = daemon;
+        return this;
     }
 
+    /**
+     * Provides the type "stop" functionality if in daemon mode.
+     */
     private void listenForInput() {
         if (isDaemon) {
             log.info("In daemon mode, process will terminate for TERM signal...");
@@ -87,6 +134,10 @@ public abstract class ArrowheadApplication {
         }
     }
 
+    /**
+     * Call this to start the application. You should provide your own implementations in onStart() and onStop() which
+     * will be called by this.
+     */
     protected void start() {
         log.info("Working directory: " + System.getProperty("user.dir"));
 
@@ -118,7 +169,16 @@ public abstract class ArrowheadApplication {
         }
     }
 
+    /**
+     * Implement your own start-up code here. For example: start servers for providers, register to the service registry
+     * subscribe to events, or open connections to hardware interfaces.
+     */
     protected abstract void onStart();
 
+    /**
+     * Implement your own stop routine here. Following a call to this method, event subscriptions will be cancelled,
+     * services unregistered and ArrowheadServer instances stopped automatically, so you would not have to do this
+     * yourself. You should however insure that anything else you start is shutdown properly.
+     */
     protected abstract void onStop();
 }
