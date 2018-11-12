@@ -36,7 +36,7 @@ class ConsumerMain extends ArrowheadApplication {
         final OrchestrationClient orchestration = OrchestrationClient.createFromProperties(securityContext);
 
         final ServiceRequestForm srf = new ServiceRequestForm.Builder(me)
-                .requestedService("temperature", "json", isSecure())
+                .requestedService("temperature", "json", getProps().isSecure())
                 .metadata(ServiceMetadata.Keys.UNIT, "celsius")
                 .flag(OrchestrationFlags.Flags.OVERRIDE_STORE, true)
                 .flag(OrchestrationFlags.Flags.PING_PROVIDERS, false)

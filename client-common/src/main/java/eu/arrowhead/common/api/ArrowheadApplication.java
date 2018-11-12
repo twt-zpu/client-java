@@ -13,7 +13,6 @@ import java.io.InputStreamReader;
 public abstract class ArrowheadApplication {
     protected final Logger log = Logger.getLogger(getClass());
     private boolean isDaemon;
-    private boolean isSecure;
     private ArrowheadProperties props;
 
     public ArrowheadApplication(String[] args) {
@@ -41,22 +40,11 @@ public abstract class ArrowheadApplication {
     }
 
     public ArrowheadApplication setProperties(ArrowheadProperties props) {
-        if (props != null) {
-            if (!props.contains("log4j.rootLogger")) {
-                props.putIfAbsent("log4j.rootLogger", "INFO, CONSOLE");
-                props.putIfAbsent("log4j.appender.CONSOLE", "org.apache.log4j.ConsoleAppender");
-                props.putIfAbsent("log4j.appender.CONSOLE.target", "System.err");
-                props.putIfAbsent("log4j.appender.CONSOLE.ImmediateFlush", "true");
-                props.putIfAbsent("log4j.appender.CONSOLE.Threshold", "debug");
-                props.putIfAbsent("log4j.appender.CONSOLE.layout", "org.apache.log4j.PatternLayout");
-                props.putIfAbsent("log4j.appender.CONSOLE.layout.conversionPattern", "%d{yyyy-MM-dd HH:mm:ss}  %c{1}.%M(%F:%L)  %p  %m%n");
-            }
-            PropertyConfigurator.configure(props);
-
-            isSecure = props.isSecure();
+        if (props == null) {
+            this.props = new ArrowheadProperties();
+        } else {
+            this.props = props;
         }
-        this.props = props;
-
         return this;
     }
 
@@ -75,15 +63,6 @@ public abstract class ArrowheadApplication {
 
     public boolean isDaemon() {
         return isDaemon;
-    }
-
-    public boolean isSecure() {
-        return isSecure;
-    }
-
-    public ArrowheadApplication setSecure(boolean secure) {
-        isSecure = secure;
-        return this;
     }
 
     public void setDaemon(boolean daemon) {
@@ -119,6 +98,18 @@ public abstract class ArrowheadApplication {
 
     protected void start(boolean listen) {
         log.info("Working directory: " + System.getProperty("user.dir"));
+
+        if (!props.contains("log4j.rootLogger")) {
+            props.putIfAbsent("log4j.rootLogger", "INFO, CONSOLE");
+            props.putIfAbsent("log4j.appender.CONSOLE", "org.apache.log4j.ConsoleAppender");
+            props.putIfAbsent("log4j.appender.CONSOLE.target", "System.err");
+            props.putIfAbsent("log4j.appender.CONSOLE.ImmediateFlush", "true");
+            props.putIfAbsent("log4j.appender.CONSOLE.Threshold", "debug");
+            props.putIfAbsent("log4j.appender.CONSOLE.layout", "org.apache.log4j.PatternLayout");
+            props.putIfAbsent("log4j.appender.CONSOLE.layout.conversionPattern", "%d{yyyy-MM-dd HH:mm:ss}  %c{1}.%M(%F:%L)  %p  %m%n");
+        }
+        PropertyConfigurator.configure(props);
+
         try {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 log.info("Received TERM signal, shutting down...");
