@@ -6,7 +6,9 @@ import javax.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
+@EnableScheduling
 @SpringBootApplication
 public class DigitalTwinApplication {
 
@@ -21,18 +23,18 @@ public class DigitalTwinApplication {
     SpringApplication.run(DigitalTwinApplication.class, args);
   }
 
-  //TODO check if there is a file with state information to use
   @PostConstruct
   void onStart() {
     digitalTwinService.registerPurchaseService();
     digitalTwinService.subscribeToSmartProductEvents();
+    digitalTwinService.loadSmartProductStatesFromFile();
   }
 
-  //TODO in case of shutdown save the internal state to file + also do it periodically like every minute
   @PreDestroy
   void onShutdown() {
     CompletableFuture<Void> eventHandler = CompletableFuture.runAsync(digitalTwinService::unsubscribeFromEvents);
     CompletableFuture<Void> serviceRegistry = CompletableFuture.runAsync(digitalTwinService::unregisterPurchaseService);
-    CompletableFuture.allOf(eventHandler, serviceRegistry).join();
+    CompletableFuture<Void> saveStateToFile = CompletableFuture.runAsync(digitalTwinService::saveSmartProductStatesToFile);
+    CompletableFuture.allOf(eventHandler, serviceRegistry, saveStateToFile).join();
   }
 }

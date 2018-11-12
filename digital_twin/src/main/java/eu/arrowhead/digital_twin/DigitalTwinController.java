@@ -38,7 +38,7 @@ public class DigitalTwinController {
 
   @GetMapping("purchase/{rfidKey}")
   public SmartProduct transferSmartProductInformation(@PathVariable String rfidKey) {
-    return digitalTwinService.findSmartProductByFirstPart(rfidKey)
+    return digitalTwinService.findSmartProductByFirstRFID(rfidKey)
                              .orElseThrow(() -> new ResourceNotFoundException("Smart product was not found with the following RFID key: " + rfidKey));
   }
 }
