@@ -9,7 +9,7 @@
 
 package eu.arrowhead.client.subscriber;
 
-import eu.arrowhead.common.api.ArrowheadServer;
+import eu.arrowhead.common.api.ArrowheadHttpServer;
 import eu.arrowhead.common.api.resources.ArrowheadResource;
 import eu.arrowhead.common.api.resources.ArrowheadSubscriberResource;
 import eu.arrowhead.common.model.Event;
@@ -28,7 +28,7 @@ import javax.ws.rs.core.Response;
 public class SubscriberResource extends ArrowheadResource implements ArrowheadSubscriberResource {
   private static final Logger log = Logger.getLogger(SubscriberResource.class);
 
-  public SubscriberResource(ArrowheadServer server) {
+  public SubscriberResource(ArrowheadHttpServer server) {
     super(server);
   }
 

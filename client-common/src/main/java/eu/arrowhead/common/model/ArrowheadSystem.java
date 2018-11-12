@@ -10,7 +10,7 @@
 package eu.arrowhead.common.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import eu.arrowhead.common.api.ArrowheadServer;
+import eu.arrowhead.common.api.ArrowheadHttpServer;
 import eu.arrowhead.common.misc.ArrowheadProperties;
 import org.apache.log4j.Logger;
 
@@ -26,7 +26,7 @@ public class ArrowheadSystem {
     private Integer port;
     private String authenticationInfo;
 
-    public static ArrowheadSystem createFromProperties(ArrowheadServer server) {
+    public static ArrowheadSystem createFromProperties(ArrowheadHttpServer server) {
         return createFromProperties(ArrowheadProperties.loadDefault(), server);
     }
 
@@ -38,7 +38,7 @@ public class ArrowheadSystem {
         return createFromProperties(ArrowheadProperties.loadDefault(), null);
     }
 
-    public static ArrowheadSystem createFromProperties(ArrowheadProperties props, ArrowheadServer server) {
+    public static ArrowheadSystem createFromProperties(ArrowheadProperties props, ArrowheadHttpServer server) {
         boolean isSecure = props.isSecure();
 
         String host = props.getAddress();

@@ -22,9 +22,10 @@ import java.util.Base64;
 public class ArrowheadSecurityContext {
     private static final Logger LOG = Logger.getLogger(ArrowheadSecurityContext.class);
     protected final Logger log = Logger.getLogger(getClass());
-    private String keystore, keystorePass, keyPass, truststore, truststorePass;
+    private String keystoreFile, keystorePass, keyPass, truststoreFile, truststorePass;
     private SSLContext sslContext;
     private SSLContextConfigurator sslContextConfigurator;
+    private KeyStore keyStore;
 
     /**
      * Create a security context using the contents from the default properties files. No certificate bootstrapping will
@@ -65,10 +66,10 @@ public class ArrowheadSecurityContext {
 
         try {
             return new ArrowheadSecurityContext()
-                    .setKeystore(props.getKeystore())
+                    .setKeystoreFile(props.getKeystore())
                     .setKeystorePass(props.getKeystorePass())
                     .setKeyPass(props.getKeyPass())
-                    .setTruststore(props.getTruststore())
+                    .setTruststoreFile(props.getTruststore())
                     .setTruststorePass(props.getTruststorePass())
                     .load();
         } catch (KeystoreException e) {
@@ -95,10 +96,10 @@ public class ArrowheadSecurityContext {
     public static ArrowheadSecurityContext create(String keystore, String keystorePass, String keyPass,
                                                   String truststore, String truststorePass) throws KeystoreException {
         return new ArrowheadSecurityContext()
-                .setKeystore(keystore)
+                .setKeystoreFile(keystore)
                 .setKeystorePass(keystorePass)
                 .setKeyPass(keyPass)
-                .setTruststore(truststore)
+                .setTruststoreFile(truststore)
                 .setTruststorePass(truststorePass)
                 .load();
     }
@@ -110,10 +111,10 @@ public class ArrowheadSecurityContext {
      */
     private ArrowheadSecurityContext load() throws KeystoreException {
         sslContextConfigurator = new SSLContextConfigurator();
-        if (keystore != null) sslContextConfigurator.setKeyStoreFile(keystore);
+        if (keystoreFile != null) sslContextConfigurator.setKeyStoreFile(keystoreFile);
         if (keystorePass != null) sslContextConfigurator.setKeyStorePass(keystorePass);
         if (keyPass != null) sslContextConfigurator.setKeyPass(keyPass);
-        if (truststore != null) sslContextConfigurator.setTrustStoreFile(truststore);
+        if (truststoreFile != null) sslContextConfigurator.setTrustStoreFile(truststoreFile);
         if (truststorePass != null) sslContextConfigurator.setTrustStorePass(truststorePass);
 
         try {
@@ -122,8 +123,8 @@ public class ArrowheadSecurityContext {
             throw new KeystoreException("Provided SSLContext is not valid", e);
         }
 
-        if (keystore != null) {
-            KeyStore keyStore = SecurityUtils.loadKeyStore(keystore, keystorePass);
+        if (keystoreFile != null) {
+            keyStore = SecurityUtils.loadKeyStore(keystoreFile, keystorePass);
             X509Certificate serverCert = SecurityUtils.getFirstCertFromKeyStore(keyStore);
             String base64PublicKey = Base64.getEncoder().encodeToString(serverCert.getPublicKey().getEncoded());
             log.info("PublicKey Base64: " + base64PublicKey);
@@ -138,12 +139,12 @@ public class ArrowheadSecurityContext {
     private ArrowheadSecurityContext() {
     }
 
-    public String getKeystore() {
-        return keystore;
+    public String getKeystoreFile() {
+        return keystoreFile;
     }
 
-    public ArrowheadSecurityContext setKeystore(String keystore) {
-        this.keystore = keystore;
+    public ArrowheadSecurityContext setKeystoreFile(String keystoreFile) {
+        this.keystoreFile = keystoreFile;
         return this;
     }
 
@@ -165,12 +166,12 @@ public class ArrowheadSecurityContext {
         return this;
     }
 
-    public String getTruststore() {
-        return truststore;
+    public String getTruststoreFile() {
+        return truststoreFile;
     }
 
-    public ArrowheadSecurityContext setTruststore(String truststore) {
-        this.truststore = truststore;
+    public ArrowheadSecurityContext setTruststoreFile(String truststoreFile) {
+        this.truststoreFile = truststoreFile;
         return this;
     }
 
@@ -189,5 +190,9 @@ public class ArrowheadSecurityContext {
 
     public SSLContextConfigurator getSSLContextConfigurator() {
         return sslContextConfigurator;
+    }
+
+    public KeyStore getKeyStore() {
+        return keyStore;
     }
 }

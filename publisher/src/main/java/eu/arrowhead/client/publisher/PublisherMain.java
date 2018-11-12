@@ -10,8 +10,9 @@
 package eu.arrowhead.client.publisher;
 
 import eu.arrowhead.common.api.ArrowheadApplication;
+import eu.arrowhead.common.api.ArrowheadHttpServer;
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
-import eu.arrowhead.common.api.ArrowheadServer;
+import eu.arrowhead.common.api.ArrowheadGrizzlyHttpServer;
 import eu.arrowhead.common.api.clients.EventHandlerClient;
 import eu.arrowhead.common.model.ArrowheadSystem;
 import eu.arrowhead.common.model.Event;
@@ -31,7 +32,7 @@ class PublisherMain extends ArrowheadApplication {
   @Override
   protected void onStart() {
     final ArrowheadSecurityContext securityContext = ArrowheadSecurityContext.createFromProperties(true);
-    final ArrowheadServer server = ArrowheadServer
+    final ArrowheadHttpServer server = ArrowheadGrizzlyHttpServer
             .createFromProperties(securityContext)
             .addResources(PublisherResource.class)
             .start();

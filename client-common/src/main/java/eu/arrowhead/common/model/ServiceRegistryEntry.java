@@ -9,7 +9,7 @@
 
 package eu.arrowhead.common.model;
 
-import eu.arrowhead.common.api.ArrowheadServer;
+import eu.arrowhead.common.api.ArrowheadHttpServer;
 import eu.arrowhead.common.misc.ArrowheadProperties;
 
 import java.time.LocalDateTime;
@@ -24,11 +24,11 @@ public class ServiceRegistryEntry {
   private LocalDateTime endOfValidity;
   private Integer version = 1;
 
-  public static ServiceRegistryEntry createFromProperties(ArrowheadServer server) {
+  public static ServiceRegistryEntry createFromProperties(ArrowheadHttpServer server) {
     return createFromProperties(ArrowheadProperties.loadDefault(), server);
   }
 
-  private static ServiceRegistryEntry createFromProperties(ArrowheadProperties props, ArrowheadServer server) {
+  private static ServiceRegistryEntry createFromProperties(ArrowheadProperties props, ArrowheadHttpServer server) {
     final ArrowheadService service = ArrowheadService.createFromProperties(props);
     final ArrowheadSystem provider = ArrowheadSystem.createFromProperties(props, server);
     final String serviceUri = props.getServiceUri();

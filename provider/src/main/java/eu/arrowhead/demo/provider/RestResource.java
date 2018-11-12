@@ -1,6 +1,6 @@
 package eu.arrowhead.demo.provider;
 
-import eu.arrowhead.common.api.ArrowheadServer;
+import eu.arrowhead.common.api.ArrowheadHttpServer;
 import eu.arrowhead.common.api.resources.ArrowheadResource;
 import eu.arrowhead.demo.model.Car;
 
@@ -16,7 +16,7 @@ import javax.ws.rs.core.SecurityContext;
 @Produces(MediaType.APPLICATION_JSON)
 public class RestResource extends ArrowheadResource {
 
-  public RestResource(ArrowheadServer server) {
+  public RestResource(ArrowheadHttpServer server) {
     super(server);
   }
 
