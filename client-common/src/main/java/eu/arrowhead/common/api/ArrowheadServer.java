@@ -1,6 +1,7 @@
 package eu.arrowhead.common.api;
 
 import eu.arrowhead.common.exception.ArrowheadRuntimeException;
+import eu.arrowhead.common.exception.NotFoundException;
 import org.apache.log4j.Logger;
 
 import java.util.HashSet;
@@ -32,7 +33,7 @@ public abstract class ArrowheadServer {
      * called automatically during this.
      * @return this.
      */
-    public ArrowheadServer start() {
+    public ArrowheadServer start() throws NotFoundException {
         if (isStarted())
             throw new ArrowheadRuntimeException("Server already started");
 

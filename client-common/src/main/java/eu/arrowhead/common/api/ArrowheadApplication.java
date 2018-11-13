@@ -2,6 +2,8 @@ package eu.arrowhead.common.api;
 
 import eu.arrowhead.common.api.clients.EventHandlerClient;
 import eu.arrowhead.common.api.clients.ServiceRegistryClient;
+import eu.arrowhead.common.exception.ArrowheadException;
+import eu.arrowhead.common.exception.NotFoundException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
@@ -172,8 +174,9 @@ public abstract class ArrowheadApplication {
     /**
      * Implement your own start-up code here. For example: start servers for providers, register to the service registry
      * subscribe to events, or open connections to hardware interfaces.
+     * @throws ArrowheadException if it fails to start.
      */
-    protected abstract void onStart();
+    protected abstract void onStart() throws ArrowheadException;
 
     /**
      * Implement your own stop routine here. Following a call to this method, event subscriptions will be cancelled,

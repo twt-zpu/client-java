@@ -9,8 +9,10 @@
 
 package eu.arrowhead.common.model;
 
+import eu.arrowhead.common.exception.DataNotFoundException;
 import eu.arrowhead.common.exception.NotFoundException;
 
+import javax.xml.crypto.Data;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,7 +37,7 @@ public class OrchestrationResponse {
 
   public OrchestrationForm getFirst() {
       if (getResponse().isEmpty())
-          throw new NotFoundException("No service found");
+          throw new DataNotFoundException("No service found");
 
       return getResponse().get(0);
   }

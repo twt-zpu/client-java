@@ -1,6 +1,6 @@
 package eu.arrowhead.common.exception;
 
-public class NotFoundException extends ArrowheadRuntimeException {
+public class NotFoundException extends ArrowheadException {
     public NotFoundException(String msg, int errorCode, String origin, Throwable cause) {
         super(msg, errorCode, origin, cause);
     }

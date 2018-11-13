@@ -62,9 +62,10 @@ public abstract class ArrowheadHttpServer extends ArrowheadServer {
      * Search through a range to find a free port.
      * @param from lowest port number (inclusive).
      * @param to highest port number (inclusive).
-     * @return A free port number,
+     * @return a free port number,
+     * @throws NotFoundException if no available port could be found.
      */
-    private int nextFreePort(int from, int to) {
+    private int nextFreePort(int from, int to) throws NotFoundException {
         for (int port = from; port <= to; port++) {
             ServerSocket s = null;
             try {
@@ -112,9 +113,10 @@ public abstract class ArrowheadHttpServer extends ArrowheadServer {
     /**
      * Start the server. Note that implementors should probably implement the onStart() method and not override this.
      * @return this.
+     * @throws NotFoundException if automatic port detection was chosen, but no free port could be found.
      */
     @Override
-    public ArrowheadHttpServer start() {
+    public ArrowheadHttpServer start() throws NotFoundException {
         if (isSecure ^ securityContext != null)
             throw new ArrowheadRuntimeException("Both or neither of isSecure and securityContext must be set");
 
