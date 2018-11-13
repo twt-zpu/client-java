@@ -33,6 +33,7 @@ class ConsumerMain extends ArrowheadApplication {
     protected void onStart() {
         final ArrowheadSecurityContext securityContext = ArrowheadSecurityContext.createFromProperties(true);
         final ArrowheadSystem me = ArrowheadSystem.createFromProperties();
+
         final OrchestrationClient orchestration = OrchestrationClient.createFromProperties(securityContext);
 
         final ServiceRequestForm srf = new ServiceRequestForm.Builder(me)
@@ -46,6 +47,7 @@ class ConsumerMain extends ArrowheadApplication {
         log.info("Service Request payload: " + Utility.toPrettyJson(null, srf));
 
         final RestClient restClient = orchestration.buildClient(srf);
+
         final Response getResponse = restClient.get().send();
 
         TemperatureReadout readout = new TemperatureReadout();

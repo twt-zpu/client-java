@@ -39,9 +39,9 @@ class PublisherMain extends ArrowheadApplication {
             .start();
 
     final ArrowheadSystem me = ArrowheadSystem.createFromProperties(server);
-
     final EventHandlerClient eventHandler = EventHandlerClient.createFromProperties(securityContext);
     final String eventType = getProps().getEventType();
+
     Timer timer = new Timer();
     TimerTask authTask = new TimerTask() {
       @Override
