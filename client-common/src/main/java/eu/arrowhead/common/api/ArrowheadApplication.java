@@ -1,7 +1,7 @@
 package eu.arrowhead.common.api;
 
-import eu.arrowhead.common.api.clients.EventHandlerClient;
-import eu.arrowhead.common.api.clients.ServiceRegistryClient;
+import eu.arrowhead.common.api.clients.core.EventHandlerClient;
+import eu.arrowhead.common.api.clients.core.ServiceRegistryClient;
 import eu.arrowhead.common.api.server.ArrowheadServer;
 import eu.arrowhead.common.exception.ArrowheadException;
 import eu.arrowhead.common.misc.ArrowheadProperties;

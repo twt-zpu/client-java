@@ -1,6 +1,7 @@
-package eu.arrowhead.common.api.clients;
+package eu.arrowhead.common.api.clients.core;
 
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
+import eu.arrowhead.common.api.clients.StaticHttpClient;
 import eu.arrowhead.common.exception.ArrowheadRuntimeException;
 import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.common.exception.KeystoreException;
@@ -19,12 +20,14 @@ import java.security.KeyStore;
 import java.security.PublicKey;
 import java.security.Security;
 
-public final class CertificateAuthorityClient extends StaticRestClient {
+public final class CertificateAuthorityClient extends StaticHttpClient {
     private static final Logger LOG = Logger.getLogger(CertificateAuthorityClient.class);
-    private String keyPass, truststore, truststorePass, keystorePass;
+    private String keyPass;
+    private String truststore;
+    private String truststorePass;
+    private String keystorePass;
     private String confDir, certDir;
     private String clientName;
-    private StaticRestClient authClient;
 
     static {
         Security.addProvider(new BouncyCastleProvider());
@@ -38,106 +41,54 @@ public final class CertificateAuthorityClient extends StaticRestClient {
         final boolean isSecure = props.isSecure();
         if (!isSecure)
             LOG.warn("Trying to create CertificateAuthorityClient but secure=false in config file");
-        return new CertificateAuthorityClient(isSecure)
-                .setAddress(props.getCaAddress())
-                .setPort(props.getCaPort())
-                .setKeyPass(props.getKeyPass())
-                .setTruststore(props.getTruststore())
-                .setTruststorePass(props.getTruststorePass())
+        return new CertificateAuthorityClient(isSecure, props.getCaAddress(), props.getCaPort(), "ca",
+                props.getKeyPass(), props.getTruststore(), props.getTruststorePass())
                 .setKeystorePass(props.getKeystorePass())
                 .setConfDir(ArrowheadProperties.getConfDir())
                 .setCertDir(props.getCertDir())
-                .setClientName(props.getSystemName())
-                .setSecurityContext()
-                .replacePath("ca");
+                .setClientName(props.getSystemName());
     }
 
     public static CertificateAuthorityClient createDefault(String clientName) {
         final boolean isSecure = ArrowheadProperties.getDefaultIsSecure();
-        return new CertificateAuthorityClient(isSecure)
-                .setAddress(ArrowheadProperties.getDefaultCaAddress())
-                .setPort(ArrowheadProperties.getDefaultCaPort(isSecure))
+        return new CertificateAuthorityClient(isSecure, ArrowheadProperties.getDefaultCaAddress(),
+                ArrowheadProperties.getDefaultCaPort(isSecure), "ca", null, null, null)
                 .setConfDir(ArrowheadProperties.getConfDir())
                 .setCertDir(ArrowheadProperties.getDefaultCertDir())
-                .setClientName(clientName)
-                .setSecurityContext()
-                .replacePath("ca");
+                .setClientName(clientName);
     }
 
-    private CertificateAuthorityClient(boolean secure) {
-        super(secure);
-    }
-
-    @Override
-    protected CertificateAuthorityClient setAddress(String address) {
-        super.setAddress(address);
-        return this;
-    }
-
-    @Override
-    protected CertificateAuthorityClient setPort(int port) {
-        super.setPort(port);
-        return this;
-    }
-
-    @Override
-    protected CertificateAuthorityClient setUri(String uri) {
-        super.setUri(uri);
-        return this;
-    }
-
-    @Override
-    protected CertificateAuthorityClient setSecure(boolean secure) {
-        super.setSecure(secure);
-        return this;
-    }
-
-    @Override
-    protected CertificateAuthorityClient setSecurityContext(ArrowheadSecurityContext securityContext) {
-        super.setSecurityContext(securityContext);
-        return this;
-    }
-
-    private CertificateAuthorityClient setSecurityContext() {
+    private static ArrowheadSecurityContext createSecurityContext(String keyPass, String truststore, String truststorePass) {
         // Setting temporary truststore if given (for the secure CA)
         try {
-            setSecurityContext(ArrowheadSecurityContext.create(null, null, keyPass, truststore, truststorePass));
+            return ArrowheadSecurityContext.create(null, null, keyPass, truststore, truststorePass);
         } catch (KeystoreException e) {
-            log.error("Failed loading temporary SSL context, are truststore set correctly in your config file?", e);
+            LOG.error("Failed loading temporary SSL context, are truststore set correctly in your config file?", e);
             try {
-                setSecurityContext(ArrowheadSecurityContext.create(null, null, null, null, null));
+                return ArrowheadSecurityContext.create(null, null, null, null, null);
             } catch (KeystoreException e1) {
                 throw new AuthException("Failed to create temporary SSL context", e1);
             }
         }
-        return this;
+    }
+
+    private CertificateAuthorityClient(boolean secure, String host, int port, String path, String keyPass, String truststore, String truststorePass) {
+        super(secure, createSecurityContext(keyPass, truststore, truststorePass), host, port, path);
+        this.keyPass = keyPass;
+        this.truststore = truststore;
+        this.truststorePass = truststorePass;
     }
 
     public String getKeyPass() {
         return keyPass;
     }
 
-    public CertificateAuthorityClient setKeyPass(String keyPass) {
-        this.keyPass = keyPass;
-        return this;
-    }
-
     public String getTruststore() {
         return truststore;
     }
 
-    public CertificateAuthorityClient setTruststore(String truststore) {
-        this.truststore = truststore;
-        return this;
-    }
-
     public String getTruststorePass() {
         return truststorePass;
-    }
-
-    public CertificateAuthorityClient setTruststorePass(String truststorePass) {
-        this.truststorePass = truststorePass;
-        return this;
     }
 
     public String getKeystorePass() {
@@ -242,7 +193,7 @@ public final class CertificateAuthorityClient extends StaticRestClient {
      Authorization Public Key is used by ArrowheadProviders to verify the signatures by the Authorization Core System in secure mode
      */
     private PublicKey getAuthorizationPublicKeyFromCa() {
-        Response caResponse = authClient.get().send();
+        Response caResponse = get().path("auth").send();
         return SecurityUtils.getPublicKey(caResponse.readEntity(String.class), false);
     }
 
@@ -254,19 +205,5 @@ public final class CertificateAuthorityClient extends StaticRestClient {
         CertificateSigningResponse signingResponse = caResponse.readEntity(CertificateSigningResponse.class);
         signingResponse.setLocalPrivateKey(keyPair.getPrivate());
         return signingResponse;
-    }
-
-    @Override
-    protected CertificateAuthorityClient replacePath(String path) {
-        super.replacePath(path);
-        authClient = clone("auth");
-        return this;
-    }
-
-    @Override
-    protected CertificateAuthorityClient addPath(String path) {
-        super.addPath(path);
-        authClient = clone("auth");
-        return this;
     }
 }

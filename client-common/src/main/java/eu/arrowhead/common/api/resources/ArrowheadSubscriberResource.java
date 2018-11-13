@@ -1,5 +1,6 @@
 package eu.arrowhead.common.api.resources;
 
+import eu.arrowhead.common.api.clients.core.EventHandlerClient;
 import eu.arrowhead.common.model.Event;
 
 import javax.ws.rs.POST;
@@ -10,7 +11,7 @@ import javax.ws.rs.core.Response;
  * Interface helper for implementing resources for publishers. You should probably also extend
  * {@link ArrowheadResource} if you are implementing this.
  *
- * See {@link eu.arrowhead.common.api.clients.EventHandlerClient} for how to subscribe to events.
+ * See {@link EventHandlerClient} for how to subscribe to events.
  */
 public interface ArrowheadSubscriberResource {
 

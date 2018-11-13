@@ -1,6 +1,6 @@
 package eu.arrowhead.common.api;
 
-import eu.arrowhead.common.api.clients.CertificateAuthorityClient;
+import eu.arrowhead.common.api.clients.core.CertificateAuthorityClient;
 import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.common.exception.KeystoreException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
