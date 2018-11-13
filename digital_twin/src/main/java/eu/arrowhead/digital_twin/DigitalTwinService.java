@@ -162,17 +162,19 @@ public class DigitalTwinService {
     String rfidData = event.getEventMetadata().get("rfid");
     if (rfidData != null) {
       String[] rfidTags = rfidData.split("_");
-      String smartProductId = rfidTags[0];
+      String smartProductId = null;
 
-      //Check if this a new product, or it existed before
+      //Check if this a new product, or it existed before (RFID orders are not guaranteed)
       SmartProduct productWithStateChange = null;
       for (SmartProduct smartProduct : smartProducts) {
-        if (smartProductId.equals(smartProduct.getRfidParts().get(0))) {
+        if (Utility.hasCommonElement(smartProduct.getRfidParts(), Arrays.asList(rfidTags))) {
           productWithStateChange = smartProduct;
+          smartProductId = smartProduct.getRfidParts().get(0);
         }
       }
       if (productWithStateChange == null) {
         productWithStateChange = new SmartProduct(Arrays.asList(rfidTags));
+        smartProductId = rfidTags[0];
         smartProducts.add(productWithStateChange);
         log.info("Smart product with id " + smartProductId + " created");
       }
@@ -202,7 +204,8 @@ public class DigitalTwinService {
           providerURL.ifPresent(url -> consumeArrowheadService(serviceDefinition, url));
 
           //Update RFID and lifecycle information on the product
-          productWithStateChange.setRfidParts(Arrays.asList(rfidTags));
+          List<String> newRfidTags = Utility.difference(productWithStateChange.getRfidParts(), Arrays.asList(rfidTags));
+          productWithStateChange.getRfidParts().addAll(newRfidTags);
           productWithStateChange.setLifeCycle(productWithStateChange.getLifeCycle().next());
           log.debug("Production lifecycle for product " + smartProductId + " updated to " + productWithStateChange.getLifeCycle());
 
@@ -216,6 +219,7 @@ public class DigitalTwinService {
 
       } else if (EventsToListenFor.area_left.name().equals(event.getType())) {
         productWithStateChange.setLastKnownPosition(SmartProductPosition.OUTSIDE_OF_GEOFENCED_AREA);
+        smartProducts.set(smartProductIndex, productWithStateChange);
         log.info("Smart product " + smartProductId + " left the " + event.getPayload() + " area");
       } else {
         log.error("Received unknown event type from Event Handler. Type: " + event.getType());
@@ -227,8 +231,10 @@ public class DigitalTwinService {
 
   Optional<SmartProduct> findSmartProductByFirstRFID(String rfidKey) {
     for (SmartProduct product : smartProducts) {
-      if (rfidKey.equals(product.getRfidParts().get(0))) {
-        return Optional.of(product);
+      for (String rfid : product.getRfidParts()) {
+        if (rfidKey.equals(rfid)) {
+          return Optional.of(product);
+        }
       }
     }
     return Optional.empty();
