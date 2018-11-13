@@ -67,11 +67,11 @@ public abstract class ArrowheadServer {
      * Implement your start routine here. On errors you should throw an exception to prevent the server to be
      * registered in the collection of running servers.
      */
-    public abstract void onStart();
+    protected abstract void onStart();
 
     /**
      * Implement your stop routine here. Notice that your server will be removed from the collection before this method
      * is called.
      */
-    public abstract void onStop();
+    protected abstract void onStop();
 }
