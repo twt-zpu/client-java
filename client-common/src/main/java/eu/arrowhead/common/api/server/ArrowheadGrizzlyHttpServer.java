@@ -72,7 +72,8 @@ public class ArrowheadGrizzlyHttpServer extends ArrowheadHttpServer {
     }
 
     /**
-     * Add resource classes to the server.
+     * Add resource classes to the server. Resources are currently treated as singleton classes and only initialised
+     * once before the server is started and added to the server as pure objects.
      * @param resources resource classes to add.
      * @return this.
      */
@@ -91,7 +92,8 @@ public class ArrowheadGrizzlyHttpServer extends ArrowheadHttpServer {
     }
 
     /**
-     * Add resource classes to the server.
+     * Add resource classes to the server. Resources are currently treated as singleton classes and only initialised
+     * once before the server is started and added to the server as pure objects.
      * @param resources resource classes to add.
      * @return this.
      */
