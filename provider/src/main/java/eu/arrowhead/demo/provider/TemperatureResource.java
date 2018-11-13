@@ -9,7 +9,7 @@
 
 package eu.arrowhead.demo.provider;
 
-import eu.arrowhead.common.api.ArrowheadHttpServer;
+import eu.arrowhead.common.api.server.ArrowheadHttpServer;
 import eu.arrowhead.common.api.resources.ArrowheadResource;
 import eu.arrowhead.demo.model.MeasurementEntry;
 import eu.arrowhead.demo.model.TemperatureReadout;

@@ -1,5 +1,6 @@
-package eu.arrowhead.common.api;
+package eu.arrowhead.common.api.server;
 
+import eu.arrowhead.common.api.ArrowheadApplication;
 import eu.arrowhead.common.exception.ArrowheadRuntimeException;
 import eu.arrowhead.common.exception.NotFoundException;
 import org.apache.log4j.Logger;

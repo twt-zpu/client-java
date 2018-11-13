@@ -1,5 +1,6 @@
-package eu.arrowhead.common.api;
+package eu.arrowhead.common.api.server;
 
+import eu.arrowhead.common.api.ArrowheadSecurityContext;
 import eu.arrowhead.common.exception.ArrowheadRuntimeException;
 import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.common.exception.InvalidStateException;

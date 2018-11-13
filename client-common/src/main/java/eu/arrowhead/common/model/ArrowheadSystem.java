@@ -10,7 +10,7 @@
 package eu.arrowhead.common.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import eu.arrowhead.common.api.ArrowheadHttpServer;
+import eu.arrowhead.common.api.server.ArrowheadHttpServer;
 import eu.arrowhead.common.misc.ArrowheadProperties;
 import org.apache.log4j.Logger;
 

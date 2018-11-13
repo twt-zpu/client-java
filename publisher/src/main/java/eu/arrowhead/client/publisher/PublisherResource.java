@@ -9,7 +9,7 @@
 
 package eu.arrowhead.client.publisher;
 
-import eu.arrowhead.common.api.ArrowheadHttpServer;
+import eu.arrowhead.common.api.server.ArrowheadHttpServer;
 import eu.arrowhead.common.api.resources.ArrowheadPublisherResource;
 import eu.arrowhead.common.api.resources.ArrowheadResource;
 import org.apache.log4j.Logger;

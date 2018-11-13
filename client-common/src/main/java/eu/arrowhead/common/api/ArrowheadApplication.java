@@ -2,8 +2,8 @@ package eu.arrowhead.common.api;
 
 import eu.arrowhead.common.api.clients.EventHandlerClient;
 import eu.arrowhead.common.api.clients.ServiceRegistryClient;
+import eu.arrowhead.common.api.server.ArrowheadServer;
 import eu.arrowhead.common.exception.ArrowheadException;
-import eu.arrowhead.common.exception.NotFoundException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;

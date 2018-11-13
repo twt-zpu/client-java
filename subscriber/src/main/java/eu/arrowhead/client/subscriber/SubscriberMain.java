@@ -11,7 +11,8 @@ package eu.arrowhead.client.subscriber;
 
 import eu.arrowhead.common.api.*;
 import eu.arrowhead.common.api.clients.EventHandlerClient;
-import eu.arrowhead.common.exception.ArrowheadRuntimeException;
+import eu.arrowhead.common.api.server.ArrowheadGrizzlyHttpServer;
+import eu.arrowhead.common.api.server.ArrowheadHttpServer;
 import eu.arrowhead.common.exception.NotFoundException;
 import eu.arrowhead.common.model.ArrowheadSystem;
 

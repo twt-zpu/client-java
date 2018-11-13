@@ -9,7 +9,7 @@
 
 package eu.arrowhead.client.subscriber;
 
-import eu.arrowhead.common.api.ArrowheadHttpServer;
+import eu.arrowhead.common.api.server.ArrowheadHttpServer;
 import eu.arrowhead.common.api.resources.ArrowheadResource;
 import eu.arrowhead.common.api.resources.ArrowheadSubscriberResource;
 import eu.arrowhead.common.model.Event;
