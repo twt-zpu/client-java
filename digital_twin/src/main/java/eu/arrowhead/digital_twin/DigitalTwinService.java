@@ -286,5 +286,4 @@ public class DigitalTwinService {
       log.info(serviceDef + " service by " + url + " returned with: " + providerResponse);
     }
   }
-
 }

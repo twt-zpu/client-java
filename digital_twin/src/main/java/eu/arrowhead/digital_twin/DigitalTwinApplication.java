@@ -1,5 +1,6 @@
 package eu.arrowhead.digital_twin;
 
+import eu.arrowhead.digital_twin.mock_provider.ProviderService;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -13,10 +14,12 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class DigitalTwinApplication {
 
   private final DigitalTwinService digitalTwinService;
+  private final ProviderService providerService;
 
   @Autowired
-  public DigitalTwinApplication(DigitalTwinService dtService) {
+  public DigitalTwinApplication(DigitalTwinService dtService, ProviderService providerService) {
     this.digitalTwinService = dtService;
+    this.providerService = providerService;
   }
 
   public static void main(String[] args) {
@@ -28,6 +31,7 @@ public class DigitalTwinApplication {
     digitalTwinService.registerPurchaseService();
     digitalTwinService.subscribeToSmartProductEvents();
     digitalTwinService.loadSmartProductStatesFromFile();
+    providerService.registerDemoServices();
   }
 
   @PreDestroy
@@ -35,6 +39,7 @@ public class DigitalTwinApplication {
     CompletableFuture<Void> eventHandler = CompletableFuture.runAsync(digitalTwinService::unsubscribeFromEvents);
     CompletableFuture<Void> serviceRegistry = CompletableFuture.runAsync(digitalTwinService::unregisterPurchaseService);
     CompletableFuture<Void> saveStateToFile = CompletableFuture.runAsync(digitalTwinService::saveSmartProductStatesToFile);
-    CompletableFuture.allOf(eventHandler, serviceRegistry, saveStateToFile).join();
+    CompletableFuture<Void> demoServices = CompletableFuture.runAsync(providerService::unregisterDemoServices);
+    CompletableFuture.allOf(eventHandler, serviceRegistry, saveStateToFile, demoServices).join();
   }
 }
