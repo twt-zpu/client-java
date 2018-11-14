@@ -2,6 +2,7 @@ package eu.arrowhead.digital_twin.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.glassfish.jersey.internal.guava.MoreObjects;
 
 public class SmartProduct {
 
@@ -44,5 +45,11 @@ public class SmartProduct {
 
   public void setLastKnownPosition(SmartProductPosition lastKnownPosition) {
     this.lastKnownPosition = lastKnownPosition;
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).add("rfidParts", rfidParts).add("lifeCycle", lifeCycle).add("lastKnownPosition", lastKnownPosition)
+                      .toString();
   }
 }

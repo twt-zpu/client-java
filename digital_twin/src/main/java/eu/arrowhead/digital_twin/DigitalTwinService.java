@@ -263,7 +263,7 @@ public class DigitalTwinService {
         ub.queryParam("signature", orchResponse.getResponse().get(0).getSignature());
       }
       //NOTE hardcoded business logic specific to the demo
-      if (srf.getRequestedService().getServiceDefinition().equals("purchase")) {
+      if (srf.getRequestedService().getServiceDefinition().equals("PurchaseSmartProduct")) {
         ub.path(smartProductId);
       }
       log.debug("Successful orchestration process, received provider system URL: " + ub.toString());
@@ -276,8 +276,15 @@ public class DigitalTwinService {
 
   private void consumeArrowheadService(String serviceDef, String url) {
     Response response = Utility.sendRequest(url, "GET", null);
-    String providerResponse = response.readEntity(String.class);
-    log.info(serviceDef + " service by " + url + " returned with: " + providerResponse);
+    //NOTE hardcoded business logic specific to the demo
+    if (serviceDef.equals("PurchaseSmartProduct")) {
+      SmartProduct purchasedSmartProduct = response.readEntity(SmartProduct.class);
+      smartProducts.add(purchasedSmartProduct);
+      log.info("Following smart product purchased: " + purchasedSmartProduct.toString());
+    } else {
+      String providerResponse = response.readEntity(String.class);
+      log.info(serviceDef + " service by " + url + " returned with: " + providerResponse);
+    }
   }
 
 }
