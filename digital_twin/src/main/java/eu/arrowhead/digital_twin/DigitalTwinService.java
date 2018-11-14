@@ -161,6 +161,7 @@ public class DigitalTwinService {
   void handleArrowheadEvent(Event event) {
     String rfidData = event.getEventMetadata().get("rfid");
     if (rfidData != null) {
+      //NOTE hardcoded business logic specific to the demo
       String[] rfidTags = rfidData.split("_");
       String smartProductId = null;
 
@@ -200,7 +201,7 @@ public class DigitalTwinService {
           ServiceRequestForm srf = new ServiceRequestForm.Builder(digitalTwin).requestedService(nextServiceToConsume)
                                                                               .orchestrationFlags(orchestrationFlags).build();
 
-          Optional<String> providerURL = requestOrchestration(srf);
+          Optional<String> providerURL = requestOrchestration(srf, smartProductId);
           providerURL.ifPresent(url -> consumeArrowheadService(serviceDefinition, url));
 
           //Update RFID and lifecycle information on the product
@@ -240,7 +241,7 @@ public class DigitalTwinService {
     return Optional.empty();
   }
 
-  private Optional<String> requestOrchestration(ServiceRequestForm srf) {
+  private Optional<String> requestOrchestration(ServiceRequestForm srf, String smartProductId) {
     try {
       Response response = Utility.sendRequest(orchestratorUrl, "POST", srf);
       OrchestrationResponse orchResponse = response.readEntity(OrchestrationResponse.class);
@@ -260,6 +261,10 @@ public class DigitalTwinService {
         ub.scheme("https");
         ub.queryParam("token", orchResponse.getResponse().get(0).getAuthorizationToken());
         ub.queryParam("signature", orchResponse.getResponse().get(0).getSignature());
+      }
+      //NOTE hardcoded business logic specific to the demo
+      if (srf.getRequestedService().getServiceDefinition().equals("purchase")) {
+        ub.path(smartProductId);
       }
       log.debug("Successful orchestration process, received provider system URL: " + ub.toString());
       return Optional.of(ub.toString());
