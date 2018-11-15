@@ -12,7 +12,7 @@ package eu.arrowhead.demo.consumer;
 import eu.arrowhead.common.api.ArrowheadApplication;
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
 import eu.arrowhead.common.api.clients.HttpClient;
-import eu.arrowhead.common.api.clients.StaticHttpClient;
+import eu.arrowhead.common.api.clients.OrchestrationStrategy;
 import eu.arrowhead.common.api.clients.core.OrchestrationClient;
 import eu.arrowhead.common.misc.Utility;
 import eu.arrowhead.common.model.*;
@@ -47,8 +47,9 @@ class ConsumerMain extends ArrowheadApplication {
                 .build();
         log.info("Service Request payload: " + Utility.toPrettyJson(null, srf));
 
-        final HttpClient client = orchestration.buildClient(srf, new StaticHttpClient.Builder());
-        final Response getResponse = client.get().send();
+        final OrchestrationStrategy strategy = new OrchestrationStrategy.StaticOrch(orchestration, srf);
+        final HttpClient client = new HttpClient(strategy, getProps().isSecure(), securityContext);
+        final Response getResponse = client.request(HttpClient.Method.GET);
 
         TemperatureReadout readout = new TemperatureReadout();
         try {

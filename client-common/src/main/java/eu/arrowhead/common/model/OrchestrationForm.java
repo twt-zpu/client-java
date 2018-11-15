@@ -9,7 +9,6 @@
 
 package eu.arrowhead.common.model;
 
-import javax.ws.rs.core.UriBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -97,21 +96,6 @@ public class OrchestrationForm {
 
   public void setWarnings(List<OrchestratorWarnings> warnings) {
     this.warnings = warnings;
-  }
-
-  public UriBuilder getUriBuilder() {
-    final boolean secure = isSecure();
-    final Integer port = provider.getPort();
-
-    final UriBuilder uriBuilder = UriBuilder.fromUri("")
-            .scheme(secure ? "https" : "http")
-            .host(provider.getAddress())
-            .path(serviceURI);
-    if (port != null) uriBuilder.port(port);
-    if (secure) uriBuilder
-            .queryParam("token", authorizationToken)
-            .queryParam("signature", signature);
-    return uriBuilder;
   }
 
   public boolean isSecure() {

@@ -2,12 +2,15 @@ package eu.arrowhead.common.api.clients.core;
 
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
 import eu.arrowhead.common.api.clients.HttpClient;
-import eu.arrowhead.common.api.clients.StaticHttpClient;
+import eu.arrowhead.common.api.clients.OrchestrationStrategy;
 import eu.arrowhead.common.misc.ArrowheadProperties;
 import eu.arrowhead.common.model.OrchestrationResponse;
 import eu.arrowhead.common.model.ServiceRequestForm;
 
-public class OrchestrationClient extends StaticHttpClient {
+import javax.ws.rs.core.UriBuilder;
+
+public class OrchestrationClient extends HttpClient {
+    private static final UriBuilder ORCHESTRATION_URI = UriBuilder.fromPath("orchestration");
 
     public static OrchestrationClient createFromProperties(ArrowheadSecurityContext securityContext) {
         return createFromProperties(ArrowheadProperties.loadDefault(), securityContext);
@@ -25,16 +28,11 @@ public class OrchestrationClient extends StaticHttpClient {
     }
 
     private OrchestrationClient(boolean secure, ArrowheadSecurityContext securityContext, String host, int port) {
-        super(secure, securityContext, host, port, "orchestrator");
-    }
-
-    public HttpClient buildClient(ServiceRequestForm serviceRequestForm, HttpClient.Builder clientBuilder) {
-        return clientBuilder.build(serviceRequestForm, this);
+        super(new OrchestrationStrategy.StaticUri(secure, host, port, "orchestrator"), secure, securityContext);
     }
 
     public OrchestrationResponse request(ServiceRequestForm serviceRequestForm) {
-        return post().path("orchestration")
-                .send(serviceRequestForm)
+        return request(Method.POST, ORCHESTRATION_URI, serviceRequestForm)
                 .readEntity(OrchestrationResponse.class);
     }
 }

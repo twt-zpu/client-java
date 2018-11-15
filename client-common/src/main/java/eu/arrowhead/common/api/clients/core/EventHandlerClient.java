@@ -1,7 +1,8 @@
 package eu.arrowhead.common.api.clients.core;
 
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
-import eu.arrowhead.common.api.clients.StaticHttpClient;
+import eu.arrowhead.common.api.clients.HttpClient;
+import eu.arrowhead.common.api.clients.OrchestrationStrategy;
 import eu.arrowhead.common.exception.ArrowheadRuntimeException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
 import eu.arrowhead.common.model.ArrowheadSystem;
@@ -9,13 +10,16 @@ import eu.arrowhead.common.model.Event;
 import eu.arrowhead.common.model.EventFilter;
 import eu.arrowhead.common.model.PublishEvent;
 
+import javax.ws.rs.core.UriBuilder;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class EventHandlerClient extends StaticHttpClient {
+public class EventHandlerClient extends HttpClient {
     private static final Map<EventHandlerClient, Map<ArrowheadSystem, Set<String>>> subscriptions = new HashMap<>();
+    private static final UriBuilder PUBLISH_URI = UriBuilder.fromPath("publish");
+    private static final UriBuilder SUBSCRIPTION_URI = UriBuilder.fromPath("subscription");
 
     public static EventHandlerClient createFromProperties(ArrowheadSecurityContext securityContext) {
         return createFromProperties(ArrowheadProperties.loadDefault(), securityContext);
@@ -33,12 +37,12 @@ public class EventHandlerClient extends StaticHttpClient {
     }
 
     public EventHandlerClient(boolean secure, ArrowheadSecurityContext securityContext, String host, int port) {
-        super(secure, securityContext, host, port, "eventhandler");
+        super(new OrchestrationStrategy.StaticUri(secure, host, port, "eventhandler"), secure, securityContext);
     }
 
     public void publish(Event event, ArrowheadSystem eventSource) {
         PublishEvent eventPublishing = new PublishEvent(eventSource, event, "publisher/feedback");
-        post().path("publish").send(eventPublishing);
+        request(Method.POST, PUBLISH_URI, eventPublishing);
         log.info("Event published to EH.");
     }
 
@@ -58,7 +62,7 @@ public class EventHandlerClient extends StaticHttpClient {
             throw new ArrowheadRuntimeException("Already subscribed to " + eventType);
 
         EventFilter filter = new EventFilter(eventType, consumer, notifyPath);
-        post().path("subscription").send(filter);
+        request(Method.POST, SUBSCRIPTION_URI, filter);
 
         if (!subscriptions.containsKey(this)) subscriptions.put(this, new HashMap<>());
         handlerSubscriptions = subscriptions.get(this);
@@ -71,7 +75,7 @@ public class EventHandlerClient extends StaticHttpClient {
     public void unsubscribe(ArrowheadSystem consumer, String eventType) {
         String consumerName = consumer.getSystemName();
 
-        delete().path("subscription").path("type").path(eventType).path("consumer").path(consumerName).send();
+        request(Method.DELETE, SUBSCRIPTION_URI.clone().path("subscription").path("type").path(eventType).path("consumer").path(consumerName));
 
         final Map<ArrowheadSystem, Set<String>> handlerSubscriptions = subscriptions.get(this);
         final Set<String> consumerSubscriptions = handlerSubscriptions != null ? handlerSubscriptions.get(consumer) : null;

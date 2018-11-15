@@ -1,7 +1,8 @@
 package eu.arrowhead.common.api.clients.core;
 
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
-import eu.arrowhead.common.api.clients.StaticHttpClient;
+import eu.arrowhead.common.api.clients.HttpClient;
+import eu.arrowhead.common.api.clients.OrchestrationStrategy;
 import eu.arrowhead.common.exception.ArrowheadRuntimeException;
 import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.common.exception.KeystoreException;
@@ -14,14 +15,16 @@ import org.apache.log4j.Logger;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
 import java.io.File;
 import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.PublicKey;
 import java.security.Security;
 
-public final class CertificateAuthorityClient extends StaticHttpClient {
+public final class CertificateAuthorityClient extends HttpClient {
     private static final Logger LOG = Logger.getLogger(CertificateAuthorityClient.class);
+    private static final UriBuilder AUTH_URI = UriBuilder.fromPath("auth");
     private String keyPass;
     private String truststore;
     private String truststorePass;
@@ -73,7 +76,7 @@ public final class CertificateAuthorityClient extends StaticHttpClient {
     }
 
     private CertificateAuthorityClient(boolean secure, String host, int port, String path, String keyPass, String truststore, String truststorePass) {
-        super(secure, createSecurityContext(keyPass, truststore, truststorePass), host, port, path);
+        super(new OrchestrationStrategy.StaticUri(secure, host, port, path), secure, createSecurityContext(keyPass, truststore, truststorePass));
         this.keyPass = keyPass;
         this.truststore = truststore;
         this.truststorePass = truststorePass;
@@ -184,16 +187,14 @@ public final class CertificateAuthorityClient extends StaticHttpClient {
      Gets the Cloud Common Name from the Certificate Authority Core System, proper URL is read from the config file
      */
     private String getCloudCN() {
-        return get()
-                .send()
-                .readEntity(String.class);
+        return request(Method.GET).readEntity(String.class);
     }
 
     /**
      Authorization Public Key is used by ArrowheadProviders to verify the signatures by the Authorization Core System in secure mode
      */
     private PublicKey getAuthorizationPublicKeyFromCa() {
-        Response caResponse = get().path("auth").send();
+        Response caResponse = request(Method.GET, AUTH_URI);
         return SecurityUtils.getPublicKey(caResponse.readEntity(String.class), false);
     }
 
@@ -201,7 +202,7 @@ public final class CertificateAuthorityClient extends StaticHttpClient {
         //Get a new locally generated public/private key pair
         KeyPair keyPair = SecurityUtils.generateRSAKeyPair();
         final CertificateSigningRequest request = SecurityUtils.createSigningRequest(commonName, keyPair);
-        Response caResponse = post().send(request);
+        Response caResponse = request(Method.POST, request);
         CertificateSigningResponse signingResponse = caResponse.readEntity(CertificateSigningResponse.class);
         signingResponse.setLocalPrivateKey(keyPair.getPrivate());
         return signingResponse;

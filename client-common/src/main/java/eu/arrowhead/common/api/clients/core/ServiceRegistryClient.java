@@ -1,19 +1,23 @@
 package eu.arrowhead.common.api.clients.core;
 
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
-import eu.arrowhead.common.api.clients.StaticHttpClient;
+import eu.arrowhead.common.api.clients.HttpClient;
+import eu.arrowhead.common.api.clients.OrchestrationStrategy;
 import eu.arrowhead.common.exception.ArrowheadRuntimeException;
 import eu.arrowhead.common.exception.ExceptionType;
 import eu.arrowhead.common.misc.ArrowheadProperties;
 import eu.arrowhead.common.model.ServiceRegistryEntry;
 
+import javax.ws.rs.core.UriBuilder;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class ServiceRegistryClient extends StaticHttpClient {
+public class ServiceRegistryClient extends HttpClient {
     private static final Map<ServiceRegistryClient, Set<ServiceRegistryEntry>> entries = new HashMap<>();
+    private static final UriBuilder REGISTER_URI = UriBuilder.fromPath("register");
+    private static final UriBuilder REMOVE_URI = UriBuilder.fromPath("remove");
 
     public static ServiceRegistryClient createFromProperties(ArrowheadSecurityContext securityContext) {
         return createFromProperties(ArrowheadProperties.loadDefault(), securityContext);
@@ -31,18 +35,18 @@ public class ServiceRegistryClient extends StaticHttpClient {
     }
 
     private ServiceRegistryClient(boolean secure, ArrowheadSecurityContext securityContext, String host, int port) {
-        super(secure, securityContext, host, port, "serviceregistry");
+        super(new OrchestrationStrategy.StaticUri(secure, host, port, "serviceregistry"), secure, securityContext);
     }
 
     public ServiceRegistryEntry register(ServiceRegistryEntry srEntry) {
         try {
-            post().path("register").send(srEntry);
+            request(Method.POST, REGISTER_URI, srEntry);
         } catch (ArrowheadRuntimeException e) {
             if (e.getExceptionType() == ExceptionType.DUPLICATE_ENTRY) {
                 log.warn("Received DuplicateEntryException from SR, sending delete request and then " +
                         "registering again.");
                 unregister(srEntry);
-                post().path("register").send(srEntry);
+                request(Method.POST, REGISTER_URI, srEntry);
             } else {
                 throw e;
             }
@@ -58,7 +62,7 @@ public class ServiceRegistryClient extends StaticHttpClient {
 
     public void unregister(ServiceRegistryEntry srEntry) {
         if (srEntry != null) {
-            put().path("remove").send(srEntry);
+            request(Method.PUT, REMOVE_URI, srEntry);
             if (entries.containsKey(this))
                 entries.get(this).remove(srEntry);
             log.info("Removing service is successful!");

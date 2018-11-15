@@ -1,14 +1,11 @@
 package eu.arrowhead.common.api.clients;
 
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
-import eu.arrowhead.common.api.clients.core.OrchestrationClient;
 import eu.arrowhead.common.exception.*;
 import eu.arrowhead.common.misc.SecurityUtils;
 import eu.arrowhead.common.misc.Utility;
-import eu.arrowhead.common.model.ServiceRequestForm;
 import org.apache.log4j.Logger;
 
-import javax.ws.rs.NotAllowedException;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
@@ -17,15 +14,17 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
 
-public abstract class HttpClient {
+public class HttpClient {
     private static final Client insecureClient = SecurityUtils.createClient(null);
 
     protected final Logger log = Logger.getLogger(getClass());
+    private final OrchestrationStrategy strategy;
     private final boolean secure;
     private final ArrowheadSecurityContext securityContext;
-    private Client client;
+    private final Client client;
 
-    protected HttpClient(boolean secure, ArrowheadSecurityContext securityContext) {
+    public HttpClient(OrchestrationStrategy strategy, boolean secure, ArrowheadSecurityContext securityContext) {
+        this.strategy = strategy;
         this.secure = secure;
         this.securityContext = securityContext;
         if (secure ^ securityContext != null)
@@ -44,107 +43,58 @@ public abstract class HttpClient {
         return securityContext;
     }
 
-    protected abstract UriBuilder onRequest(Method method);
-
-    private Request request(Method method) {
-        return new Request(client, method, onRequest(method).clone());
+    public Response request(Method method) {
+        return request(method, null, null);
     }
 
-    public Request get() {
-        return request(Method.GET);
+    public <T> Response request(Method method, T payload) {
+        return request(method, null, payload);
     }
 
-    public Request put() {
-        return request(Method.PUT);
+    public Response request(Method method, UriBuilder appendUri) {
+        return request(method, appendUri, null);
     }
 
-    public Request post() {
-        return request(Method.POST);
+    public <T> Response request(Method method, UriBuilder appendUri, T payload) {
+        appendUri = appendUri == null ? UriBuilder.fromUri("") : appendUri.clone();
+
+        final URI uri = appendUri.build();
+        if (uri.getScheme() != null) throw new ArrowheadRuntimeException("Append URI should not contain a scheme");
+        if (uri.getHost() != null) throw new ArrowheadRuntimeException("Append URI should not contain a host");
+        if (uri.getPort() != -1) throw new ArrowheadRuntimeException("Append URI should not contain a port");
+
+        // TODO Remove JSON
+        return strategy.request(this, method, appendUri, Entity.json(payload));
     }
 
-    public Request delete() {
-        return request(Method.DELETE);
-    }
-
-    protected enum Method {
-        GET, PUT, POST, DELETE;
-    }
-
-    public abstract static class Builder {
-        protected final Logger log = Logger.getLogger(getClass());
-
-        public abstract HttpClient build(ServiceRequestForm serviceRequestForm, OrchestrationClient orchestrationClient);
-    }
-
-    public class Request {
-        protected final Logger log = Logger.getLogger(getClass());
-        private final Client client;
-        private final Method method;
-        private final UriBuilder uriBuilder;
-
-        public Request(Client client, Method method, UriBuilder uriBuilder) {
-            this.client = client;
-            this.method = method;
-            this.uriBuilder = uriBuilder;
-        }
-
-        public Request queryParam(String s, Object... objects) {
-            uriBuilder.queryParam(s, objects);
-            return this;
-        }
-
-        public Request path(String s) {
-            uriBuilder.path(s);
-            return this;
-        }
-
-        public Response send() {
-            return send(null);
-        }
-
-        public <T> Response send(T payload) {
-            final URI uri = uriBuilder.build();
-            Invocation.Builder request = client
+    Response send(URI uri, HttpClient.Method method, Entity<?> entity) {
+        try {
+            log.info(String.format("%s %s", method.toString(), uri.toString()));
+            final Invocation.Builder client = this.client
                     .target(uri)
                     .request()
+                    // TODO Remove JSON
                     .header("Content-type", "application/json");
-
-            Response response; // will not be null after the switch-case
-            try {
-                switch (method) {
-                    case GET:
-                        response = request.get();
-                        break;
-                    case POST:
-                        response = request.post(Entity.json(payload));
-                        break;
-                    case PUT:
-                        response = request.put(Entity.json(payload));
-                        break;
-                    case DELETE:
-                        response = request.delete();
-                        break;
-                    default:
-                        throw new NotAllowedException("Invalid method type was given to the Utility.sendRequest() method");
-                }
-            } catch (ProcessingException e) {
-                if (e.getCause().getMessage().contains("PKIX path")) {
-                    throw new AuthException("The system at " + uri + " is not part of the same certificate chain of trust!", Response.Status.UNAUTHORIZED.getStatusCode(),
-                            e);
-                } else {
-                    throw new UnavailableServerException("Could not get any response from: " + uri, Response.Status.SERVICE_UNAVAILABLE.getStatusCode(), e);
-                }
-            }
-
-            // If the response status code does not start with 2 the request was not successful
-            if (!(response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL)) {
-                handleException(response, uri.toString());
-            }
-
-            return response;
+            return check(entity == null ?
+                    client.method(method.toString()) :
+                    client.method(method.toString(), entity), uri.toString());
+        } catch (ProcessingException e) {
+            throw handleProcessingException(uri, e);
         }
+    }
 
-        private void handleException(Response response, String uri) {
+    private ArrowheadRuntimeException handleProcessingException(URI uri, ProcessingException e) {
+        if (e.getCause().getMessage().contains("PKIX path")) {
+            return new AuthException("The system at " + uri + " is not part of the same certificate chain of trust!", Response.Status.UNAUTHORIZED.getStatusCode(),
+                    e);
+        } else {
+            return new UnavailableServerException("Could not get any response from: " + uri, Response.Status.SERVICE_UNAVAILABLE.getStatusCode(), e);
+        }
+    }
+
+    private Response check(Response response, String uri) {
+        // If the response status code does not start with 2 the request was not successful
+        if (!(response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL)) {
             //The response body has to be extracted before the stream closes
             String errorMessageBody = Utility.toPrettyJson(null, response.getEntity());
             if (errorMessageBody == null || errorMessageBody.equals("null")) {
@@ -189,6 +139,35 @@ public abstract class HttpClient {
                         throw new UnavailableServerException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
                 }
             }
+        }
+
+        return response;
+    }
+
+    /**
+     * From: rfc2616 / rfc5789
+     */
+    public enum Method {
+        OPTIONS("OPTIONS"),
+        GET("GET"),
+        HEAD("HEAD"),
+        POST("POST"),
+        PUT("PUT"),
+        DELETE("DELETE"),
+        TRACE("TRACE"),
+        CONNECT("CONNECT"),
+        PATCH("PATCH"),
+        ;
+
+        private final String method;
+
+        Method(final String method) {
+            this.method = method;
+        }
+
+        @Override
+        public String toString() {
+            return method;
         }
     }
 }
