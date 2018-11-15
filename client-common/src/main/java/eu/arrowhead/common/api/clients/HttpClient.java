@@ -13,14 +13,34 @@ import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 
 public class HttpClient {
     private static final Client insecureClient = SecurityUtils.createClient(null);
-
+    // TODO Add per instance converters also
+    private static final Map<MediaType, Function<Object, Entity<?>>> DEFAULT_ENTITY_CONVERTERS = new HashMap<>();
     protected final Logger log = Logger.getLogger(getClass());
+
     private final OrchestrationStrategy strategy;
     private final ArrowheadSecurityContext securityContext;
     private final Client client;
+
+    static {
+        DEFAULT_ENTITY_CONVERTERS.put(MediaType.JSON, Entity::json);
+        DEFAULT_ENTITY_CONVERTERS.put(MediaType.XML, Entity::xml);
+    }
+
+    /**
+     * TODO Basing this on an enum is very limiting!
+     * @param mediaType
+     * @param converter
+     */
+    public static void addDefaultEntityConverter(MediaType mediaType, Function<Object, Entity<?>> converter) {
+        DEFAULT_ENTITY_CONVERTERS.put(mediaType, converter);
+    }
 
     public HttpClient(OrchestrationStrategy strategy, ArrowheadSecurityContext securityContext) {
         final boolean secure = strategy.isSecure();
@@ -64,18 +84,30 @@ public class HttpClient {
         if (uri.getHost() != null) throw new ArrowheadRuntimeException("Append URI should not contain a host");
         if (uri.getPort() != -1) throw new ArrowheadRuntimeException("Append URI should not contain a port");
 
-        // TODO Remove JSON
-        return strategy.request(this, method, appendUri, Entity.json(payload));
+        return strategy.request(this, method, appendUri, payload);
     }
 
-    Response send(URI uri, HttpClient.Method method, Entity<?> entity) {
+    Response send(URI uri, HttpClient.Method method, Set<String> interfaces, Object payload) {
+        for (String i : interfaces) {
+            try {
+                HttpClient.MediaType mediaType = HttpClient.MediaType.fromInterface(i);
+                return send(uri, method, mediaType, payload);
+            } catch (ArrowheadException e) {
+                log.warn("Unknown interface", e);
+            }
+        }
+
+        throw new ArrowheadRuntimeException("No compatible interface found");
+    }
+
+    Response send(URI uri, HttpClient.Method method, MediaType mediaType, Object payload) {
         try {
+            final Entity<?> entity = DEFAULT_ENTITY_CONVERTERS.get(mediaType).apply(payload);
             log.info(String.format("%s %s", method.toString(), uri.toString()));
             final Invocation.Builder client = this.client
                     .target(uri)
                     .request()
-                    // TODO Remove JSON
-                    .header("Content-type", "application/json");
+                    .header("Content-type", mediaType.toString());
             return check(entity == null ?
                     client.method(method.toString()) :
                     client.method(method.toString(), entity), uri.toString());
@@ -143,6 +175,35 @@ public class HttpClient {
         }
 
         return response;
+    }
+
+    /**
+     * Subset of those registered with IANA
+     */
+    public enum MediaType {
+        JSON("application/json"), // [RFC8259]
+        XML("application/xml"),   // [RFC7303]
+        ;
+
+        private final String type;
+
+        // TODO Could use a better way - use MediaType in SR?
+        public static HttpClient.MediaType fromInterface(final String s) throws ArrowheadException {
+            if (s.equalsIgnoreCase("JSON"))
+                return HttpClient.MediaType.JSON;
+            if (s.equalsIgnoreCase("XML"))
+                return HttpClient.MediaType.XML;
+            throw new ArrowheadException("Unknown interface");
+        }
+
+        MediaType(final String type) {
+            this.type = type;
+        }
+
+        @Override
+        public String toString() {
+            return type;
+        }
     }
 
     /**

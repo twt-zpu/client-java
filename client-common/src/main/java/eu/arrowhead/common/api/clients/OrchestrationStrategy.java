@@ -9,11 +9,12 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
+import java.util.Set;
 
 public abstract class OrchestrationStrategy {
     protected final Logger log = Logger.getLogger(getClass());
 
-    public abstract Response request(HttpClient client, HttpClient.Method method, UriBuilder baseUri, Entity<?> entity);
+    public abstract Response request(HttpClient client, HttpClient.Method method, UriBuilder baseUri, Object payload);
 
     protected UriBuilder buildUri(UriBuilder uriBuilder, boolean secure, String address, Integer port, String serviceURI) {
         uriBuilder.scheme(secure ? "https" : "http")
@@ -52,18 +53,20 @@ public abstract class OrchestrationStrategy {
         private final String address;
         private final int port;
         private final String serviceUri;
+        private final HttpClient.MediaType mediaType;
 
-        public Never(boolean secure, String address, int port, String serviceUri) {
+        public Never(boolean secure, String address, int port, String serviceUri, HttpClient.MediaType mediaType) {
             this.secure = secure;
             this.address = address;
             this.port = port;
             this.serviceUri = serviceUri;
+            this.mediaType = mediaType;
         }
 
         @Override
-        public Response request(HttpClient client, HttpClient.Method method, UriBuilder baseUri, Entity<?> entity) {
+        public Response request(HttpClient client, HttpClient.Method method, UriBuilder baseUri, Object payload) {
             final URI uri = buildUri(baseUri, secure, address, port, serviceUri).build();
-            return client.send(uri, method, entity);
+            return client.send(uri, method, mediaType, payload);
         }
 
         @Override
@@ -86,9 +89,10 @@ public abstract class OrchestrationStrategy {
         }
 
         @Override
-        public Response request(HttpClient client, HttpClient.Method method, UriBuilder baseUri, Entity<?> entity) {
+        public Response request(HttpClient client, HttpClient.Method method, UriBuilder baseUri, Object payload) {
             final URI uri = buildUri(baseUri, entry).build();
-            return client.send(uri, method, entity);
+            final Set<String> interfaces = entry.getService().getInterfaces();
+            return client.send(uri, method, interfaces, payload);
         }
 
         @Override
@@ -107,12 +111,13 @@ public abstract class OrchestrationStrategy {
         }
 
         @Override
-        public Response request(HttpClient client, HttpClient.Method method, UriBuilder baseUri, Entity<?> entity) {
+        public Response request(HttpClient client, HttpClient.Method method, UriBuilder baseUri, Object payload) {
             try {
                 final OrchestrationResponse response1 = orchestrationClient.request(serviceRequestForm);
                 final OrchestrationForm entry = response1.getFirst();
                 final URI uri = buildUri(baseUri, entry).build();
-                return client.send(uri, method, entity);
+                final Set<String> interfaces = entry.getService().getInterfaces();
+                return client.send(uri, method, interfaces, payload);
             } catch (DataNotFoundException e) {
                 log.warn("Failed with requester system: " + serviceRequestForm.getRequesterSystem());
                 throw e;
