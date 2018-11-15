@@ -76,7 +76,7 @@ public final class CertificateAuthorityClient extends HttpClient {
     }
 
     private CertificateAuthorityClient(boolean secure, String host, int port, String path, String keyPass, String truststore, String truststorePass) {
-        super(new OrchestrationStrategy.Never(secure, host, port, path, MediaType.JSON), createSecurityContext(keyPass, truststore, truststorePass));
+        super(new OrchestrationStrategy.Never(secure, host, port, path, Interface.JSON), createSecurityContext(keyPass, truststore, truststorePass));
         this.keyPass = keyPass;
         this.truststore = truststore;
         this.truststorePass = truststorePass;

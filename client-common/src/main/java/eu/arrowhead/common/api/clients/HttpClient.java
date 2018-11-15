@@ -20,26 +20,24 @@ import java.util.function.Function;
 
 public class HttpClient {
     private static final Client insecureClient = SecurityUtils.createClient(null);
-    // TODO Add per instance converters also
-    private static final Map<MediaType, Function<Object, Entity<?>>> DEFAULT_ENTITY_CONVERTERS = new HashMap<>();
-    protected final Logger log = Logger.getLogger(getClass());
+    private static final Map<Interface, Function<Object, Entity<?>>> DEFAULT_ENTITY_CONVERTERS = new HashMap<>();
+    private static final Map<String, Interface> DEFAULT_MEDIA_TYPES = new HashMap<>();
 
+    protected final Logger log = Logger.getLogger(getClass());
     private final OrchestrationStrategy strategy;
     private final ArrowheadSecurityContext securityContext;
     private final Client client;
+    private final Map<Interface, Function<Object, Entity<?>>> entityConverters = new HashMap<>();
+    private final Map<String, Interface> mediaTypes = new HashMap<>();
 
     static {
-        DEFAULT_ENTITY_CONVERTERS.put(MediaType.JSON, Entity::json);
-        DEFAULT_ENTITY_CONVERTERS.put(MediaType.XML, Entity::xml);
+        addDefaultEntityConverter(Interface.JSON, Entity::json);
+        addDefaultEntityConverter(Interface.XML, Entity::xml);
     }
 
-    /**
-     * TODO Basing this on an enum is very limiting!
-     * @param mediaType
-     * @param converter
-     */
-    public static void addDefaultEntityConverter(MediaType mediaType, Function<Object, Entity<?>> converter) {
-        DEFAULT_ENTITY_CONVERTERS.put(mediaType, converter);
+    public static void addDefaultEntityConverter(Interface anInterface, Function<Object, Entity<?>> converter) {
+        DEFAULT_ENTITY_CONVERTERS.put(anInterface, converter);
+        DEFAULT_MEDIA_TYPES.put(anInterface.getInterface(), anInterface);
     }
 
     public HttpClient(OrchestrationStrategy strategy, ArrowheadSecurityContext securityContext) {
@@ -62,6 +60,11 @@ public class HttpClient {
 
     public ArrowheadSecurityContext getSecurityContext() {
         return securityContext;
+    }
+
+    public void addEntityConverter(Interface anInterface, Function<Object, Entity<?>> converter) {
+        entityConverters.put(anInterface, converter);
+        mediaTypes.put(anInterface.getInterface(), anInterface);
     }
 
     public Response request(Method method) {
@@ -89,25 +92,24 @@ public class HttpClient {
 
     Response send(URI uri, HttpClient.Method method, Set<String> interfaces, Object payload) {
         for (String i : interfaces) {
-            try {
-                HttpClient.MediaType mediaType = HttpClient.MediaType.fromInterface(i);
-                return send(uri, method, mediaType, payload);
-            } catch (ArrowheadException e) {
-                log.warn("Unknown interface", e);
-            }
+            Interface anInterface = mediaTypes.containsKey(i) ? mediaTypes.get(i) : DEFAULT_MEDIA_TYPES.get(i);
+            if (anInterface != null) return send(uri, method, anInterface, payload);
         }
 
         throw new ArrowheadRuntimeException("No compatible interface found");
     }
 
-    Response send(URI uri, HttpClient.Method method, MediaType mediaType, Object payload) {
+    Response send(URI uri, HttpClient.Method method, Interface anInterface, Object payload) {
         try {
-            final Entity<?> entity = DEFAULT_ENTITY_CONVERTERS.get(mediaType).apply(payload);
+            final Entity<?> entity = (entityConverters.containsKey(anInterface) ?
+                    entityConverters.get(anInterface) :
+                    DEFAULT_ENTITY_CONVERTERS.get(anInterface))
+                    .apply(payload);
             log.info(String.format("%s %s", method.toString(), uri.toString()));
             final Invocation.Builder client = this.client
                     .target(uri)
                     .request()
-                    .header("Content-type", mediaType.toString());
+                    .header("Content-type", anInterface.getMediaType());
             return check(entity == null ?
                     client.method(method.toString()) :
                     client.method(method.toString(), entity), uri.toString());
@@ -180,29 +182,24 @@ public class HttpClient {
     /**
      * Subset of those registered with IANA
      */
-    public enum MediaType {
-        JSON("application/json"), // [RFC8259]
-        XML("application/xml"),   // [RFC7303]
-        ;
+    public static class Interface {
+        public static final Interface JSON = new Interface("JSON", "application/json"); // [RFC8259]
+        public static final Interface XML = new Interface("XML", "application/xml");    // [RFC7303]
 
-        private final String type;
+        private final String anInterface;
+        private final String mediaType;
 
-        // TODO Could use a better way - use MediaType in SR?
-        public static HttpClient.MediaType fromInterface(final String s) throws ArrowheadException {
-            if (s.equalsIgnoreCase("JSON"))
-                return HttpClient.MediaType.JSON;
-            if (s.equalsIgnoreCase("XML"))
-                return HttpClient.MediaType.XML;
-            throw new ArrowheadException("Unknown interface");
+        public Interface(String anInterface, String mediaType) {
+            this.anInterface = anInterface;
+            this.mediaType = mediaType;
         }
 
-        MediaType(final String type) {
-            this.type = type;
+        public String getInterface() {
+            return anInterface;
         }
 
-        @Override
-        public String toString() {
-            return type;
+        public String getMediaType() {
+            return mediaType;
         }
     }
 

@@ -5,7 +5,6 @@ import eu.arrowhead.common.exception.*;
 import eu.arrowhead.common.model.*;
 import org.apache.log4j.Logger;
 
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
@@ -53,20 +52,20 @@ public abstract class OrchestrationStrategy {
         private final String address;
         private final int port;
         private final String serviceUri;
-        private final HttpClient.MediaType mediaType;
+        private final HttpClient.Interface anInterface;
 
-        public Never(boolean secure, String address, int port, String serviceUri, HttpClient.MediaType mediaType) {
+        public Never(boolean secure, String address, int port, String serviceUri, HttpClient.Interface anInterface) {
             this.secure = secure;
             this.address = address;
             this.port = port;
             this.serviceUri = serviceUri;
-            this.mediaType = mediaType;
+            this.anInterface = anInterface;
         }
 
         @Override
         public Response request(HttpClient client, HttpClient.Method method, UriBuilder baseUri, Object payload) {
             final URI uri = buildUri(baseUri, secure, address, port, serviceUri).build();
-            return client.send(uri, method, mediaType, payload);
+            return client.send(uri, method, anInterface, payload);
         }
 
         @Override

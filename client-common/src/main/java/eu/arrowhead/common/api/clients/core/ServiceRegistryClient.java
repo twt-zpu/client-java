@@ -35,7 +35,7 @@ public class ServiceRegistryClient extends HttpClient {
     }
 
     private ServiceRegistryClient(boolean secure, ArrowheadSecurityContext securityContext, String host, int port) {
-        super(new OrchestrationStrategy.Never(secure, host, port, "serviceregistry", MediaType.JSON), securityContext);
+        super(new OrchestrationStrategy.Never(secure, host, port, "serviceregistry", Interface.JSON), securityContext);
     }
 
     public ServiceRegistryEntry register(ServiceRegistryEntry srEntry) {
