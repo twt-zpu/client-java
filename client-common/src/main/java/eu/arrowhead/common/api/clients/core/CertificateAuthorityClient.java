@@ -22,6 +22,10 @@ import java.security.KeyStore;
 import java.security.PublicKey;
 import java.security.Security;
 
+/**
+ * A client for interacting with the Certificate Authority system. See the static create* methods for how to get an
+ * instance of one of these.
+ */
 public final class CertificateAuthorityClient extends HttpClient {
     private static final Logger LOG = Logger.getLogger(CertificateAuthorityClient.class);
     private static final UriBuilder AUTH_URI = UriBuilder.fromPath("auth");
@@ -36,10 +40,18 @@ public final class CertificateAuthorityClient extends HttpClient {
         Security.addProvider(new BouncyCastleProvider());
     }
 
+    /**
+     * Create a new client from the settings in the default properties files.
+     * @return your shiny new client.
+     */
     public static CertificateAuthorityClient createFromProperties() {
         return createFromProperties(ArrowheadProperties.loadDefault());
     }
 
+    /**
+     * Create a new client from given set of properties.
+     * @return your shiny new client.
+     */
     public static CertificateAuthorityClient createFromProperties(ArrowheadProperties props) {
         final boolean isSecure = props.isSecure();
         if (!isSecure)
@@ -52,6 +64,10 @@ public final class CertificateAuthorityClient extends HttpClient {
                 .setClientName(props.getSystemName());
     }
 
+    /**
+     * Create a new client using default values.
+     * @return your shiny new client.
+     */
     public static CertificateAuthorityClient createDefault(String clientName) {
         final boolean isSecure = ArrowheadProperties.getDefaultIsSecure();
         return new CertificateAuthorityClient(isSecure, ArrowheadProperties.getDefaultCaAddress(),
@@ -61,6 +77,13 @@ public final class CertificateAuthorityClient extends HttpClient {
                 .setClientName(clientName);
     }
 
+    /**
+     * Internal method for creating a temporary security context until we can build the right one.
+     * @param keyPass the password for the certificates.
+     * @param truststore the trust store.
+     * @param truststorePass the password for the trust store.
+     * @return the security context.
+     */
     private static ArrowheadSecurityContext createSecurityContext(String keyPass, String truststore, String truststorePass) {
         // Setting temporary truststore if given (for the secure CA)
         try {
@@ -75,6 +98,16 @@ public final class CertificateAuthorityClient extends HttpClient {
         }
     }
 
+    /**
+     * Private construct, see the create* methods.
+     * @param secure use secure mode?
+     * @param host the host.
+     * @param port the port.
+     * @param path the path.
+     * @param keyPass the password for the certificates.
+     * @param truststore the trust store.
+     * @param truststorePass the password for the trust store.
+     */
     private CertificateAuthorityClient(boolean secure, String host, int port, String path, String keyPass, String truststore, String truststorePass) {
         super(new OrchestrationStrategy.Never(secure, host, port, path, Interface.JSON), createSecurityContext(keyPass, truststore, truststorePass));
         this.keyPass = keyPass;
@@ -98,6 +131,11 @@ public final class CertificateAuthorityClient extends HttpClient {
         return keystorePass;
     }
 
+    /**
+     * Set a new password for the generated keystore.
+     * @param keystorePass the password.
+     * @return this.
+     */
     public CertificateAuthorityClient setKeystorePass(String keystorePass) {
         this.keystorePass = keystorePass;
         return this;
@@ -107,6 +145,11 @@ public final class CertificateAuthorityClient extends HttpClient {
         return confDir;
     }
 
+    /**
+     * Set the configuration directory for generating the configuration files.
+     * @param confDir the directory.
+     * @return this.
+     */
     public CertificateAuthorityClient setConfDir(String confDir) {
         this.confDir = confDir;
         return this;
@@ -116,6 +159,11 @@ public final class CertificateAuthorityClient extends HttpClient {
         return certDir;
     }
 
+    /**
+     * Set the certificate directory for storing the certificates.
+     * @param certDir
+     * @return this.
+     */
     public CertificateAuthorityClient setCertDir(String certDir) {
         this.certDir = certDir;
         return this;
@@ -125,11 +173,21 @@ public final class CertificateAuthorityClient extends HttpClient {
         return clientName;
     }
 
+    /**
+     * Set the name of the system to generate certificates for.
+     * @param clientName the name.
+     * @return this.
+     */
     public CertificateAuthorityClient setClientName(String clientName) {
         this.clientName = clientName;
         return this;
     }
 
+    /**
+     * Bootstrap a security context with shiny new certificates. Also updates your configuration files to use the new
+     * context the next time around.
+     * @return the newly generated security context you should use.
+     */
     public ArrowheadSecurityContext bootstrap() {
         if (clientName == null) throw new ArrowheadRuntimeException("System name is required to generate " +
                 "certificates - have you set \"system_name\" in the config file?");
@@ -184,20 +242,28 @@ public final class CertificateAuthorityClient extends HttpClient {
     }
 
     /**
-     Gets the Cloud Common Name from the Certificate Authority Core System, proper URL is read from the config file
+     * Gets the Cloud Common Name from the Certificate Authority Core System
+     * @return the CN.
      */
     private String getCloudCN() {
         return request(Method.GET).readEntity(String.class);
     }
 
     /**
-     Authorization Public Key is used by ArrowheadProviders to verify the signatures by the Authorization Core System in secure mode
+     * Authorization Public Key is used by ArrowheadProviders to verify the signatures by the Authorization Core System
+     * in secure mode.
+     * @return the public key.
      */
     private PublicKey getAuthorizationPublicKeyFromCa() {
         Response caResponse = request(Method.GET, AUTH_URI);
         return SecurityUtils.getPublicKey(caResponse.readEntity(String.class), false);
     }
 
+    /**
+     * Gets a new signed certificate from the Certificate Authority.
+     * @param commonName the common name.
+     * @return a {@link CertificateSigningResponse}.
+     */
     private CertificateSigningResponse getSignedCertificate(String commonName) {
         //Get a new locally generated public/private key pair
         KeyPair keyPair = SecurityUtils.generateRSAKeyPair();

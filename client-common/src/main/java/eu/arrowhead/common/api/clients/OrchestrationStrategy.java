@@ -214,6 +214,7 @@ public abstract class OrchestrationStrategy {
         @Override
         public Response request(HttpClient client, HttpClient.Method method, UriBuilder appendUri, Object payload) {
             try {
+                // TODO Should add a loop here !!!
                 final OrchestrationResponse response1 = orchestrationClient.request(serviceRequestForm);
                 final OrchestrationForm entry = response1.getFirst();
                 final URI uri = buildUri(appendUri, entry).build();

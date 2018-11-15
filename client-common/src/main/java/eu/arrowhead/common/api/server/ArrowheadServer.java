@@ -23,7 +23,8 @@ public abstract class ArrowheadServer {
     protected final Logger log = Logger.getLogger(getClass());
 
     /**
-     * Stop all running servers.
+     * Stop all servers that was ever started. Note this will be called automatically by
+     * {@link eu.arrowhead.common.api.ArrowheadApplication} if this class is used.
      */
     public static void stopAll() {
         servers.forEach(ArrowheadServer::stop);
