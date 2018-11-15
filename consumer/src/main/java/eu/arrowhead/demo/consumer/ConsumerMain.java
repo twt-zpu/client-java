@@ -47,8 +47,7 @@ class ConsumerMain extends ArrowheadApplication {
                 .build();
         log.info("Service Request payload: " + Utility.toPrettyJson(null, srf));
 
-        final OrchestrationStrategy strategy = new OrchestrationStrategy.Once(orchestration, srf);
-        final HttpClient client = new HttpClient(strategy, getProps().isSecure(), securityContext);
+        final HttpClient client = new HttpClient(new OrchestrationStrategy.Once(orchestration, srf), securityContext);
         final Response getResponse = client.request(HttpClient.Method.GET);
 
         TemperatureReadout readout = new TemperatureReadout();

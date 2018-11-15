@@ -2,10 +2,7 @@ package eu.arrowhead.common.api.clients;
 
 import eu.arrowhead.common.api.clients.core.OrchestrationClient;
 import eu.arrowhead.common.exception.*;
-import eu.arrowhead.common.model.ArrowheadSystem;
-import eu.arrowhead.common.model.OrchestrationForm;
-import eu.arrowhead.common.model.OrchestrationResponse;
-import eu.arrowhead.common.model.ServiceRequestForm;
+import eu.arrowhead.common.model.*;
 import org.apache.log4j.Logger;
 
 import javax.ws.rs.client.Entity;
@@ -48,6 +45,8 @@ public abstract class OrchestrationStrategy {
         return uriBuilder;
     }
 
+    public abstract boolean isSecure();
+
     public static class Never extends OrchestrationStrategy {
         private final boolean secure;
         private final String address;
@@ -65,6 +64,11 @@ public abstract class OrchestrationStrategy {
         public Response request(HttpClient client, HttpClient.Method method, UriBuilder baseUri, Entity<?> entity) {
             final URI uri = buildUri(baseUri, secure, address, port, serviceUri).build();
             return client.send(uri, method, entity);
+        }
+
+        @Override
+        public boolean isSecure() {
+            return secure;
         }
     }
 
@@ -85,6 +89,11 @@ public abstract class OrchestrationStrategy {
         public Response request(HttpClient client, HttpClient.Method method, UriBuilder baseUri, Entity<?> entity) {
             final URI uri = buildUri(baseUri, entry).build();
             return client.send(uri, method, entity);
+        }
+
+        @Override
+        public boolean isSecure() {
+            return entry.isSecure();
         }
     }
 
@@ -108,6 +117,11 @@ public abstract class OrchestrationStrategy {
                 log.warn("Failed with requester system: " + serviceRequestForm.getRequesterSystem());
                 throw e;
             }
+        }
+
+        @Override
+        public boolean isSecure() {
+            return serviceRequestForm.getRequestedService().getServiceMetadata().containsKey(ServiceMetadata.Keys.SECURITY);
         }
 
     }

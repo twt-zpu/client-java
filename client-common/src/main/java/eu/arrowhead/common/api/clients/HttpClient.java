@@ -19,24 +19,25 @@ public class HttpClient {
 
     protected final Logger log = Logger.getLogger(getClass());
     private final OrchestrationStrategy strategy;
-    private final boolean secure;
     private final ArrowheadSecurityContext securityContext;
     private final Client client;
 
-    public HttpClient(OrchestrationStrategy strategy, boolean secure, ArrowheadSecurityContext securityContext) {
+    public HttpClient(OrchestrationStrategy strategy, ArrowheadSecurityContext securityContext) {
+        final boolean secure = strategy.isSecure();
         this.strategy = strategy;
-        this.secure = secure;
         this.securityContext = securityContext;
+
         if (secure ^ securityContext != null)
             throw new AuthException(String.format("Client is %s, but trying to set security context to %s)",
                     secure ? "secure" : "insecure", securityContext == null ? "null" : "not null"));
+
         client = secure ?
                 SecurityUtils.createClient(securityContext.getSslContext()) :
                 insecureClient;
     }
 
     public boolean isSecure() {
-        return secure;
+        return strategy.isSecure();
     }
 
     public ArrowheadSecurityContext getSecurityContext() {
