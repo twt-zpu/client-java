@@ -1,6 +1,7 @@
 package eu.arrowhead.digital_twin.mock_provider;
 
 import eu.arrowhead.client.common.Utility;
+import eu.arrowhead.client.common.exception.DuplicateEntryException;
 import eu.arrowhead.client.common.model.ArrowheadService;
 import eu.arrowhead.client.common.model.ArrowheadSystem;
 import eu.arrowhead.client.common.model.ServiceRegistryEntry;
@@ -8,6 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ws.rs.core.UriBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +19,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class ProviderService {
+
+  private AtomicBoolean firstTry = new AtomicBoolean(true);
 
   private final String serviceRegistryUrl;
   private final ServiceRegistryEntry millingService;
@@ -67,6 +71,14 @@ public class ProviderService {
   private void sendAndLogRequest(String url, String method, ServiceRegistryEntry payload) {
     try {
       Utility.sendRequest(url, method, payload);
+    } catch (DuplicateEntryException e) {
+      unregisterDemoServices();
+      if (firstTry.get()) {
+        firstTry.compareAndSet(true, false);
+        registerDemoServices();
+      } else {
+        throw e;
+      }
     } catch (Exception e) {
       log.error(payload.getProvidedService().getServiceDefinition() + " (un)registration failed with exception", e);
       return;

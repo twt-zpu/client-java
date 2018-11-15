@@ -1,6 +1,7 @@
 package eu.arrowhead.digital_twin;
 
 import eu.arrowhead.client.common.Utility;
+import eu.arrowhead.client.common.exception.DuplicateEntryException;
 import eu.arrowhead.client.common.model.ArrowheadService;
 import eu.arrowhead.client.common.model.ArrowheadSystem;
 import eu.arrowhead.client.common.model.Event;
@@ -9,6 +10,7 @@ import eu.arrowhead.client.common.model.OrchestrationResponse;
 import eu.arrowhead.client.common.model.ServiceRegistryEntry;
 import eu.arrowhead.client.common.model.ServiceRequestForm;
 import eu.arrowhead.digital_twin.model.SmartProduct;
+import eu.arrowhead.digital_twin.model.SmartProductCSV;
 import eu.arrowhead.digital_twin.model.SmartProductLifeCycle;
 import eu.arrowhead.digital_twin.model.SmartProductPosition;
 import java.io.FileReader;
@@ -23,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import org.slf4j.Logger;
@@ -41,6 +44,8 @@ import org.supercsv.prefs.CsvPreference;
 
 @Service
 public class DigitalTwinService {
+
+  private AtomicBoolean firstTry = new AtomicBoolean(true);
 
   private static final String CONSUMER_NAME = "IPS_DIGITAL_TWIN";
   private static final Map<SmartProductLifeCycle, SmartProductPosition> nextStepForProduct = new HashMap<>();
@@ -81,7 +86,17 @@ public class DigitalTwinService {
     ArrowheadService purchaseProduct = new ArrowheadService("PurchaseSmartProduct", Collections.singleton("JSON"), null);
     ServiceRegistryEntry srEntry = new ServiceRegistryEntry(purchaseProduct, digitalTwin, "purchase");
     String registerUrl = UriBuilder.fromPath(serviceRegistryUrl).path("register").toString();
-    Utility.sendRequest(registerUrl, "POST", srEntry);
+    try {
+      Utility.sendRequest(registerUrl, "POST", srEntry);
+    } catch (DuplicateEntryException e) {
+      unregisterPurchaseService();
+      if (firstTry.get()) {
+        firstTry.compareAndSet(true, false);
+        registerPurchaseService();
+      } else {
+        throw e;
+      }
+    }
     log.info("PuchaseSmartProduct service registered with the Service Registry");
   }
 
@@ -123,6 +138,13 @@ public class DigitalTwinService {
   @Scheduled(fixedRate = 1000 * 600)
     //run this method every 10 minutes
   void saveSmartProductStatesToFile() {
+    List<SmartProductCSV> stringifiedProducts = new ArrayList<>();
+    for (SmartProduct product : smartProducts) {
+      SmartProductCSV productCSV = new SmartProductCSV(product.getRfidParts().toString(), product.getLifeCycle().name(),
+                                                       product.getLastKnownPosition().name());
+      stringifiedProducts.add(productCSV);
+    }
+
     final CellProcessor[] cellProcessors = new CellProcessor[]{new NotNull(), new NotNull(), new NotNull()};
     try (ICsvBeanWriter beanWriter = new CsvBeanWriter(new FileWriter(stateSaveLocation), CsvPreference.STANDARD_PREFERENCE)) {
 
@@ -133,7 +155,7 @@ public class DigitalTwinService {
       beanWriter.writeHeader(headers);
 
       // write the beans
-      for (final SmartProduct smartProduct : smartProducts) {
+      for (final SmartProductCSV smartProduct : stringifiedProducts) {
         beanWriter.write(smartProduct, headers, cellProcessors);
       }
     } catch (IOException e) {
@@ -148,8 +170,12 @@ public class DigitalTwinService {
 
         final String[] header = beanReader.getHeader(true);
 
-        SmartProduct smartProduct;
-        while ((smartProduct = beanReader.read(SmartProduct.class, header, cellProcessors)) != null) {
+        SmartProductCSV smartProductCSV;
+        while ((smartProductCSV = beanReader.read(SmartProductCSV.class, header, cellProcessors)) != null) {
+          String rfidParts = smartProductCSV.getRfidParts();
+          List<String> rfidList = new ArrayList<>(Arrays.asList(rfidParts.substring(1, rfidParts.length() - 1).split(", ")));
+          SmartProduct smartProduct = new SmartProduct(rfidList, SmartProductLifeCycle.valueOf(smartProductCSV.getLifeCycle()),
+                                                       SmartProductPosition.valueOf(smartProductCSV.getLastKnownPosition()));
           smartProducts.add(smartProduct);
         }
       } catch (IOException e) {
@@ -279,8 +305,19 @@ public class DigitalTwinService {
     //NOTE hardcoded business logic specific to the demo
     if (serviceDef.equals("PurchaseSmartProduct")) {
       SmartProduct purchasedSmartProduct = response.readEntity(SmartProduct.class);
-      smartProducts.add(purchasedSmartProduct);
-      log.info("Following smart product purchased: " + purchasedSmartProduct.toString());
+      //NOTE this assumes that RFID tags are unique even between local clouds
+      boolean exists = false;
+      for (SmartProduct smartProduct : smartProducts) {
+        if (Utility.hasCommonElement(smartProduct.getRfidParts(), purchasedSmartProduct.getRfidParts())) {
+          exists = true;
+        }
+      }
+      if (exists) {
+        log.error("Purchased a smart product with an already existing RFID tag: " + purchasedSmartProduct.toString());
+      } else {
+        smartProducts.add(purchasedSmartProduct);
+        log.info("Following smart product purchased: " + purchasedSmartProduct.toString());
+      }
     } else {
       String providerResponse = response.readEntity(String.class);
       log.info(serviceDef + " service by " + url + " returned with: " + providerResponse);
