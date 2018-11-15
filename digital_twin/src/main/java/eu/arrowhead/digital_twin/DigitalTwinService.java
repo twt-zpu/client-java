@@ -49,6 +49,7 @@ public class DigitalTwinService {
 
   private static final String CONSUMER_NAME = "IPS_DIGITAL_TWIN";
   private static final Map<SmartProductLifeCycle, SmartProductPosition> nextStepForProduct = new HashMap<>();
+  //TODO is this thread safe?
   private static final List<SmartProduct> smartProducts = new ArrayList<>();
 
   private final String serviceRegistryUrl;
@@ -184,7 +185,8 @@ public class DigitalTwinService {
     }
   }
 
-  void handleArrowheadEvent(Event event) {
+  synchronized void handleArrowheadEvent(Event event) {
+    System.out.println(smartProducts.toString());
     String rfidData = event.getEventMetadata().get("rfid");
     if (rfidData != null) {
       //NOTE hardcoded business logic specific to the demo
@@ -219,6 +221,7 @@ public class DigitalTwinService {
         SmartProductPosition nextProductionStep = nextStepForProduct.get(productWithStateChange.getLifeCycle());
         //3) If it matches, ask for the service through the Orchestrator Core System
         if (nextProductionStep.equals(SmartProductPosition.valueOf(event.getPayload().toUpperCase()))) {
+          //TODO check what happens between the 2 breakpoints on the 3rd request!
           String serviceDefinition = event.getEventMetadata().get("extra");
           ArrowheadService nextServiceToConsume = new ArrowheadService(serviceDefinition, Collections.singleton("JSON"), null);
           Map<String, Boolean> orchestrationFlags = new HashMap<>();
@@ -232,10 +235,10 @@ public class DigitalTwinService {
 
           //Update RFID and lifecycle information on the product
           List<String> newRfidTags = Utility.difference(productWithStateChange.getRfidParts(), Arrays.asList(rfidTags));
+          //TODO weird thing happens here during 3rd request
           productWithStateChange.getRfidParts().addAll(newRfidTags);
           productWithStateChange.setLifeCycle(productWithStateChange.getLifeCycle().next());
           log.debug("Production lifecycle for product " + smartProductId + " updated to " + productWithStateChange.getLifeCycle());
-
         } else {
           log.debug("The next production step for product " + smartProductId + " is at " + nextProductionStep + ", but it entered into " + event
               .getPayload().toUpperCase());

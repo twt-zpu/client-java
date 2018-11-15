@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ws.rs.core.UriBuilder;
 import org.slf4j.Logger;
@@ -54,20 +55,35 @@ public class ProviderService {
 
   public void registerDemoServices() {
     String registeringURL = UriBuilder.fromPath(serviceRegistryUrl).path("register").build().toString();
-    CompletableFuture.runAsync(() -> sendAndLogRequest(registeringURL, "POST", millingService));
-    CompletableFuture.runAsync(() -> sendAndLogRequest(registeringURL, "POST", assemblyService));
-    CompletableFuture.runAsync(() -> sendAndLogRequest(registeringURL, "POST", storeService));
-    CompletableFuture.runAsync(() -> sendAndLogRequest(registeringURL, "POST", weldingService));
+    try {
+      CompletableFuture.runAsync(() -> sendAndLogRequest(registeringURL, "POST", millingService));
+      TimeUnit.MILLISECONDS.sleep(100);
+      CompletableFuture.runAsync(() -> sendAndLogRequest(registeringURL, "POST", assemblyService));
+      TimeUnit.MILLISECONDS.sleep(100);
+      CompletableFuture.runAsync(() -> sendAndLogRequest(registeringURL, "POST", storeService));
+      TimeUnit.MILLISECONDS.sleep(100);
+      CompletableFuture.runAsync(() -> sendAndLogRequest(registeringURL, "POST", weldingService));
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 
   public void unregisterDemoServices() {
     String removeURL = UriBuilder.fromPath(serviceRegistryUrl).path("remove").build().toString();
-    CompletableFuture.runAsync(() -> sendAndLogRequest(removeURL, "PUT", millingService));
-    CompletableFuture.runAsync(() -> sendAndLogRequest(removeURL, "PUT", assemblyService));
-    CompletableFuture.runAsync(() -> sendAndLogRequest(removeURL, "PUT", storeService));
-    CompletableFuture.runAsync(() -> sendAndLogRequest(removeURL, "PUT", weldingService));
+    try {
+      CompletableFuture.runAsync(() -> sendAndLogRequest(removeURL, "PUT", millingService));
+      TimeUnit.MILLISECONDS.sleep(100);
+      CompletableFuture.runAsync(() -> sendAndLogRequest(removeURL, "PUT", assemblyService));
+      TimeUnit.MILLISECONDS.sleep(100);
+      CompletableFuture.runAsync(() -> sendAndLogRequest(removeURL, "PUT", storeService));
+      TimeUnit.MILLISECONDS.sleep(100);
+      CompletableFuture.runAsync(() -> sendAndLogRequest(removeURL, "PUT", weldingService));
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 
+  //TODO retry needs refining, this is not stable
   private void sendAndLogRequest(String url, String method, ServiceRegistryEntry payload) {
     try {
       Utility.sendRequest(url, method, payload);
