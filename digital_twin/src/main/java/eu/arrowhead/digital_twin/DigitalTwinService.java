@@ -49,8 +49,8 @@ public class DigitalTwinService {
 
   private static final String CONSUMER_NAME = "IPS_DIGITAL_TWIN";
   private static final Map<SmartProductLifeCycle, SmartProductPosition> nextStepForProduct = new HashMap<>();
-  //TODO is this thread safe?
-  private static final List<SmartProduct> smartProducts = new ArrayList<>();
+  //TODO is this thread safe? refactor it to use concurrenthashmap
+  private final List<SmartProduct> smartProducts = new ArrayList<>();
 
   private final String serviceRegistryUrl;
   private final String eventHandlerUrl;
@@ -237,6 +237,7 @@ public class DigitalTwinService {
           List<String> newRfidTags = Utility.difference(productWithStateChange.getRfidParts(), Arrays.asList(rfidTags));
           //TODO weird thing happens here during 3rd request
           productWithStateChange.getRfidParts().addAll(newRfidTags);
+          System.out.println("saaaajt");
           productWithStateChange.setLifeCycle(productWithStateChange.getLifeCycle().next());
           log.debug("Production lifecycle for product " + smartProductId + " updated to " + productWithStateChange.getLifeCycle());
         } else {
