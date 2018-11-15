@@ -47,6 +47,14 @@ public abstract class OrchestrationStrategy {
 
     public abstract boolean isSecure();
 
+    protected Response send(HttpClient client, URI uri, HttpClient.Method method, Set<String> interfaces, Object payload) {
+        return client.send(uri, method, interfaces, payload);
+    }
+
+    protected Response send(HttpClient client, URI uri, HttpClient.Method method, HttpClient.Interface anInterface, Object payload) {
+        return client.send(uri, method, anInterface, payload);
+    }
+
     public static class Never extends OrchestrationStrategy {
         private final boolean secure;
         private final String address;
@@ -65,7 +73,7 @@ public abstract class OrchestrationStrategy {
         @Override
         public Response request(HttpClient client, HttpClient.Method method, UriBuilder baseUri, Object payload) {
             final URI uri = buildUri(baseUri, secure, address, port, serviceUri).build();
-            return client.send(uri, method, anInterface, payload);
+            return send(client, uri, method, anInterface, payload);
         }
 
         @Override
@@ -91,7 +99,7 @@ public abstract class OrchestrationStrategy {
         public Response request(HttpClient client, HttpClient.Method method, UriBuilder baseUri, Object payload) {
             final URI uri = buildUri(baseUri, entry).build();
             final Set<String> interfaces = entry.getService().getInterfaces();
-            return client.send(uri, method, interfaces, payload);
+            return send(client, uri, method, interfaces, payload);
         }
 
         @Override
@@ -116,7 +124,7 @@ public abstract class OrchestrationStrategy {
                 final OrchestrationForm entry = response1.getFirst();
                 final URI uri = buildUri(baseUri, entry).build();
                 final Set<String> interfaces = entry.getService().getInterfaces();
-                return client.send(uri, method, interfaces, payload);
+                return send(client, uri, method, interfaces, payload);
             } catch (DataNotFoundException e) {
                 log.warn("Failed with requester system: " + serviceRequestForm.getRequesterSystem());
                 throw e;
