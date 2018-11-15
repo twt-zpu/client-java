@@ -37,7 +37,7 @@ public class EventHandlerClient extends HttpClient {
     }
 
     public EventHandlerClient(boolean secure, ArrowheadSecurityContext securityContext, String host, int port) {
-        super(new OrchestrationStrategy.StaticUri(secure, host, port, "eventhandler"), secure, securityContext);
+        super(new OrchestrationStrategy.Never(secure, host, port, "eventhandler"), secure, securityContext);
     }
 
     public void publish(Event event, ArrowheadSystem eventSource) {

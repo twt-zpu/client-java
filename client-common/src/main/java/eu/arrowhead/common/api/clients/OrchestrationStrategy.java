@@ -48,13 +48,13 @@ public abstract class OrchestrationStrategy {
         return uriBuilder;
     }
 
-    public static class StaticUri extends OrchestrationStrategy {
+    public static class Never extends OrchestrationStrategy {
         private final boolean secure;
         private final String address;
         private final int port;
         private final String serviceUri;
 
-        public StaticUri(boolean secure, String address, int port, String serviceUri) {
+        public Never(boolean secure, String address, int port, String serviceUri) {
             this.secure = secure;
             this.address = address;
             this.port = port;
@@ -68,10 +68,10 @@ public abstract class OrchestrationStrategy {
         }
     }
 
-    public static class StaticOrch extends OrchestrationStrategy {
+    public static class Once extends OrchestrationStrategy {
         private final OrchestrationForm entry;
 
-        public StaticOrch(OrchestrationClient orchestrationClient, ServiceRequestForm serviceRequestForm) {
+        public Once(OrchestrationClient orchestrationClient, ServiceRequestForm serviceRequestForm) {
             try {
                 final OrchestrationResponse response1 = orchestrationClient.request(serviceRequestForm);
                 entry = response1.getFirst();

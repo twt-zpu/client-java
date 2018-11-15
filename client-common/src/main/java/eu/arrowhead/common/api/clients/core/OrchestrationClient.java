@@ -28,7 +28,7 @@ public class OrchestrationClient extends HttpClient {
     }
 
     private OrchestrationClient(boolean secure, ArrowheadSecurityContext securityContext, String host, int port) {
-        super(new OrchestrationStrategy.StaticUri(secure, host, port, "orchestrator"), secure, securityContext);
+        super(new OrchestrationStrategy.Never(secure, host, port, "orchestrator"), secure, securityContext);
     }
 
     public OrchestrationResponse request(ServiceRequestForm serviceRequestForm) {
