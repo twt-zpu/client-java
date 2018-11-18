@@ -37,7 +37,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.ServiceConfigurationError;
 import java.util.Set;
@@ -383,16 +382,6 @@ public final class Utility {
 
   public static boolean isBlank(final String str) {
     return (str == null || "".equals(str.trim()));
-  }
-
-  //Returns true if the 2 lists have at least 1 common element
-  public static <T> boolean hasCommonElement(List<T> list1, List<T> list2) {
-    boolean firstIsBigger = list1.size() > list2.size();
-    List<T> big = firstIsBigger ? list1 : list2;
-    List<T> copy = new ArrayList<>(big);
-    Set<T> small = firstIsBigger ? new HashSet<T>(list2) : new HashSet<T>(list1);
-    copy.retainAll(small);
-    return copy.size() > 0;
   }
 
   //Finds and returns the elements from all, which are not in base

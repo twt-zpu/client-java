@@ -24,7 +24,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -50,7 +52,7 @@ public class DigitalTwinService {
   private static final String CONSUMER_NAME = "IPS_DIGITAL_TWIN";
   private static final Map<SmartProductLifeCycle, SmartProductPosition> nextStepForProduct = new HashMap<>();
   //TODO is this thread safe? refactor it to use concurrenthashmap
-  private final List<SmartProduct> smartProducts = new ArrayList<>();
+  private final ConcurrentHashMap<String, SmartProduct> smartProducts = new ConcurrentHashMap<>();
 
   private final String serviceRegistryUrl;
   private final String eventHandlerUrl;
@@ -140,9 +142,9 @@ public class DigitalTwinService {
     //run this method every 10 minutes
   void saveSmartProductStatesToFile() {
     List<SmartProductCSV> stringifiedProducts = new ArrayList<>();
-    for (SmartProduct product : smartProducts) {
-      SmartProductCSV productCSV = new SmartProductCSV(product.getRfidParts().toString(), product.getLifeCycle().name(),
-                                                       product.getLastKnownPosition().name());
+    for (Entry<String, SmartProduct> mapEntry : smartProducts.entrySet()) {
+      SmartProductCSV productCSV = new SmartProductCSV(mapEntry.getValue().getRfidParts().toString(), mapEntry.getValue().getLifeCycle().name(),
+                                                       mapEntry.getValue().getLastKnownPosition().name());
       stringifiedProducts.add(productCSV);
     }
 
@@ -177,7 +179,7 @@ public class DigitalTwinService {
           List<String> rfidList = new ArrayList<>(Arrays.asList(rfidParts.substring(1, rfidParts.length() - 1).split(", ")));
           SmartProduct smartProduct = new SmartProduct(rfidList, SmartProductLifeCycle.valueOf(smartProductCSV.getLifeCycle()),
                                                        SmartProductPosition.valueOf(smartProductCSV.getLastKnownPosition()));
-          smartProducts.add(smartProduct);
+          smartProducts.put(rfidList.get(0), smartProduct);
         }
       } catch (IOException e) {
         log.error("IOException during reading in the state from file.", e);
@@ -185,7 +187,7 @@ public class DigitalTwinService {
     }
   }
 
-  synchronized void handleArrowheadEvent(Event event) {
+  void handleArrowheadEvent(Event event) {
     System.out.println(smartProducts.toString());
     String rfidData = event.getEventMetadata().get("rfid");
     if (rfidData != null) {
@@ -195,19 +197,18 @@ public class DigitalTwinService {
 
       //Check if this a new product, or it existed before (RFID orders are not guaranteed)
       SmartProduct productWithStateChange = null;
-      for (SmartProduct smartProduct : smartProducts) {
-        if (Utility.hasCommonElement(smartProduct.getRfidParts(), Arrays.asList(rfidTags))) {
-          productWithStateChange = smartProduct;
-          smartProductId = smartProduct.getRfidParts().get(0);
+      for (String rfidKey : rfidTags) {
+        if (smartProducts.containsKey(rfidKey)) {
+          productWithStateChange = smartProducts.get(rfidKey);
+          smartProductId = rfidKey;
         }
       }
       if (productWithStateChange == null) {
         productWithStateChange = new SmartProduct(Arrays.asList(rfidTags));
         smartProductId = rfidTags[0];
-        smartProducts.add(productWithStateChange);
+        smartProducts.put(smartProductId, productWithStateChange);
         log.info("Smart product with id " + smartProductId + " created");
       }
-      int smartProductIndex = smartProducts.indexOf(productWithStateChange);
 
       if (EventsToListenFor.area_entered.name().equals(event.getType())) {
         log.info("Smart product " + smartProductId + " entered into area: " + event.getPayload());
@@ -237,7 +238,6 @@ public class DigitalTwinService {
           List<String> newRfidTags = Utility.difference(productWithStateChange.getRfidParts(), Arrays.asList(rfidTags));
           //TODO weird thing happens here during 3rd request
           productWithStateChange.getRfidParts().addAll(newRfidTags);
-          System.out.println("saaaajt");
           productWithStateChange.setLifeCycle(productWithStateChange.getLifeCycle().next());
           log.debug("Production lifecycle for product " + smartProductId + " updated to " + productWithStateChange.getLifeCycle());
         } else {
@@ -246,11 +246,11 @@ public class DigitalTwinService {
         }
 
         productWithStateChange.setLastKnownPosition(SmartProductPosition.valueOf(event.getPayload().toUpperCase()));
-        smartProducts.set(smartProductIndex, productWithStateChange);
+        smartProducts.put(smartProductId, productWithStateChange);
 
       } else if (EventsToListenFor.area_left.name().equals(event.getType())) {
         productWithStateChange.setLastKnownPosition(SmartProductPosition.OUTSIDE_OF_GEOFENCED_AREA);
-        smartProducts.set(smartProductIndex, productWithStateChange);
+        smartProducts.put(smartProductId, productWithStateChange);
         log.info("Smart product " + smartProductId + " left the " + event.getPayload() + " area");
       } else {
         log.error("Received unknown event type from Event Handler. Type: " + event.getType());
@@ -261,14 +261,12 @@ public class DigitalTwinService {
   }
 
   Optional<SmartProduct> findSmartProductByFirstRFID(String rfidKey) {
-    for (SmartProduct product : smartProducts) {
-      for (String rfid : product.getRfidParts()) {
-        if (rfidKey.equals(rfid)) {
-          return Optional.of(product);
-        }
-      }
+    SmartProduct smartProduct = smartProducts.get(rfidKey);
+    if (smartProduct != null) {
+      return Optional.of(smartProduct);
+    } else {
+      return Optional.empty();
     }
-    return Optional.empty();
   }
 
   private Optional<String> requestOrchestration(ServiceRequestForm srf, String smartProductId) {
@@ -309,17 +307,20 @@ public class DigitalTwinService {
     //NOTE hardcoded business logic specific to the demo
     if (serviceDef.equals("PurchaseSmartProduct")) {
       SmartProduct purchasedSmartProduct = response.readEntity(SmartProduct.class);
+
       //NOTE this assumes that RFID tags are unique even between local clouds
       boolean exists = false;
-      for (SmartProduct smartProduct : smartProducts) {
-        if (Utility.hasCommonElement(smartProduct.getRfidParts(), purchasedSmartProduct.getRfidParts())) {
+      for (String rfidKey : purchasedSmartProduct.getRfidParts()) {
+        if (smartProducts.containsKey(rfidKey)) {
           exists = true;
+          break;
         }
       }
+
       if (exists) {
         log.error("Purchased a smart product with an already existing RFID tag: " + purchasedSmartProduct.toString());
       } else {
-        smartProducts.add(purchasedSmartProduct);
+        smartProducts.put(purchasedSmartProduct.getRfidParts().get(0), purchasedSmartProduct);
         log.info("Following smart product purchased: " + purchasedSmartProduct.toString());
       }
     } else {
