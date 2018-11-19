@@ -1,6 +1,8 @@
 package eu.arrowhead.client.provider;
 
 import eu.arrowhead.client.common.Utility;
+import eu.arrowhead.client.common.exception.ArrowheadException;
+import eu.arrowhead.client.common.exception.AuthException;
 import eu.arrowhead.client.common.misc.SecurityUtils;
 import eu.arrowhead.client.common.model.RawTokenInfo;
 import java.nio.charset.StandardCharsets;
@@ -13,16 +15,12 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 class ProviderService {
 
-  public enum TokenValidationResult {
-    OK, SIGNATURE, EXPIRED, MISMATCH, SERVER_ERROR
-  }
-
   /*
     Based on the local Authorization public key and provider private key, this method verifies that the provided token/signature pair
     was created by the Authorization Core System with the provider public key. It also checks if the token expired or not, plus the token
     has to contain the same consumer name as the common name field of the client certificate.
    */
-  static TokenValidationResult verifyRequester(SecurityContext context, String token, String signature) {
+  static void verifyRequester(SecurityContext context, String token, String signature) {
     try {
       String commonName = SecurityUtils.getCertCNFromSubject(context.getUserPrincipal().getName());
       String[] commonNameParts = commonName.split("\\.");
@@ -47,7 +45,7 @@ class ProviderService {
 
       boolean verifies = signatureInstance.verify(signaturebytes);
       if (!verifies) {
-        return TokenValidationResult.SIGNATURE;
+        throw new AuthException("Authorization core system signature verification failed!");
       }
 
       Cipher cipher = Cipher.getInstance("RSA/NONE/PKCS1Padding", "BC");
@@ -65,18 +63,16 @@ class ProviderService {
 
       if (consumerName.equalsIgnoreCase(consumerTokenName)) {
         if (endTime == 0L || (endTime > currentTime)) {
-          return TokenValidationResult.OK;
+          return;
         }
-        return TokenValidationResult.EXPIRED;
+        throw new AuthException("Given token has expired!");
 
       } else {
-        return TokenValidationResult.MISMATCH;
+        throw new AuthException("Cert common name and token information are mismatched!");
       }
 
     } catch (Exception ex) {
-      ex.printStackTrace();
-      return TokenValidationResult.SERVER_ERROR;
+      throw new ArrowheadException("Internal Server Error during token validation!", 500, ex);
     }
   }
-
 }

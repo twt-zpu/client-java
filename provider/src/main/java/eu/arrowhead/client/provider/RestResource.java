@@ -25,6 +25,8 @@ import javax.ws.rs.core.Response.Status;
 @Produces(MediaType.APPLICATION_JSON)
 public class RestResource {
 
+  //TODO augment this example with a hashmap inmemory database
+
   @GET
   @Produces(MediaType.TEXT_PLAIN) //individual methods can override class level annotations
   public String simpleGetRequest() {
