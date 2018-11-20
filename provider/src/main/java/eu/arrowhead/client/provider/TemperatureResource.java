@@ -32,7 +32,7 @@ public class TemperatureResource {
   public Response getIt(@Context SecurityContext context, @QueryParam("token") String token, @QueryParam("signature") String signature) {
     String providerName;
     if (context.isSecure()) {
-      ProviderService.verifyRequester(context, token, signature);
+      RequestVerification.verifyRequester(context, token, signature);
       providerName = "TemperatureSensors_SecureTemperatureSensor";
     } else {
       providerName = "TemperatureSensors_InsecureTemperatureSensor";

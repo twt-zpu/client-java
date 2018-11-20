@@ -13,7 +13,7 @@ import javax.crypto.Cipher;
 import javax.ws.rs.core.SecurityContext;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-class ProviderService {
+class RequestVerification {
 
   /*
     Based on the local Authorization public key and provider private key, this method verifies that the provided token/signature pair
