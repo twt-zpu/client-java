@@ -2,6 +2,7 @@ package eu.arrowhead.common.api.resources;
 
 import eu.arrowhead.common.api.server.ArrowheadHttpServer;
 import eu.arrowhead.common.misc.SecurityVerifier;
+import org.apache.log4j.Logger;
 
 /**
  * Helper class for creating resources for {@link ArrowheadHttpServer}. The verifier object should be used to verify
@@ -15,6 +16,7 @@ import eu.arrowhead.common.misc.SecurityVerifier;
  * publisher and subscriber resources.
  */
 public abstract class ArrowheadResource {
+    protected final Logger log = Logger.getLogger(getClass());
     protected final SecurityVerifier verifier = SecurityVerifier.createFromProperties();
     protected final ArrowheadHttpServer server;
 

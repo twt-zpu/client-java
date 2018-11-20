@@ -9,24 +9,22 @@
 
 package eu.arrowhead.client.publisher;
 
-import eu.arrowhead.common.api.server.ArrowheadHttpServer;
 import eu.arrowhead.common.api.resources.ArrowheadPublisherResource;
 import eu.arrowhead.common.api.resources.ArrowheadResource;
-import org.apache.log4j.Logger;
+import eu.arrowhead.common.api.server.ArrowheadHttpServer;
 
-import java.util.Map;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.Map;
 
 @Path("publisher")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class PublisherResource extends ArrowheadResource implements ArrowheadPublisherResource {
-  private final Logger log = Logger.getLogger(getClass());
 
   public PublisherResource(ArrowheadHttpServer server) {
     super(server);
