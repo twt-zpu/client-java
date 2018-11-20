@@ -9,7 +9,7 @@
 
 package eu.arrowhead.client.common.model;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import org.glassfish.jersey.internal.guava.MoreObjects;
@@ -18,13 +18,13 @@ public class Event {
 
   private String type;
   private String payload;
-  private LocalDateTime timestamp;
+  private ZonedDateTime timestamp;
   private Map<String, String> eventMetadata = new HashMap<>();
 
   public Event() {
   }
 
-  public Event(String type, String payload, LocalDateTime timestamp, Map<String, String> eventMetadata) {
+  public Event(String type, String payload, ZonedDateTime timestamp, Map<String, String> eventMetadata) {
     this.type = type;
     this.payload = payload;
     this.timestamp = timestamp;
@@ -47,11 +47,11 @@ public class Event {
     this.payload = payload;
   }
 
-  public LocalDateTime getTimestamp() {
+  public ZonedDateTime getTimestamp() {
     return timestamp;
   }
 
-  public void setTimestamp(LocalDateTime timestamp) {
+  public void setTimestamp(ZonedDateTime timestamp) {
     this.timestamp = timestamp;
   }
 
