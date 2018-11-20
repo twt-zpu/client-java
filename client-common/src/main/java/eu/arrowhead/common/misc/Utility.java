@@ -9,7 +9,7 @@
 
 package eu.arrowhead.common.misc;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.arrowhead.common.api.ArrowheadConverter;
 import eu.arrowhead.common.exception.ArrowheadRuntimeException;
 
 import javax.ws.rs.core.UriBuilder;
@@ -19,14 +19,10 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
+import java.util.ServiceConfigurationError;
 
 //Contains static utility methods for the project, most important one is the sendRequest method!
 public final class Utility {
-    private static final ObjectMapper mapper = JacksonJsonProviderAtRest.getMapper();
 
     private Utility() throws AssertionError {
         throw new AssertionError("Arrowhead Common:Utility is a non-instantiable class");
@@ -86,40 +82,11 @@ public final class Utility {
         }
 
         if (!sb.toString().isEmpty()) {
-            String payload = toPrettyJson(sb.toString(), null);
+            String payload = ArrowheadConverter.JSON.toString(
+                    ArrowheadConverter.JSON.fromString(sb.toString(), Object.class));
             return payload != null ? payload : "";
         } else {
             return "";
-        }
-    }
-
-    public static String toPrettyJson(String jsonString, Object obj) {
-        try {
-            if (jsonString != null) {
-                jsonString = jsonString.trim();
-                if (jsonString.startsWith("{")) {
-                    Object tempObj = mapper.readValue(jsonString, Object.class);
-                    return mapper.writeValueAsString(tempObj);
-                } else {
-                    Object[] tempObj = mapper.readValue(jsonString, Object[].class);
-                    return mapper.writeValueAsString(tempObj);
-                }
-            }
-            if (obj != null) {
-                return mapper.writeValueAsString(obj);
-            }
-        } catch (IOException e) {
-            throw new ArrowheadRuntimeException(
-                    "Jackson library threw IOException during JSON serialization! Wrapping it in RuntimeException. Exception message: " + e.getMessage(), e);
-        }
-        return null;
-    }
-
-    public static <T> T fromJson(String json, Class<T> parsedClass) {
-        try {
-            return mapper.readValue(json, parsedClass);
-        } catch (IOException e) {
-            throw new ArrowheadRuntimeException("Jackson library threw exception during JSON parsing!", e);
         }
     }
 

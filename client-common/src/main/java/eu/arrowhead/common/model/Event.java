@@ -9,6 +9,7 @@
 
 package eu.arrowhead.common.model;
 
+import eu.arrowhead.common.api.ArrowheadConverter;
 import org.glassfish.jersey.internal.guava.MoreObjects;
 
 import java.time.LocalDateTime;
@@ -34,6 +35,33 @@ public class Event {
   public Event(String type, String payload, LocalDateTime timestamp, Map<String, String> eventMetadata) {
     this.type = type;
     this.payload = payload;
+    this.timestamp = timestamp;
+    this.eventMetadata = eventMetadata;
+  }
+
+  public Event(String type, Object payload) {
+    this.type = type;
+    this.payload = ArrowheadConverter.JSON.toString(payload);
+    this.timestamp = LocalDateTime.now();
+  }
+
+  public Event(String type, Object payload, LocalDateTime timestamp, Map<String, String> eventMetadata) {
+    this.type = type;
+    this.payload = ArrowheadConverter.JSON.toString(payload);
+    this.timestamp = timestamp;
+    this.eventMetadata = eventMetadata;
+  }
+
+  public Event(String type, Object payload, String anInterface) {
+    this.type = type;
+    this.payload = ArrowheadConverter.toString(anInterface, payload);
+    this.timestamp = LocalDateTime.now();
+  }
+
+  public Event(String type, Object payload, String anInterface, LocalDateTime timestamp,
+               Map<String, String> eventMetadata) {
+    this.type = type;
+    this.payload = ArrowheadConverter.toString(anInterface, payload);
     this.timestamp = timestamp;
     this.eventMetadata = eventMetadata;
   }

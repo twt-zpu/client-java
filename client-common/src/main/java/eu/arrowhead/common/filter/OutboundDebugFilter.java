@@ -9,7 +9,7 @@
 
 package eu.arrowhead.common.filter;
 
-import eu.arrowhead.common.misc.Utility;
+import eu.arrowhead.common.api.ArrowheadConverter;
 import org.apache.log4j.Logger;
 
 import javax.annotation.Priority;
@@ -29,7 +29,7 @@ public class OutboundDebugFilter implements ContainerResponseFilter {
     if (Boolean.valueOf(System.getProperty("debug_mode", "false"))) {
       if (responseContext.getEntity() != null) {
         log.info("Response to the request at: " + requestContext.getUriInfo().getRequestUri().toString());
-        log.info(Utility.toPrettyJson(null, responseContext.getEntity()));
+        log.info(ArrowheadConverter.JSON.toString(responseContext.getEntity()));
       }
     }
   }

@@ -1,19 +1,76 @@
 package eu.arrowhead.common.api;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import eu.arrowhead.common.exception.ArrowheadRuntimeException;
+import eu.arrowhead.common.misc.JacksonJsonProviderAtRest;
+
 import javax.ws.rs.client.Entity;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 
 public class ArrowheadConverter {
     private static final Map<String, Converter> DEFAULT_CONVERTERS = new HashMap<>();
+    private static final ObjectMapper jsonMapper = JacksonJsonProviderAtRest.getMapper();
+    private static final XmlMapper xmlMapper = new XmlMapper();
 
-    public static final String JSON = "JSON";
-    public static final String XML = "XML";
+    public static final Converter JSON = new Converter(Interface.JSON, "application/json") {
+        @Override
+        public <T> Entity<T> toEntity(T object) {
+            return Entity.json(object);
+        }
+
+        @Override
+        public <T> String toString(T object) {
+            try {
+                return jsonMapper.writeValueAsString(object);
+            } catch (JsonProcessingException e) {
+                throw new ArrowheadRuntimeException("Jackson library threw IOException during JSON serialization! " +
+                        "Wrapping it in RuntimeException. Exception message: " + e.getMessage(), e);
+            }
+        }
+
+        @Override
+        public <T> T fromString(String string, Class<T> aClass) {
+            try {
+                return jsonMapper.readValue(string.trim(), aClass);
+            } catch (IOException e) {
+                throw new ArrowheadRuntimeException("Jackson library threw exception during JSON parsing!", e);
+            }
+        }
+    };
+
+    public static final Converter XML = new Converter(Interface.XML, "application/xml") {
+        @Override
+        public <T> Entity<T> toEntity(T object) {
+            return Entity.xml(object);
+        }
+
+        @Override
+        public <T> String toString(T object) {
+            try {
+                return xmlMapper.writeValueAsString(object);
+            } catch (JsonProcessingException e) {
+                throw new ArrowheadRuntimeException("Jackson library threw IOException during XML serialization! " +
+                        "Wrapping it in RuntimeException. Exception message: " + e.getMessage(), e);
+            }
+        }
+
+        @Override
+        public <T> T fromString(String string, Class<T> aClass) {
+            try {
+                return xmlMapper.readValue(string.trim(), aClass);
+            } catch (IOException e) {
+                throw new ArrowheadRuntimeException("Jackson library threw exception during JSON parsing!", e);
+            }
+        }
+    };
 
     static {
-        addDefaultEntityConverter(new FunctionConverter(JSON, "application/json", Entity::json));
-        addDefaultEntityConverter(new FunctionConverter(XML, "application/xml", Entity::xml));
+        addDefaultEntityConverter(JSON);
+        addDefaultEntityConverter(XML);
     }
 
     public static void addDefaultEntityConverter(Converter converter) {
@@ -24,8 +81,16 @@ public class ArrowheadConverter {
         return DEFAULT_CONVERTERS.containsKey(anInterface);
     }
 
-    public static Entity<?> toEntity(String anInterface, Object obj) {
-        return DEFAULT_CONVERTERS.get(anInterface).toEntity(obj);
+    public static <T> Entity<T> toEntity(String anInterface, T object) {
+        return DEFAULT_CONVERTERS.get(anInterface).toEntity(object);
+    }
+
+    public static <T> String toString(String anInterface, T object) {
+        return DEFAULT_CONVERTERS.get(anInterface).toString(object);
+    }
+
+    public static <T> T fromString(String anInterface, String string, Class<T> aClass) {
+        return DEFAULT_CONVERTERS.get(anInterface).fromString(string, aClass);
     }
 
     public static Converter get(String anInterface) {
@@ -40,7 +105,11 @@ public class ArrowheadConverter {
             this.mediaType = mediaType;
         }
 
-        public abstract Entity<?> toEntity(Object obj);
+        public abstract <T> Entity<T> toEntity(T object);
+
+        public abstract <T> String toString(T object);
+
+        public abstract <T> T fromString(String string, Class<T> aClass);
 
         public String getInterface() {
             return anInterface;
@@ -51,18 +120,8 @@ public class ArrowheadConverter {
         }
     }
 
-    public static class FunctionConverter extends Converter {
-
-        private final Function<Object, Entity<?>> toEntity;
-
-        public FunctionConverter(String anInterface, String mediaType, Function<Object, Entity<?>> toEntity) {
-            super(anInterface, mediaType);
-            this.toEntity = toEntity;
-        }
-
-        @Override
-        public Entity<?> toEntity(Object obj) {
-            return toEntity.apply(obj);
-        }
+    public abstract class Interface {
+        public static final String JSON = "JSON";
+        public static final String XML = "XML";
     }
 }

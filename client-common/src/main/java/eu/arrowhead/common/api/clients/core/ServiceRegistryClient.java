@@ -62,7 +62,7 @@ public class ServiceRegistryClient extends HttpClient {
      * @param port the port.
      */
     private ServiceRegistryClient(boolean secure, ArrowheadSecurityContext securityContext, String host, int port) {
-        super(new OrchestrationStrategy.Never(secure, host, port, "serviceregistry", ArrowheadConverter.JSON), securityContext);
+        super(new OrchestrationStrategy.Never(secure, host, port, "serviceregistry", ArrowheadConverter.Interface.JSON), securityContext);
     }
 
     /**

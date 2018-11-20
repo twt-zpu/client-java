@@ -1,5 +1,6 @@
 package eu.arrowhead.common.misc;
 
+import eu.arrowhead.common.api.ArrowheadConverter;
 import eu.arrowhead.common.exception.ErrorMessage;
 import eu.arrowhead.common.exception.ExceptionType;
 import eu.arrowhead.common.model.RawTokenInfo;
@@ -110,7 +111,7 @@ public class SecurityVerifier {
             byte[] byteToken = cipher.doFinal(tokenbytes);
 
             String json = new String(byteToken, StandardCharsets.UTF_8);
-            RawTokenInfo rawTokenInfo = Utility.fromJson(json, RawTokenInfo.class);
+            RawTokenInfo rawTokenInfo = ArrowheadConverter.JSON.fromString(json, RawTokenInfo.class);
             String[] rawTokenInfoParts = rawTokenInfo.getC().split("\\.");
             String consumerTokenName = rawTokenInfoParts[0];
 

@@ -10,12 +10,15 @@
 package eu.arrowhead.demo.consumer;
 
 import eu.arrowhead.common.api.ArrowheadApplication;
+import eu.arrowhead.common.api.ArrowheadConverter;
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
 import eu.arrowhead.common.api.clients.HttpClient;
 import eu.arrowhead.common.api.clients.OrchestrationStrategy;
 import eu.arrowhead.common.api.clients.core.OrchestrationClient;
-import eu.arrowhead.common.misc.Utility;
-import eu.arrowhead.common.model.*;
+import eu.arrowhead.common.model.ArrowheadSystem;
+import eu.arrowhead.common.model.OrchestrationFlags;
+import eu.arrowhead.common.model.ServiceMetadata;
+import eu.arrowhead.common.model.ServiceRequestForm;
 import eu.arrowhead.demo.model.TemperatureReadout;
 
 import javax.ws.rs.core.Response;
@@ -45,7 +48,7 @@ class ConsumerMain extends ArrowheadApplication {
                 .flag(OrchestrationFlags.Flags.METADATA_SEARCH, true)
                 .flag(OrchestrationFlags.Flags.ENABLE_INTER_CLOUD, true)
                 .build();
-        log.info("Service Request payload: " + Utility.toPrettyJson(null, srf));
+        log.info("Service Request payload: " + ArrowheadConverter.JSON.toString(srf));
 
         final HttpClient client = new HttpClient(new OrchestrationStrategy.Once(orchestration, srf), securityContext);
         final Response getResponse = client.request(HttpClient.Method.GET);
@@ -53,7 +56,7 @@ class ConsumerMain extends ArrowheadApplication {
         TemperatureReadout readout = new TemperatureReadout();
         try {
             readout = getResponse.readEntity(TemperatureReadout.class);
-            log.info("Provider Response payload: " + Utility.toPrettyJson(null, readout));
+            log.info("Provider Response payload: " + ArrowheadConverter.JSON.toString(readout));
         } catch (RuntimeException e) {
             log.error("Provider did not send the temperature readout in SenML format.", e);
         }

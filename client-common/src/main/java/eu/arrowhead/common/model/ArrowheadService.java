@@ -9,10 +9,12 @@
 
 package eu.arrowhead.common.model;
 
+import eu.arrowhead.common.api.ArrowheadConverter;
 import eu.arrowhead.common.misc.ArrowheadProperties;
-import eu.arrowhead.common.misc.Utility;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ArrowheadService {
 
@@ -137,8 +139,12 @@ public class ArrowheadService {
     }
 
     public void partialUpdate(ArrowheadService other) {
-        this.serviceDefinition = other.getServiceDefinition() != null ? other.getServiceDefinition() : this.serviceDefinition;
-        this.interfaces = other.getInterfaces().isEmpty() ? this.interfaces : Utility.fromJson(Utility.toPrettyJson(null, other.getInterfaces()), Set.class);
-        this.serviceMetadata = other.getServiceMetadata().isEmpty() ? this.serviceMetadata : Utility.fromJson(Utility.toPrettyJson(null, other.getServiceMetadata()), ServiceMetadata.class);
+        this.serviceDefinition = other.getServiceDefinition() != null ? other.getServiceDefinition() :
+                this.serviceDefinition;
+        this.interfaces = other.getInterfaces().isEmpty() ? this.interfaces : ArrowheadConverter.JSON.fromString(
+                ArrowheadConverter.JSON.toString(other.getInterfaces()), Set.class);
+        this.serviceMetadata = other.getServiceMetadata().isEmpty() ? this.serviceMetadata :
+                ArrowheadConverter.JSON.fromString(ArrowheadConverter.JSON.toString(other.getServiceMetadata()),
+                        ServiceMetadata.class);
     }
 }
