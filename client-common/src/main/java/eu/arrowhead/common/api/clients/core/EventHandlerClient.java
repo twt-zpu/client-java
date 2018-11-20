@@ -65,7 +65,7 @@ public class EventHandlerClient extends HttpClient {
      */
     public EventHandlerClient(boolean secure, ArrowheadSecurityContext securityContext, String host, int port) {
         super(new OrchestrationStrategy.Never(secure, host, port, "eventhandler",
-                ArrowheadConverter.Interface.JSON), securityContext);
+                ArrowheadConverter.JSON), securityContext);
     }
 
     /**

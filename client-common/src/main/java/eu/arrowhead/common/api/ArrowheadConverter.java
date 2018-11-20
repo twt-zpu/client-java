@@ -12,65 +12,64 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ArrowheadConverter {
+    public static final String JSON = "JSON";
+    public static final String XML = "XML";
+
     private static final Map<String, Converter> DEFAULT_CONVERTERS = new HashMap<>();
     private static final ObjectMapper jsonMapper = JacksonJsonProviderAtRest.getMapper();
     private static final XmlMapper xmlMapper = new XmlMapper();
 
-    public static final Converter JSON = new Converter(Interface.JSON, "application/json") {
-        @Override
-        public <T> Entity<T> toEntity(T object) {
-            return Entity.json(object);
-        }
-
-        @Override
-        public <T> String toString(T object) {
-            try {
-                return jsonMapper.writeValueAsString(object);
-            } catch (JsonProcessingException e) {
-                throw new ArrowheadRuntimeException("Jackson library threw IOException during JSON serialization! " +
-                        "Wrapping it in RuntimeException. Exception message: " + e.getMessage(), e);
-            }
-        }
-
-        @Override
-        public <T> T fromString(String string, Class<T> aClass) {
-            try {
-                return jsonMapper.readValue(string.trim(), aClass);
-            } catch (IOException e) {
-                throw new ArrowheadRuntimeException("Jackson library threw exception during JSON parsing!", e);
-            }
-        }
-    };
-
-    public static final Converter XML = new Converter(Interface.XML, "application/xml") {
-        @Override
-        public <T> Entity<T> toEntity(T object) {
-            return Entity.xml(object);
-        }
-
-        @Override
-        public <T> String toString(T object) {
-            try {
-                return xmlMapper.writeValueAsString(object);
-            } catch (JsonProcessingException e) {
-                throw new ArrowheadRuntimeException("Jackson library threw IOException during XML serialization! " +
-                        "Wrapping it in RuntimeException. Exception message: " + e.getMessage(), e);
-            }
-        }
-
-        @Override
-        public <T> T fromString(String string, Class<T> aClass) {
-            try {
-                return xmlMapper.readValue(string.trim(), aClass);
-            } catch (IOException e) {
-                throw new ArrowheadRuntimeException("Jackson library threw exception during JSON parsing!", e);
-            }
-        }
-    };
-
     static {
-        addDefaultEntityConverter(JSON);
-        addDefaultEntityConverter(XML);
+        addDefaultEntityConverter(new Converter(JSON, "application/json") {
+            @Override
+            public <T> Entity<T> toEntity(T object) {
+                return Entity.json(object);
+            }
+
+            @Override
+            public <T> String toString(T object) {
+                try {
+                    return jsonMapper.writeValueAsString(object);
+                } catch (JsonProcessingException e) {
+                    throw new ArrowheadRuntimeException("Jackson library threw IOException during JSON serialization! " +
+                            "Wrapping it in RuntimeException. Exception message: " + e.getMessage(), e);
+                }
+            }
+
+            @Override
+            public <T> T fromString(String string, Class<T> aClass) {
+                try {
+                    return jsonMapper.readValue(string.trim(), aClass);
+                } catch (IOException e) {
+                    throw new ArrowheadRuntimeException("Jackson library threw exception during JSON parsing!", e);
+                }
+            }
+        });
+        addDefaultEntityConverter(new Converter(XML, "application/xml") {
+            @Override
+            public <T> Entity<T> toEntity(T object) {
+                return Entity.xml(object);
+            }
+
+            @Override
+            public <T> String toString(T object) {
+                try {
+                    return xmlMapper.writeValueAsString(object);
+                } catch (JsonProcessingException e) {
+                    throw new ArrowheadRuntimeException("Jackson library threw IOException during XML serialization! " +
+                            "Wrapping it in RuntimeException. Exception message: " + e.getMessage(), e);
+                }
+            }
+
+            @Override
+            public <T> T fromString(String string, Class<T> aClass) {
+                try {
+                    return xmlMapper.readValue(string.trim(), aClass);
+                } catch (IOException e) {
+                    throw new ArrowheadRuntimeException("Jackson library threw exception during JSON parsing!", e);
+                }
+            }
+        });
     }
 
     public static void addDefaultEntityConverter(Converter converter) {
@@ -97,6 +96,10 @@ public class ArrowheadConverter {
         return DEFAULT_CONVERTERS.get(anInterface);
     }
 
+    public static Converter json() {
+        return get(JSON);
+    }
+
     public static abstract class Converter {
         private String anInterface, mediaType;
 
@@ -118,10 +121,5 @@ public class ArrowheadConverter {
         public String getMediaType() {
             return mediaType;
         }
-    }
-
-    public abstract class Interface {
-        public static final String JSON = "JSON";
-        public static final String XML = "XML";
     }
 }

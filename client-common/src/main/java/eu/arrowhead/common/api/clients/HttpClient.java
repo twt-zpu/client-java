@@ -165,7 +165,7 @@ public class HttpClient {
         // If the response status code does not start with 2 the request was not successful
         if (!(response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL)) {
             //The response body has to be extracted before the stream closes
-            String errorMessageBody = ArrowheadConverter.JSON.toString(response.getEntity());
+            String errorMessageBody = ArrowheadConverter.json().toString(response.getEntity());
             if (errorMessageBody == null || errorMessageBody.equals("null")) {
                 response.bufferEntity();
                 errorMessageBody = response.readEntity(String.class);
@@ -182,7 +182,7 @@ public class HttpClient {
                 log.warn("Request failed, response body: " + errorMessageBody);
                 throw new ArrowheadRuntimeException("Unknown error occurred at " + uri);
             } else {
-                log.warn(ArrowheadConverter.JSON.toString(errorMessage));
+                log.warn(ArrowheadConverter.json().toString(errorMessage));
                 switch (errorMessage.getExceptionType()) {
                     case ARROWHEAD:
                         throw new ArrowheadRuntimeException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());

@@ -111,7 +111,7 @@ public class SecurityVerifier {
             byte[] byteToken = cipher.doFinal(tokenbytes);
 
             String json = new String(byteToken, StandardCharsets.UTF_8);
-            RawTokenInfo rawTokenInfo = ArrowheadConverter.JSON.fromString(json, RawTokenInfo.class);
+            RawTokenInfo rawTokenInfo = ArrowheadConverter.json().fromString(json, RawTokenInfo.class);
             String[] rawTokenInfoParts = rawTokenInfo.getC().split("\\.");
             String consumerTokenName = rawTokenInfoParts[0];
 

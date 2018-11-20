@@ -82,8 +82,8 @@ public final class Utility {
         }
 
         if (!sb.toString().isEmpty()) {
-            String payload = ArrowheadConverter.JSON.toString(
-                    ArrowheadConverter.JSON.fromString(sb.toString(), Object.class));
+            String payload = ArrowheadConverter.json().toString(
+                    ArrowheadConverter.json().fromString(sb.toString(), Object.class));
             return payload != null ? payload : "";
         } else {
             return "";

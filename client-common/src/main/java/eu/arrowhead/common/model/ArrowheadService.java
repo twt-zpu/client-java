@@ -141,10 +141,10 @@ public class ArrowheadService {
     public void partialUpdate(ArrowheadService other) {
         this.serviceDefinition = other.getServiceDefinition() != null ? other.getServiceDefinition() :
                 this.serviceDefinition;
-        this.interfaces = other.getInterfaces().isEmpty() ? this.interfaces : ArrowheadConverter.JSON.fromString(
-                ArrowheadConverter.JSON.toString(other.getInterfaces()), Set.class);
+        this.interfaces = other.getInterfaces().isEmpty() ? this.interfaces : ArrowheadConverter.json().fromString(
+                ArrowheadConverter.json().toString(other.getInterfaces()), Set.class);
         this.serviceMetadata = other.getServiceMetadata().isEmpty() ? this.serviceMetadata :
-                ArrowheadConverter.JSON.fromString(ArrowheadConverter.JSON.toString(other.getServiceMetadata()),
+                ArrowheadConverter.json().fromString(ArrowheadConverter.json().toString(other.getServiceMetadata()),
                         ServiceMetadata.class);
     }
 }

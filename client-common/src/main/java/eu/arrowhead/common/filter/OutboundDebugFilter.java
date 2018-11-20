@@ -29,7 +29,7 @@ public class OutboundDebugFilter implements ContainerResponseFilter {
     if (Boolean.valueOf(System.getProperty("debug_mode", "false"))) {
       if (responseContext.getEntity() != null) {
         log.info("Response to the request at: " + requestContext.getUriInfo().getRequestUri().toString());
-        log.info(ArrowheadConverter.JSON.toString(responseContext.getEntity()));
+        log.info(ArrowheadConverter.json().toString(responseContext.getEntity()));
       }
     }
   }

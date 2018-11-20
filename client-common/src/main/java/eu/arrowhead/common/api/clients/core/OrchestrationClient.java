@@ -55,7 +55,7 @@ public class OrchestrationClient extends HttpClient {
      * @param port the port.
      */
     private OrchestrationClient(boolean secure, ArrowheadSecurityContext securityContext, String host, int port) {
-        super(new OrchestrationStrategy.Never(secure, host, port, "orchestrator", ArrowheadConverter.Interface.JSON), securityContext);
+        super(new OrchestrationStrategy.Never(secure, host, port, "orchestrator", ArrowheadConverter.JSON), securityContext);
     }
 
     /**

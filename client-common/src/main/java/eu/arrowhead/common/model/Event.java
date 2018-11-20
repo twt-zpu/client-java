@@ -41,13 +41,13 @@ public class Event {
 
   public Event(String type, Object payload) {
     this.type = type;
-    this.payload = ArrowheadConverter.JSON.toString(payload);
+    this.payload = ArrowheadConverter.json().toString(payload);
     this.timestamp = LocalDateTime.now();
   }
 
   public Event(String type, Object payload, LocalDateTime timestamp, Map<String, String> eventMetadata) {
     this.type = type;
-    this.payload = ArrowheadConverter.JSON.toString(payload);
+    this.payload = ArrowheadConverter.json().toString(payload);
     this.timestamp = timestamp;
     this.eventMetadata = eventMetadata;
   }
