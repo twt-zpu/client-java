@@ -150,7 +150,7 @@ public abstract class ArrowheadApplication {
             props.putIfAbsent("log4j.appender.CONSOLE.ImmediateFlush", "true");
             props.putIfAbsent("log4j.appender.CONSOLE.Threshold", "debug");
             props.putIfAbsent("log4j.appender.CONSOLE.layout", "org.apache.log4j.PatternLayout");
-            props.putIfAbsent("log4j.appender.CONSOLE.layout.conversionPattern", "%d{yyyy-MM-dd HH:mm:ss}  %c{1}.%M(%F:%L)  %p  %m%n");
+            props.putIfAbsent("log4j.appender.CONSOLE.layout.conversionPattern", "%d{yyyy-MM-dd HH:mm:ss}  %p  %-160m  %c{1}.%M(%F:%L)%n");
         }
         PropertyConfigurator.configure(props);
 
