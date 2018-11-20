@@ -9,11 +9,12 @@
 
 package eu.arrowhead.client.subscriber;
 
-import eu.arrowhead.common.api.*;
+import eu.arrowhead.common.api.ArrowheadApplication;
+import eu.arrowhead.common.api.ArrowheadSecurityContext;
 import eu.arrowhead.common.api.clients.core.EventHandlerClient;
 import eu.arrowhead.common.api.server.ArrowheadGrizzlyHttpServer;
 import eu.arrowhead.common.api.server.ArrowheadHttpServer;
-import eu.arrowhead.common.exception.NotFoundException;
+import eu.arrowhead.common.exception.ArrowheadException;
 import eu.arrowhead.common.model.ArrowheadSystem;
 
 class SubscriberMain extends ArrowheadApplication {
@@ -27,7 +28,7 @@ class SubscriberMain extends ArrowheadApplication {
   }
 
   @Override
-  protected void onStart() throws NotFoundException {
+  protected void onStart() throws ArrowheadException {
     final ArrowheadSecurityContext securityContext = ArrowheadSecurityContext.createFromProperties(true);
     final ArrowheadHttpServer server = ArrowheadGrizzlyHttpServer
             .createFromProperties(securityContext)

@@ -1,10 +1,7 @@
 package eu.arrowhead.common.api.server;
 
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
-import eu.arrowhead.common.exception.ArrowheadRuntimeException;
-import eu.arrowhead.common.exception.AuthException;
-import eu.arrowhead.common.exception.InvalidStateException;
-import eu.arrowhead.common.exception.NotFoundException;
+import eu.arrowhead.common.exception.*;
 import eu.arrowhead.common.misc.SecurityUtils;
 import eu.arrowhead.common.misc.Utility;
 
@@ -117,7 +114,7 @@ public abstract class ArrowheadHttpServer extends ArrowheadServer {
      * @throws NotFoundException if automatic port detection was chosen, but no free port could be found.
      */
     @Override
-    public ArrowheadHttpServer start() throws NotFoundException {
+    public ArrowheadHttpServer start() throws ArrowheadException {
         if (isSecure ^ securityContext != null)
             throw new ArrowheadRuntimeException("Both or neither of isSecure and securityContext must be set");
 

@@ -1,8 +1,8 @@
 package eu.arrowhead.common.api.server;
 
 import eu.arrowhead.common.api.ArrowheadApplication;
+import eu.arrowhead.common.exception.ArrowheadException;
 import eu.arrowhead.common.exception.ArrowheadRuntimeException;
-import eu.arrowhead.common.exception.NotFoundException;
 import org.apache.log4j.Logger;
 
 import java.util.HashSet;
@@ -35,7 +35,7 @@ public abstract class ArrowheadServer {
      * called automatically during this.
      * @return this.
      */
-    public ArrowheadServer start() throws NotFoundException {
+    public ArrowheadServer start() throws ArrowheadException {
         if (isStarted())
             throw new ArrowheadRuntimeException("Server already started");
 
@@ -69,7 +69,7 @@ public abstract class ArrowheadServer {
      * Implement your start routine here. On errors you should throw an exception to prevent the server to be
      * registered in the collection of running servers.
      */
-    protected abstract void onStart();
+    protected abstract void onStart() throws ArrowheadException;
 
     /**
      * Implement your stop routine here. Notice that your server will be removed from the collection before this method
