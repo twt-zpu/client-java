@@ -1,7 +1,7 @@
 package eu.arrowhead.common.api.clients;
 
 import eu.arrowhead.common.api.clients.core.OrchestrationClient;
-import eu.arrowhead.common.exception.*;
+import eu.arrowhead.common.exception.DataNotFoundException;
 import eu.arrowhead.common.model.*;
 import org.apache.log4j.Logger;
 
@@ -116,7 +116,7 @@ public abstract class OrchestrationStrategy {
      * @param payload the payload to send along.
      * @return the response.
      */
-    protected Response send(HttpClient client, URI uri, HttpClient.Method method, HttpClient.Interface anInterface, Object payload) {
+    protected Response send(HttpClient client, URI uri, HttpClient.Method method, String anInterface, Object payload) {
         return client.send(uri, method, anInterface, payload);
     }
 
@@ -128,7 +128,7 @@ public abstract class OrchestrationStrategy {
         private final String address;
         private final int port;
         private final String serviceUri;
-        private final HttpClient.Interface anInterface;
+        private final String anInterface;
 
         /**
          * Construct a new never strategy. Since it does not poll the orchestration system for the data, this needs to
@@ -139,7 +139,7 @@ public abstract class OrchestrationStrategy {
          * @param serviceUri the URI of the service.
          * @param anInterface the accepted Arrowhead interface.
          */
-        public Never(boolean secure, String address, int port, String serviceUri, HttpClient.Interface anInterface) {
+        public Never(boolean secure, String address, int port, String serviceUri, String anInterface) {
             this.secure = secure;
             this.address = address;
             this.port = port;

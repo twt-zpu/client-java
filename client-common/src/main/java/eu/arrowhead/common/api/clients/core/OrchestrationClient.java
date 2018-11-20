@@ -1,5 +1,6 @@
 package eu.arrowhead.common.api.clients.core;
 
+import eu.arrowhead.common.api.ArrowheadConverter;
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
 import eu.arrowhead.common.api.clients.HttpClient;
 import eu.arrowhead.common.api.clients.OrchestrationStrategy;
@@ -54,7 +55,7 @@ public class OrchestrationClient extends HttpClient {
      * @param port the port.
      */
     private OrchestrationClient(boolean secure, ArrowheadSecurityContext securityContext, String host, int port) {
-        super(new OrchestrationStrategy.Never(secure, host, port, "orchestrator", Interface.JSON), securityContext);
+        super(new OrchestrationStrategy.Never(secure, host, port, "orchestrator", ArrowheadConverter.JSON), securityContext);
     }
 
     /**

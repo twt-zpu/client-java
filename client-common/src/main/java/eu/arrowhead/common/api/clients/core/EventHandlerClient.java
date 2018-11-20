@@ -1,5 +1,6 @@
 package eu.arrowhead.common.api.clients.core;
 
+import eu.arrowhead.common.api.ArrowheadConverter;
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
 import eu.arrowhead.common.api.clients.HttpClient;
 import eu.arrowhead.common.api.clients.OrchestrationStrategy;
@@ -63,7 +64,7 @@ public class EventHandlerClient extends HttpClient {
      * @param port the port.
      */
     public EventHandlerClient(boolean secure, ArrowheadSecurityContext securityContext, String host, int port) {
-        super(new OrchestrationStrategy.Never(secure, host, port, "eventhandler", Interface.JSON), securityContext);
+        super(new OrchestrationStrategy.Never(secure, host, port, "eventhandler", ArrowheadConverter.JSON), securityContext);
     }
 
     /**

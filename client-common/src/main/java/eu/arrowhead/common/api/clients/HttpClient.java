@@ -1,5 +1,6 @@
 package eu.arrowhead.common.api.clients;
 
+import eu.arrowhead.common.api.ArrowheadConverter;
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
 import eu.arrowhead.common.exception.*;
 import eu.arrowhead.common.misc.SecurityUtils;
@@ -8,15 +9,11 @@ import org.apache.log4j.Logger;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 
 /**
  * Use instances of this to interact with HTTP based Arrowhead services.
@@ -25,32 +22,11 @@ import java.util.function.Function;
  */
 public class HttpClient {
     private static final Client insecureClient = SecurityUtils.createClient(null);
-    private static final Map<Interface, Function<Object, Entity<?>>> DEFAULT_ENTITY_CONVERTERS = new HashMap<>();
-    private static final Map<String, Interface> DEFAULT_MEDIA_TYPES = new HashMap<>();
 
     protected final Logger log = Logger.getLogger(getClass());
     private final OrchestrationStrategy strategy;
     private final ArrowheadSecurityContext securityContext;
     private final Client client;
-    private final Map<Interface, Function<Object, Entity<?>>> entityConverters = new HashMap<>();
-    private final Map<String, Interface> mediaTypes = new HashMap<>();
-
-    static {
-        addDefaultEntityConverter(Interface.JSON, Entity::json);
-        addDefaultEntityConverter(Interface.XML, Entity::xml);
-    }
-
-    /**
-     * Add an additional default converter to convert payloads to what is required by the Arrowhead Service. Default
-     * converters are shared between all instances of HttpClient, for instance specific converters see
-     * {@link HttpClient#addEntityConverter}.
-     * @param anInterface the interface to convert to.
-     * @param converter a function to do the conversion, can be null to deactivate.
-     */
-    public static void addDefaultEntityConverter(Interface anInterface, Function<Object, Entity<?>> converter) {
-        DEFAULT_ENTITY_CONVERTERS.put(anInterface, converter);
-        DEFAULT_MEDIA_TYPES.put(anInterface.getInterface(), anInterface);
-    }
 
     /**
      * Construct a new HttpClient
@@ -77,18 +53,6 @@ public class HttpClient {
 
     public ArrowheadSecurityContext getSecurityContext() {
         return securityContext;
-    }
-
-    /**
-     * Add an additional converter to convert payloads to what is required by the Arrowhead Service. These converters
-     * override the default converters. To set a default converter for all HttpClient instances, see
-     * {@link HttpClient#addDefaultEntityConverter}.
-     * @param anInterface the interface to convert to.
-     * @param converter a function to do the conversion, can be null to deactivate.
-     */
-    public void addEntityConverter(Interface anInterface, Function<Object, Entity<?>> converter) {
-        entityConverters.put(anInterface, converter);
-        mediaTypes.put(anInterface.getInterface(), anInterface);
     }
 
     /**
@@ -152,9 +116,8 @@ public class HttpClient {
      * @return the response.
      */
     Response send(URI uri, HttpClient.Method method, Set<String> interfaces, Object payload) {
-        for (String i : interfaces) {
-            Interface anInterface = mediaTypes.containsKey(i) ? mediaTypes.get(i) : DEFAULT_MEDIA_TYPES.get(i);
-            if (anInterface != null) return send(uri, method, anInterface, payload);
+        for (String anInterface : interfaces) {
+            if (ArrowheadConverter.contains(anInterface)) return send(uri, method, anInterface, payload);
         }
 
         throw new ArrowheadRuntimeException("No compatible interface found");
@@ -169,20 +132,19 @@ public class HttpClient {
      * @param payload the payload to send along.
      * @return the response.
      */
-    Response send(URI uri, HttpClient.Method method, Interface anInterface, Object payload) {
+    Response send(URI uri, HttpClient.Method method, String anInterface, Object payload) {
         try {
-            final Entity<?> entity = (entityConverters.containsKey(anInterface) && entityConverters.get(anInterface) != null ?
-                    entityConverters.get(anInterface) :
-                    DEFAULT_ENTITY_CONVERTERS.get(anInterface))
-                    .apply(payload);
+            final ArrowheadConverter.Converter converter = ArrowheadConverter.get(anInterface);
             log.info(String.format("%s %s", method.toString(), uri.toString()));
             final Invocation.Builder client = this.client
                     .target(uri)
-                    .request()
-                    .header("Content-type", anInterface.getMediaType());
-            return check(entity == null ?
-                    client.method(method.toString()) :
-                    client.method(method.toString(), entity), uri.toString());
+                    .request();
+            if (payload == null) {
+                return check(client.method(method.toString()), uri.toString());
+            } else {
+                client.header("Content-type", converter.getMediaType());
+                return check(client.method(method.toString(), converter.toEntity(payload)), uri.toString());
+            }
         } catch (ProcessingException e) {
             if (e.getCause().getMessage().contains("PKIX path")) {
                 throw new AuthException("The system at " + uri + " is not part of the same certificate chain of trust!",
@@ -250,35 +212,6 @@ public class HttpClient {
         }
 
         return response;
-    }
-
-    /**
-     * Arrowhead interface definition.
-     */
-    public static class Interface {
-        public static final Interface JSON = new Interface("JSON", "application/json"); // [RFC8259]
-        public static final Interface XML = new Interface("XML", "application/xml");    // [RFC7303]
-
-        private final String anInterface;
-        private final String mediaType;
-
-        /**
-         * Create a new interface
-         * @param anInterface the Arrowhead defined interface.
-         * @param mediaType the HTTP media type.
-         */
-        public Interface(String anInterface, String mediaType) {
-            this.anInterface = anInterface;
-            this.mediaType = mediaType;
-        }
-
-        public String getInterface() {
-            return anInterface;
-        }
-
-        public String getMediaType() {
-            return mediaType;
-        }
     }
 
     /**

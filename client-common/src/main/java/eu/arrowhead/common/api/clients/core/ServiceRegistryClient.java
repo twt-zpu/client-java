@@ -1,5 +1,6 @@
 package eu.arrowhead.common.api.clients.core;
 
+import eu.arrowhead.common.api.ArrowheadConverter;
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
 import eu.arrowhead.common.api.clients.HttpClient;
 import eu.arrowhead.common.api.clients.OrchestrationStrategy;
@@ -61,7 +62,7 @@ public class ServiceRegistryClient extends HttpClient {
      * @param port the port.
      */
     private ServiceRegistryClient(boolean secure, ArrowheadSecurityContext securityContext, String host, int port) {
-        super(new OrchestrationStrategy.Never(secure, host, port, "serviceregistry", Interface.JSON), securityContext);
+        super(new OrchestrationStrategy.Never(secure, host, port, "serviceregistry", ArrowheadConverter.JSON), securityContext);
     }
 
     /**
