@@ -19,11 +19,11 @@ import eu.arrowhead.common.model.ArrowheadSystem;
 
 class SubscriberMain extends ArrowheadApplication {
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws ArrowheadException {
     new SubscriberMain(args).start();
   }
 
-  private SubscriberMain(String[] args) {
+  private SubscriberMain(String[] args) throws ArrowheadException {
     super(args);
   }
 

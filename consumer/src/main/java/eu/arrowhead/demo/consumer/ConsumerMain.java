@@ -15,6 +15,7 @@ import eu.arrowhead.common.api.ArrowheadSecurityContext;
 import eu.arrowhead.common.api.clients.HttpClient;
 import eu.arrowhead.common.api.clients.OrchestrationStrategy;
 import eu.arrowhead.common.api.clients.core.OrchestrationClient;
+import eu.arrowhead.common.exception.ArrowheadException;
 import eu.arrowhead.common.model.ArrowheadSystem;
 import eu.arrowhead.common.model.OrchestrationFlags;
 import eu.arrowhead.common.model.ServiceMetadata;
@@ -25,11 +26,11 @@ import javax.ws.rs.core.Response;
 
 class ConsumerMain extends ArrowheadApplication {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ArrowheadException {
         new ConsumerMain(args).start();
     }
 
-    public ConsumerMain(String[] args) {
+    public ConsumerMain(String[] args) throws ArrowheadException {
         super(args);
     }
 

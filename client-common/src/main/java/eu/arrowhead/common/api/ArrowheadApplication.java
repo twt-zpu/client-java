@@ -33,28 +33,49 @@ public abstract class ArrowheadApplication {
     /**
      * @param args Arguments from main().
      */
-    public ArrowheadApplication(String[] args) {
-        setProperties(ArrowheadProperties.loadDefault());
+    public ArrowheadApplication(String[] args) throws ArrowheadException {
+        try {
+            setProperties(ArrowheadProperties.loadDefault());
+            defaultLogger(props);
 
-        boolean daemon = false;
-        for (String arg : args) {
-            switch (arg) {
-                case "-daemon":
-                    daemon = true;
-                    log.info("Starting server as daemon!");
-                    break;
-                case "-d":
-                    setDebug(true);
-                    log.info("Starting server in debug mode!");
-                    break;
-                case "-tls":
-                    log.warn("-------------------------------------------------------");
-                    log.warn("  WARNING: -TLS IS NO LONGER ACCEPTED AS ARGUMENT");
-                    log.warn("  Use 'secure=true' in the configuration file instead");
-                    log.warn("-------------------------------------------------------");
+            log.info("Working directory: " + System.getProperty("user.dir"));
+
+            boolean daemon = false;
+            for (String arg : args) {
+                switch (arg) {
+                    case "-daemon":
+                        daemon = true;
+                        log.info("Starting server as daemon!");
+                        break;
+                    case "-d":
+                        setDebug(true);
+                        log.info("Starting server in debug mode!");
+                        break;
+                    case "-tls":
+                        log.warn("-------------------------------------------------------");
+                        log.warn("  WARNING: -TLS IS NO LONGER ACCEPTED AS ARGUMENT");
+                        log.warn("  Use 'secure=true' in the configuration file instead");
+                        log.warn("-------------------------------------------------------");
+                }
             }
+            isDaemon = daemon;
+        } catch (Throwable t) {
+            log.error("Failed to create application", t);
+            throw t;
         }
-        isDaemon = daemon;
+    }
+
+    private static void defaultLogger(ArrowheadProperties props) {
+        if (!props.contains("log4j.rootLogger")) {
+            props.putIfAbsent("log4j.rootLogger", "INFO, CONSOLE");
+            props.putIfAbsent("log4j.appender.CONSOLE", "org.apache.log4j.ConsoleAppender");
+            props.putIfAbsent("log4j.appender.CONSOLE.target", "System.err");
+            props.putIfAbsent("log4j.appender.CONSOLE.ImmediateFlush", "true");
+            props.putIfAbsent("log4j.appender.CONSOLE.Threshold", "debug");
+            props.putIfAbsent("log4j.appender.CONSOLE.layout", "org.apache.log4j.PatternLayout");
+            props.putIfAbsent("log4j.appender.CONSOLE.layout.conversionPattern", "%d{yyyy-MM-dd HH:mm:ss}  %p  %-160m  %c{1}.%M(%F:%L)%n");
+        }
+        PropertyConfigurator.configure(props);
     }
 
     /**
@@ -140,20 +161,7 @@ public abstract class ArrowheadApplication {
      * Call this to start the application. You should provide your own implementations in onStart() and onStop() which
      * will be called by this.
      */
-    protected void start() {
-        log.info("Working directory: " + System.getProperty("user.dir"));
-
-        if (!props.contains("log4j.rootLogger")) {
-            props.putIfAbsent("log4j.rootLogger", "INFO, CONSOLE");
-            props.putIfAbsent("log4j.appender.CONSOLE", "org.apache.log4j.ConsoleAppender");
-            props.putIfAbsent("log4j.appender.CONSOLE.target", "System.err");
-            props.putIfAbsent("log4j.appender.CONSOLE.ImmediateFlush", "true");
-            props.putIfAbsent("log4j.appender.CONSOLE.Threshold", "debug");
-            props.putIfAbsent("log4j.appender.CONSOLE.layout", "org.apache.log4j.PatternLayout");
-            props.putIfAbsent("log4j.appender.CONSOLE.layout.conversionPattern", "%d{yyyy-MM-dd HH:mm:ss}  %p  %-160m  %c{1}.%M(%F:%L)%n");
-        }
-        PropertyConfigurator.configure(props);
-
+    protected void start() throws ArrowheadException {
         try {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 log.info("Received TERM signal, shutting down...");
@@ -168,6 +176,7 @@ public abstract class ArrowheadApplication {
             listenForInput();
         } catch (Throwable e) {
             log.error("Starting client failed", e);
+            throw e;
         }
     }
 

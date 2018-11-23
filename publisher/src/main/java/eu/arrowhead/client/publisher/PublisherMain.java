@@ -23,11 +23,11 @@ import java.util.TimerTask;
 
 class PublisherMain extends ArrowheadApplication {
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws ArrowheadException {
     new PublisherMain(args).start();
   }
 
-  private PublisherMain(String[] args) {
+  private PublisherMain(String[] args) throws ArrowheadException {
     super(args);
   }
 

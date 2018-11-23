@@ -10,11 +10,11 @@ import eu.arrowhead.common.model.ServiceRegistryEntry;
 
 class ProviderMain extends ArrowheadApplication {
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws ArrowheadException {
     new ProviderMain(args).start();
   }
 
-  public ProviderMain(String[] args) {
+  public ProviderMain(String[] args) throws ArrowheadException {
     super(args);
   }
 
