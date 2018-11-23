@@ -13,7 +13,6 @@ import eu.arrowhead.common.misc.Utility;
 import eu.arrowhead.common.model.CertificateSigningRequest;
 import eu.arrowhead.common.model.CertificateSigningResponse;
 import org.apache.log4j.Logger;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -21,7 +20,6 @@ import java.io.File;
 import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.PublicKey;
-import java.security.Security;
 
 /**
  * A client for interacting with the Certificate Authority system. See the static create* methods for how to get an
@@ -36,10 +34,6 @@ public final class CertificateAuthorityClient extends HttpClient {
     private String keystorePass;
     private String confDir, certDir;
     private String clientName;
-
-    static {
-        Security.addProvider(new BouncyCastleProvider());
-    }
 
     /**
      * Create a new client from the settings in the default properties files.
@@ -192,6 +186,8 @@ public final class CertificateAuthorityClient extends HttpClient {
     public ArrowheadSecurityContext bootstrap() {
         if (clientName == null) throw new ArrowheadRuntimeException("System name is required to generate " +
                 "certificates - have you set \"system_name\" in the config file?");
+
+        SecurityUtils.addSecurityProvider();
 
         // Prepare the data needed to generate the certificate(s)
         String cloudCN = getCloudCN();

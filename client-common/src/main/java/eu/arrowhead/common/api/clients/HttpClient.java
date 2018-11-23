@@ -20,7 +20,7 @@ import java.util.Set;
  * To interact with Arrowhead Core Services, see {@link eu.arrowhead.common.api.clients.core}
  */
 public class HttpClient {
-    private static final Client insecureClient = SecurityUtils.createClient(null);
+    private static Client insecureClient;
 
     protected final Logger log = Logger.getLogger(getClass());
     private final OrchestrationStrategy strategy;
@@ -40,6 +40,10 @@ public class HttpClient {
         if (secure ^ securityContext != null)
             throw new AuthException(String.format("Client is %s, but trying to set security context to %s)",
                     secure ? "secure" : "insecure", securityContext == null ? "null" : "not null"));
+
+        // Late creation of insecure client since this is slow on a Raspberry
+        if (!secure && insecureClient == null)
+            insecureClient = SecurityUtils.createClient(null);
 
         client = secure ?
                 SecurityUtils.createClient(securityContext.getSslContext()) :

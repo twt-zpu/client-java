@@ -15,6 +15,7 @@ import eu.arrowhead.common.model.CertificateSigningRequest;
 import eu.arrowhead.common.model.CertificateSigningResponse;
 import org.apache.log4j.Logger;
 import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
@@ -56,6 +57,15 @@ public final class SecurityUtils {
     // Decide whether to allow the connection...
     return true;
   };
+
+  private static Provider securityProvider;
+
+  public static void addSecurityProvider() {
+    // Late creation of BouncyCastleProvider since it can be slow to low on a Raspberry Pi
+    if (securityProvider == null) securityProvider = new BouncyCastleProvider();
+    if (Security.getProvider(securityProvider.getName()) == null)
+      Security.addProvider(securityProvider);
+  }
 
   public static KeyStore loadKeyStore(String filePath, String pass) {
     try {
@@ -442,6 +452,7 @@ public final class SecurityUtils {
       } else {
           client = ClientBuilder.newClient(configuration);
       }
+      // TODO Can we use eu.arrowhead.common.api.ArrowheadConverter here?
       client.register(JacksonJsonProviderAtRest.class);
       return client;
   }

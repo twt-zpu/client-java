@@ -5,13 +5,15 @@ import eu.arrowhead.common.exception.ErrorMessage;
 import eu.arrowhead.common.exception.ExceptionType;
 import eu.arrowhead.common.model.RawTokenInfo;
 import org.apache.log4j.Logger;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.crypto.Cipher;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.nio.charset.StandardCharsets;
-import java.security.*;
+import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.Signature;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.function.Supplier;
@@ -94,7 +96,7 @@ public class SecurityVerifier {
             byte[] tokenbytes = Base64.getDecoder().decode(token);
             byte[] signaturebytes = Base64.getDecoder().decode(signature);
 
-            Security.addProvider(new BouncyCastleProvider());
+            SecurityUtils.addSecurityProvider();
             Signature signatureInstance = Signature.getInstance("SHA256withRSA", "BC");
             signatureInstance.initVerify(authKey);
             signatureInstance.update(tokenbytes);
