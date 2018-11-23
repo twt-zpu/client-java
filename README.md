@@ -16,4 +16,3 @@ This is a multi module maven project, the [root `pom.xml`](https://github.com/ar
 * **provider**: client skeleton which registers a specific `ArrowheadService` into the Service Registry and runs a web server where the service is available
 * **publisher**: client skeleton which publishes events to the Event Handler core system
 * **subscriber**: client skeleton which subscribes to specific event types at the Event Handler core system
-* **cert_request**: stand-alone proof of concept Spring Boot app which requests a new Application System certificate from the Certificate Authority core system
