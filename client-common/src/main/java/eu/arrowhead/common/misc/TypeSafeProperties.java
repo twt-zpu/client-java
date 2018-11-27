@@ -34,23 +34,46 @@ public class TypeSafeProperties extends Properties {
     }
   }
 
-    /**
-     Updates the given properties file with the given key-value pairs.
-     */
-    public void storeToFile(String file) {
-        try {
-            final Path path = Paths.get(file);
-            if (!Files.exists(path)) {
-                Files.createFile(path);
-            }
+  /**
+   Updates the given properties file with the given key-value pairs.
+   */
+  public void storeToFile(String file) {
+    try {
+      final Path path = Paths.get(file);
+      if (!Files.exists(path)) {
+        Files.createFile(path);
+      }
 
-            FileOutputStream out = new FileOutputStream(file);
-            store(out, null);
-            out.close();
-        } catch (IOException e) {
-            throw new ArrowheadRuntimeException("IOException during configuration file update", e);
-        }
+      FileOutputStream out = new FileOutputStream(file);
+      store(out, null);
+      out.close();
+    } catch (IOException e) {
+      throw new ArrowheadRuntimeException("IOException during configuration file update", e);
     }
+  }
+
+  /**
+   * TODO This is very much a hack, that is likely to break with new implementations of Properties...
+   * @param file
+   */
+  public void storeToFileCommented(String file) {
+    try {
+      final Path path = Paths.get(file);
+      if (!Files.exists(path)) {
+        Files.createFile(path);
+      }
+      FileOutputStream out = new FileOutputStream(file);
+      store(new BufferedWriter(new OutputStreamWriter(out, "8859_1")) {
+        @Override
+        public void write(String str) throws IOException {
+          super.write((str.startsWith("#") || str.startsWith("\r") || str.startsWith("\n") ? "" : "#") + str);
+        }
+      }, null);
+      out.close();
+    } catch (IOException e) {
+      throw new ArrowheadRuntimeException("IOException during configuration file update", e);
+    }
+  }
 
   public int getIntProperty(String key, int defaultValue) {
     String val = getProperty(key);
@@ -66,7 +89,7 @@ public class TypeSafeProperties extends Properties {
     String val = getProperty(key);
     return (val == null) ? defaultValue : Boolean.valueOf(val);
   }
-    //These methods are here to make sure TypeSafeProperties are saved to file in alphabetical order (sorted by key value)
+  //These methods are here to make sure TypeSafeProperties are saved to file in alphabetical order (sorted by key value)
 
   @Override
   public Set<Object> keySet() {

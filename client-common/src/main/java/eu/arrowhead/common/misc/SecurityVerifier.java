@@ -41,6 +41,15 @@ public class SecurityVerifier {
                 .loadAuthorizationPublicKey(authKeyPath);
     }
 
+    public static void setDefaultProperties(ArrowheadProperties props) {
+        props
+                .setDefaultSystemName(false)
+                .setDefaultKeystore()
+                .setDefaultKeystorePass()
+                .setDefaultKeyPass()
+                .setDefaultAuthKey();
+    }
+
     private SecurityVerifier() {
     }
 

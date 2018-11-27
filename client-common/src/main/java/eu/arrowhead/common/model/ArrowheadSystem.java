@@ -59,6 +59,14 @@ public class ArrowheadSystem {
         return new ArrowheadSystem(systemName, host, port, authInfo);
     }
 
+    public static void setDefaultProperties(ArrowheadProperties props) {
+        props
+                .setDefaultSecure()
+                .setDefaultAddress()
+                .setDefaultPort()
+                .setDefaultSystemName(false);
+    }
+
     public ArrowheadSystem() {
     }
 

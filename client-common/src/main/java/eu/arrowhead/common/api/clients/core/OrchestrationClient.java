@@ -47,6 +47,13 @@ public class OrchestrationClient extends HttpClient {
                 ArrowheadProperties.getDefaultOrchPort(isSecure));
     }
 
+    public static void setDefaultProperties(ArrowheadProperties props) {
+        props
+                .setDefaultSecure()
+                .setDefaultOrchAddress()
+                .setDefaultOrchPort();
+    }
+
     /**
      * Private construct, see the create* methods.
      * @param secure use secure mode?

@@ -36,6 +36,12 @@ public class ServiceRegistryEntry {
     return new ServiceRegistryEntry(service, provider, serviceUri);
   }
 
+  public static void setDefaultProperties(ArrowheadProperties props) {
+    ArrowheadService.setDefaultProperties(props);
+    ArrowheadSystem.setDefaultProperties(props);
+    props.setDefaultServiceUri();
+  }
+
   public ServiceRegistryEntry() {
   }
 

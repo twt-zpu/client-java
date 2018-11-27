@@ -35,6 +35,12 @@ public abstract class ArrowheadApplication {
      */
     public ArrowheadApplication(String[] args) throws ArrowheadException {
         try {
+            defaultLogger(new ArrowheadProperties());
+
+            if (!ArrowheadProperties.defaultExists()) {
+                onMissingConf();
+            }
+
             setProperties(ArrowheadProperties.loadDefault());
             defaultLogger(props);
 
@@ -193,4 +199,8 @@ public abstract class ArrowheadApplication {
      * yourself. You should however insure that anything else you start is shutdown properly.
      */
     protected abstract void onStop();
+
+    protected void onMissingConf() throws ArrowheadException {
+
+    }
 }

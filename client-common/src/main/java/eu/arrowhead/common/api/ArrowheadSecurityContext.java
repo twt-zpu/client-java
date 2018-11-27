@@ -104,6 +104,21 @@ public class ArrowheadSecurityContext {
                 .load();
     }
 
+    public static void setDefaultProperties(ArrowheadProperties props, boolean bootstrap) {
+        props
+                .setDefaultSecure()
+                .setDefaultSystemName(false)
+                .setDefaultKeystore()
+                .setDefaultKeystorePass()
+                .setDefaultKeyPass()
+                .setDefaultTruststore()
+                .setDefaultTruststorePass();
+
+        if (props.isSecure() && bootstrap) {
+            CertificateAuthorityClient.setDefaultProperties(props);
+        }
+    }
+
     /**
      * Internal function for loading everything.
      * @return this.

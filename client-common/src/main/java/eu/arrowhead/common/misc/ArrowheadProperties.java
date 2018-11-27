@@ -10,60 +10,19 @@ import java.util.*;
 
 public class ArrowheadProperties extends TypeSafeProperties {
 
-    private enum Keys {
-        SECURE("secure"),
-        KEYSTORE("keystore"),
-        KEYSTOREPASS("keystorepass"),
-        KEYPASS("keypass"),
-        TRUSTSTORE("truststore"),
-        TRUSTSTOREPASS("truststorepass"),
-        SYSTEM_NAME("system_name"),
-        ADDRESS("address"),
-        PORT("port"),
-        SR_ADDRESS("sr_address"),
-        SR_PORT("sr_port"),
-        ORCH_ADDRESS("orch_address"),
-        ORCH_PORT("orch_port"),
-        EH_ADDRESS("eh_address"),
-        EH_PORT("eh_port"),
-        CA_ADDRESS("ca_address"),
-        CA_PORT("ca_port"),
-        AUTH_PUB("auth_pub"),
-        SERVICE_URI("service_uri"),
-        SERVICE_NAME("service_name"),
-        INTERFACES("interfaces"),
-        SERVICE_METADATA("service_metadata"),
-        EVENT_TYPE("event_type"),
-        NOTIFY_URI("notify_uri"),
-        CERT_DIR("cert_dir"),
-        BOOTSTRAP("bootstrap"),
-        ;
-        private final String key;
-
-        Keys(final String key) {
-            this.key = key;
-        }
-
-        @Override
-        public String toString() {
-            return key;
-        }
-
-    }
     public static String getConfDir() {
         return System.getProperty("confDir");
     }
-
     public static boolean getDefaultIsSecure() {
         return true;
     }
 
     public static String getDefaultKeyStore(String systemName) {
-        return getDefaultCertDir() + File.separator + systemName + ".p12";
+        return systemName + ".p12";
     }
 
     public static String getDefaultTruststore(String systemName) {
-        return getDefaultCertDir() + File.separator + systemName + ".p12";
+        return systemName + ".p12";
     }
 
     public static String getDefaultAddress() {
@@ -126,23 +85,77 @@ public class ArrowheadProperties extends TypeSafeProperties {
         return false;
     }
 
+    private static String getDefaultKeyPass() {
+        return "";
+    }
+
+    private static String getDefaultTruststorePass() {
+        return "";
+    }
+
+    private static String getDefaultKeyStorePass() {
+        return "";
+    }
+
+    private static String getDefaultServiceName() {
+        return "unknown";
+    }
+
+    private static String getDefaultInterfaces() {
+        return "JSON, XML";
+    }
+
+    private static String getDefaultMetadata() {
+        return "";
+    }
+
+    private static String getDefaultServiceUri(String serviceName) {
+        return serviceName;
+    }
+
     public static ArrowheadProperties load(String fileName) {
         ArrowheadProperties prop = new ArrowheadProperties();
         prop.loadFromFile(fileName);
         return prop;
     }
 
-    public static ArrowheadProperties loadDefault() {
+    private static String defaultConf() {
         final String confDir = getConfDir();
+        return (confDir != null ? confDir + File.separator : "") + "default.conf";
+    }
 
+    private static String appConf() {
+        final String confDir = getConfDir();
+        return (confDir != null ? confDir + File.separator : "") + "app.conf";
+    }
+
+    public static boolean defaultExists() {
+        return new File(defaultConf()).isFile();
+    }
+
+    public static ArrowheadProperties loadDefault() {
         ArrowheadProperties prop = new ArrowheadProperties();
-        prop.loadFromFile((confDir != null ? confDir + File.separator : "") + "default.conf");
-        final String appConf = (confDir != null ? confDir + File.separator : "") + "app.conf";
+        final String fileName = defaultConf();
+        LOG.info("Loading " + fileName);
+        prop.loadFromFile(fileName);
+        final String appConf = appConf();
         if (Files.isReadable(Paths.get(appConf))) {
             prop.loadFromFile(appConf);
         }
 
         return prop;
+    }
+
+    public void storeAsDefault() {
+        storeToFile(defaultConf());
+    }
+
+    public void storeAsDefaultCommented() {
+        storeToFileCommented(defaultConf());
+    }
+
+    public void storeAsApp() {
+        storeToFile(appConf());
     }
 
     private int getIntProperty(Keys key, int defaultValue) {
@@ -163,6 +176,14 @@ public class ArrowheadProperties extends TypeSafeProperties {
 
     private synchronized Object setProperty(Keys key, String value) {
         return super.setProperty(key.toString(), value);
+    }
+
+    private synchronized Object setProperty(Keys key, int value) {
+        return super.setProperty(key.toString(), Integer.toString(value));
+    }
+
+    private synchronized Object setProperty(Keys key, boolean value) {
+        return super.setProperty(key.toString(), Boolean.toString(value));
     }
 
     public boolean containsKey(Keys key) {
@@ -335,4 +356,191 @@ public class ArrowheadProperties extends TypeSafeProperties {
         }
     }
 
+    public ArrowheadProperties setDefaultSecure() {
+        setProperty(Keys.SECURE, getDefaultIsSecure());
+        return this;
+    }
+
+    public ArrowheadProperties setDefaultCaAddress() {
+        setProperty(Keys.CA_ADDRESS, getDefaultCaAddress());
+        return this;
+    }
+
+    public ArrowheadProperties setDefaultCaPort() {
+        setProperty(Keys.CA_PORT, getDefaultCaPort(isSecure()));
+        return this;
+    }
+
+    public ArrowheadProperties setDefaultKeyPass() {
+        setProperty(Keys.KEYPASS, getDefaultKeyPass());
+        return this;
+    }
+
+    public ArrowheadProperties setDefaultTruststore() {
+        setProperty(Keys.TRUSTSTORE, getDefaultTruststore(getSystemName()));
+        return this;
+    }
+
+    public ArrowheadProperties setDefaultSystemName(boolean override) {
+        if (override || !containsKey(Keys.SYSTEM_NAME))
+            setProperty(Keys.SYSTEM_NAME, createDefaultSystemName());
+        return this;
+    }
+
+    public ArrowheadProperties setDefaultTruststorePass() {
+        setProperty(Keys.TRUSTSTOREPASS, getDefaultTruststorePass());
+        return this;
+    }
+
+    public ArrowheadProperties setDefaultKeystorePass() {
+        setProperty(Keys.KEYSTOREPASS, getDefaultKeyStorePass());
+        return this;
+    }
+
+    public ArrowheadProperties setDefaultCertDir() {
+        setProperty(Keys.CERT_DIR, getDefaultCertDir());
+        return this;
+    }
+
+    public ArrowheadProperties setDefaultEhAddress() {
+        setProperty(Keys.EH_ADDRESS, getDefaultEhAddress());
+        return this;
+    }
+
+    public ArrowheadProperties setDefaultEhPort() {
+        setProperty(Keys.EH_PORT, getDefaultEhPort(isSecure()));
+        return this;
+    }
+
+    public ArrowheadProperties setDefaultOrchAddress() {
+        setProperty(Keys.ORCH_ADDRESS, getDefaultOrchAddress());
+        return this;
+    }
+
+    public ArrowheadProperties setDefaultOrchPort() {
+        setProperty(Keys.ORCH_PORT, getDefaultOrchPort(isSecure()));
+        return this;
+    }
+
+    public ArrowheadProperties setDefaultSrAddress() {
+        setProperty(Keys.SR_ADDRESS, getDefaultSrAddress());
+        return this;
+    }
+
+    public ArrowheadProperties setDefaultSrPort() {
+        setProperty(Keys.SR_PORT, getDefaultSrPort(isSecure()));
+        return this;
+    }
+
+    public ArrowheadProperties setDefaultAddress() {
+        setProperty(Keys.ADDRESS, getDefaultAddress());
+        return this;
+    }
+
+    public ArrowheadProperties setDefaultPort() {
+        setProperty(Keys.PORT, getDefaultPort(isSecure()));
+        return this;
+    }
+
+    public ArrowheadProperties setDefaultKeystore() {
+        setProperty(Keys.KEYSTORE, getDefaultKeyStore(getSystemName()));
+        return this;
+    }
+
+    public ArrowheadProperties setDefaultServiceName() {
+        setProperty(Keys.SERVICE_NAME, getDefaultServiceName());
+        return this;
+    }
+
+    public ArrowheadProperties setDefaultInterfaces() {
+        setProperty(Keys.INTERFACES, getDefaultInterfaces());
+        return this;
+    }
+
+    public ArrowheadProperties setDefaultServiceMetadata() {
+        setProperty(Keys.SERVICE_METADATA, getDefaultMetadata());
+        return this;
+    }
+
+    public ArrowheadProperties setDefaultAuthKey() {
+        setProperty(Keys.AUTH_PUB, getDefaultAuthKey());
+        return this;
+    }
+
+    public ArrowheadProperties setDefaultServiceUri() {
+        setProperty(Keys.SERVICE_URI, getDefaultServiceUri(getServiceName()));
+        return this;
+    }
+
+
+    private enum Keys {
+        SECURE("secure"),
+        KEYSTORE("keystore"),
+        KEYSTOREPASS("keystorepass"),
+        KEYPASS("keypass"),
+        TRUSTSTORE("truststore"),
+        TRUSTSTOREPASS("truststorepass"),
+        SYSTEM_NAME("system_name"),
+        ADDRESS("address"),
+        PORT("port"),
+        SR_ADDRESS("sr_address"),
+        SR_PORT("sr_port"),
+        ORCH_ADDRESS("orch_address"),
+        ORCH_PORT("orch_port"),
+        EH_ADDRESS("eh_address"),
+        EH_PORT("eh_port"),
+        CA_ADDRESS("ca_address"),
+        CA_PORT("ca_port"),
+        AUTH_PUB("auth_pub"),
+        SERVICE_URI("service_uri"),
+        SERVICE_NAME("service_name"),
+        INTERFACES("interfaces"),
+        SERVICE_METADATA("service_metadata"),
+        EVENT_TYPE("event_type"),
+        NOTIFY_URI("notify_uri"),
+        CERT_DIR("cert_dir"),
+        BOOTSTRAP("bootstrap"),
+        ;
+        private final String key;
+
+        Keys(final String key) {
+            this.key = key;
+        }
+
+        @Override
+        public String toString() {
+            return key;
+        }
+
+    }
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
