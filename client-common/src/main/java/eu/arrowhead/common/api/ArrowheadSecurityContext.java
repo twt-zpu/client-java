@@ -74,7 +74,7 @@ public class ArrowheadSecurityContext {
                     .load();
         } catch (KeystoreException e) {
             if (secure && bootstrap) {
-                LOG.info("Bootstrapping certificates...");
+                LOG.info("Bootstrapping certificates...", e);
                 return CertificateAuthorityClient.createFromProperties(props).bootstrap();
             } else {
                 throw new AuthException("Creating security context failed", e);
@@ -126,11 +126,23 @@ public class ArrowheadSecurityContext {
      */
     private ArrowheadSecurityContext load() throws KeystoreException {
         sslContextConfigurator = new SSLContextConfigurator();
-        if (keystoreFile != null) sslContextConfigurator.setKeyStoreFile(keystoreFile);
-        if (keystorePass != null) sslContextConfigurator.setKeyStorePass(keystorePass);
-        if (keyPass != null) sslContextConfigurator.setKeyPass(keyPass);
-        if (truststoreFile != null) sslContextConfigurator.setTrustStoreFile(truststoreFile);
-        if (truststorePass != null) sslContextConfigurator.setTrustStorePass(truststorePass);
+        if (keystoreFile != null) {
+            log.info("Using keystore: " + keystoreFile);
+            sslContextConfigurator.setKeyStoreFile(keystoreFile);
+        }
+        if (keystorePass != null) {
+            sslContextConfigurator.setKeyStorePass(keystorePass);
+        }
+        if (keyPass != null) {
+            sslContextConfigurator.setKeyPass(keyPass);
+        }
+        if (truststoreFile != null) {
+            log.info("Using truststore: " + truststoreFile);
+            sslContextConfigurator.setTrustStoreFile(truststoreFile);
+        }
+        if (truststorePass != null) {
+            sslContextConfigurator.setTrustStorePass(truststorePass);
+        }
 
         try {
             sslContext = sslContextConfigurator.createSSLContext(true);

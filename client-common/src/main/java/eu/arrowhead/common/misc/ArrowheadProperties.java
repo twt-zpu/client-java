@@ -1,6 +1,7 @@
 package eu.arrowhead.common.misc;
 
 import eu.arrowhead.common.model.ServiceMetadata;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -9,6 +10,7 @@ import java.time.ZonedDateTime;
 import java.util.*;
 
 public class ArrowheadProperties extends TypeSafeProperties {
+    private static final Logger LOG = Logger.getLogger(ArrowheadProperties.class);
 
     public static String getConfDir() {
         return System.getProperty("confDir");
@@ -140,6 +142,7 @@ public class ArrowheadProperties extends TypeSafeProperties {
         prop.loadFromFile(fileName);
         final String appConf = appConf();
         if (Files.isReadable(Paths.get(appConf))) {
+            LOG.info("Loading " + appConf);
             prop.loadFromFile(appConf);
         }
 
