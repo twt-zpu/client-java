@@ -19,6 +19,7 @@ import java.util.Set;
  * See also {@link ArrowheadHttpServer} and {@link ArrowheadGrizzlyHttpServer}.
  */
 public abstract class ArrowheadServer {
+    private static final Logger LOG = Logger.getLogger(ArrowheadServer.class);
     private static final Set<ArrowheadServer> servers = new HashSet<>();
     protected final Logger log = Logger.getLogger(getClass());
 
@@ -27,7 +28,14 @@ public abstract class ArrowheadServer {
      * {@link eu.arrowhead.common.api.ArrowheadApplication} if this class is used.
      */
     public static void stopAll() {
-        servers.forEach(ArrowheadServer::stop);
+        while (!servers.isEmpty()) {
+            final ArrowheadServer server = servers.iterator().next();
+            server.stop();
+            if (servers.contains(server)) {
+                LOG.warn("Should not be here");
+                servers.remove(server);
+            }
+        }
     }
 
     /**
