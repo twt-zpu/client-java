@@ -1,0 +1,94 @@
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Security settings
+# ---------------------------------------------------------------------------------------------------------------------
+
+# Start the system in secure mode?
+#secure=true
+
+# Use bootstrapping by the certificate authority (EXPERIMENTAL)
+#bootstrap=false
+
+# ---------------------------------------------------------------------------------------------------------------------
+# System settings
+# ---------------------------------------------------------------------------------------------------------------------
+
+# Name of your system
+#system_name=unknownSystem
+
+# Address / port of your system
+#address=0.0.0.0
+#port=443
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Service settings
+# ---------------------------------------------------------------------------------------------------------------------
+
+# Name of a service
+#service_name=unknownService
+
+# URI of the service
+#service_uri=unknownService
+
+# Interfaces of the service
+#interfaces=JSON, XML
+
+# Service metadata
+#service_metadata=
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Event settings
+# ---------------------------------------------------------------------------------------------------------------------
+
+# Ask event handler for feedback on notifications
+#feedback=false
+
+# Feedback URI
+#feedback_uri=publisher/feedback
+
+# Notify URI
+#notify_uri=subscriber/notify
+
+# Event type
+#event_type=
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Core system addresses and ports
+# ---------------------------------------------------------------------------------------------------------------------
+
+# Address / port of the Service Registry
+#sr_address=0.0.0.0
+#sr_port=8443
+
+# Address / port of the Orchestrator
+#orch_address=0.0.0.0
+#orch_port=8441
+
+# Address / port of the Event Handler
+#eh_address=0.0.0.0
+#eh_port=8455
+
+# Address / port of the Certificate Authority
+#ca_address=0.0.0.0
+#ca_port=8459
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Certificate settings
+# ---------------------------------------------------------------------------------------------------------------------
+
+# Path of the certificates
+#cert_dir=config/certificates
+
+# Keystore filename and password
+#keystore=unknownSystem.p12
+#keystorepass=
+
+# Password for the individual keys
+#keypass=
+
+# Truststore filename and password
+#truststore=unknownSystem.p12
+#truststorepass=
+
+# Public key of the Authorization system (.pub or .crt)
+#auth_pub=authorization.crt

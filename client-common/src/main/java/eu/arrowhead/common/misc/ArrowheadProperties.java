@@ -15,6 +15,7 @@ public class ArrowheadProperties extends TypeSafeProperties {
     public static String getConfDir() {
         return System.getProperty("confDir");
     }
+
     public static boolean getDefaultIsSecure() {
         return true;
     }
@@ -68,7 +69,7 @@ public class ArrowheadProperties extends TypeSafeProperties {
     }
 
     public static String getDefaultAuthKey() {
-        return "authorization.pub";
+        return "authorization.crt";
     }
 
     public static String createDefaultSystemName() {
@@ -349,7 +350,7 @@ public class ArrowheadProperties extends TypeSafeProperties {
     }
 
     public boolean getFeedback() {
-        return getBooleanProperty(Keys.FEEDBACK_URI, getDefaultFeedback());
+        return getBooleanProperty(Keys.FEEDBACK, getDefaultFeedback());
     }
 
     public String getCertDir() {
@@ -491,17 +492,24 @@ public class ArrowheadProperties extends TypeSafeProperties {
         return this;
     }
 
-
     private enum Keys {
         SECURE("secure"),
-        KEYSTORE("keystore"),
-        KEYSTOREPASS("keystorepass"),
-        KEYPASS("keypass"),
-        TRUSTSTORE("truststore"),
-        TRUSTSTOREPASS("truststorepass"),
+        BOOTSTRAP("bootstrap"),
+
         SYSTEM_NAME("system_name"),
         ADDRESS("address"),
         PORT("port"),
+
+        SERVICE_NAME("service_name"),
+        SERVICE_URI("service_uri"),
+        INTERFACES("interfaces"),
+        SERVICE_METADATA("service_metadata"),
+
+        EVENT_TYPE("event_type"),
+        NOTIFY_URI("notify_uri"),
+        FEEDBACK_URI("feedback_uri"),
+        FEEDBACK("feedback"),
+
         SR_ADDRESS("sr_address"),
         SR_PORT("sr_port"),
         ORCH_ADDRESS("orch_address"),
@@ -510,18 +518,16 @@ public class ArrowheadProperties extends TypeSafeProperties {
         EH_PORT("eh_port"),
         CA_ADDRESS("ca_address"),
         CA_PORT("ca_port"),
-        AUTH_PUB("auth_pub"),
-        SERVICE_URI("service_uri"),
-        SERVICE_NAME("service_name"),
-        INTERFACES("interfaces"),
-        SERVICE_METADATA("service_metadata"),
-        EVENT_TYPE("event_type"),
-        NOTIFY_URI("notify_uri"),
-        FEEDBACK_URI("feedback_uri"),
-        FEEDBACK("feedback"),
+
         CERT_DIR("cert_dir"),
-        BOOTSTRAP("bootstrap"),
+        KEYSTORE("keystore"),
+        KEYSTOREPASS("keystorepass"),
+        KEYPASS("keypass"),
+        TRUSTSTORE("truststore"),
+        TRUSTSTOREPASS("truststorepass"),
+        AUTH_PUB("auth_pub"),
         ;
+
         private final String key;
 
         Keys(final String key) {
