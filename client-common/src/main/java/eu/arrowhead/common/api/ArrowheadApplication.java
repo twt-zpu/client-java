@@ -5,12 +5,11 @@ import eu.arrowhead.common.api.clients.core.ServiceRegistryClient;
 import eu.arrowhead.common.api.server.ArrowheadServer;
 import eu.arrowhead.common.exception.ArrowheadException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 
 /**
  * Main class for Arrowhead applications. In most cases, your main class should inherit from this and your main function
@@ -46,11 +45,10 @@ public abstract class ArrowheadApplication {
 
             log.info("Working directory: " + System.getProperty("user.dir"));
 
-            boolean daemon = false;
             for (String arg : args) {
                 switch (arg) {
                     case "-daemon":
-                        daemon = true;
+                        isDaemon = true;
                         log.info("Starting server as daemon!");
                         break;
                     case "-d":
@@ -64,7 +62,6 @@ public abstract class ArrowheadApplication {
                         log.warn("-------------------------------------------------------");
                 }
             }
-            isDaemon = daemon;
         } catch (Throwable t) {
             log.error("Failed to create application", t);
             throw t;

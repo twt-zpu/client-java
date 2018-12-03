@@ -10,14 +10,27 @@
 package eu.arrowhead.common.misc;
 
 import eu.arrowhead.common.exception.ArrowheadRuntimeException;
-import org.apache.log4j.Logger;
-
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.ServiceConfigurationError;
+import java.util.Set;
+import java.util.TreeSet;
+import org.apache.log4j.Logger;
 
 public class TypeSafeProperties extends Properties {
   protected final Logger log = Logger.getLogger(getClass());
@@ -89,8 +102,8 @@ public class TypeSafeProperties extends Properties {
     String val = getProperty(key);
     return (val == null) ? defaultValue : Boolean.valueOf(val);
   }
-  //These methods are here to make sure TypeSafeProperties are saved to file in alphabetical order (sorted by key value)
 
+  //These methods are here to make sure TypeSafeProperties are saved to file in alphabetical order (sorted by key value)
   @Override
   public Set<Object> keySet() {
     return Collections.unmodifiableSet(new TreeSet<>(super.keySet()));
@@ -114,6 +127,5 @@ public class TypeSafeProperties extends Properties {
   @Override
   public synchronized Enumeration<Object> keys() {
     return Collections.enumeration(new TreeSet<>(super.keySet()));
-
   }
 }
