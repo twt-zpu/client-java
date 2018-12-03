@@ -62,14 +62,6 @@ public class ArrowheadGrizzlyHttpServer extends ArrowheadHttpServer {
                 securityContext);
     }
 
-    public static void setDefaultProperties(ArrowheadProperties props) {
-        props
-                .setDefaultSecure()
-                .setDefaultAddress()
-                .setDefaultPort();
-        SecurityVerifier.setDefaultProperties(props);
-    }
-
     /**
      * Private constructor, use one of the static create* methods instead.
      * @param isSecure create a secure instance?

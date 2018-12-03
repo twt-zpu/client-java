@@ -54,13 +54,6 @@ public class ServiceRegistryClient extends HttpClient {
                 ArrowheadProperties.getDefaultSrPort(isSecure));
     }
 
-    public static void setDefaultProperties(ArrowheadProperties props) {
-        props
-                .setDefaultSecure()
-                .setDefaultSrAddress()
-                .setDefaultSrPort();
-    }
-
     /**
      * Private construct, see the create* methods.
      * @param secure use secure mode?

@@ -58,13 +58,6 @@ public class EventHandlerClient extends HttpClient {
                 ArrowheadProperties.getDefaultEhPort(isSecure), ArrowheadProperties.getDefaultFeedbackUri());
     }
 
-    public static void setDefaultProperties(ArrowheadProperties props) {
-        props
-                .setDefaultSecure()
-                .setDefaultEhAddress()
-                .setDefaultEhPort();
-    }
-
     /**
      * Private construct, see the create* methods.
      * @param secure use secure mode?

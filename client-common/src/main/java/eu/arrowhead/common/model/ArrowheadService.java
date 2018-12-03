@@ -42,14 +42,6 @@ public class ArrowheadService {
         return new ArrowheadService(serviceDef, interfaces, metadata);
     }
 
-    public static void setDefaultProperties(ArrowheadProperties props) {
-        props
-                .setDefaultSecure()
-                .setDefaultServiceName()
-                .setDefaultInterfaces()
-                .setDefaultServiceMetadata();
-    }
-
     public ArrowheadService() {
     }
 

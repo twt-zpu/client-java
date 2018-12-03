@@ -72,19 +72,6 @@ public final class CertificateAuthorityClient extends HttpClient {
                 .setClientName(clientName);
     }
 
-    public static void setDefaultProperties(ArrowheadProperties props) {
-        props
-                .setDefaultSecure()
-                .setDefaultCaAddress()
-                .setDefaultCaPort()
-                .setDefaultKeyPass()
-                .setDefaultTruststore()
-                .setDefaultTruststorePass()
-                .setDefaultKeystorePass()
-                .setDefaultCertDir()
-                .setDefaultSystemName(false);
-    }
-
     /**
      * Internal method for creating a temporary security context until we can build the right one.
      * @param keyPass the password for the certificates.
