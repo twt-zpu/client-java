@@ -83,6 +83,10 @@ public class ArrowheadProperties extends TypeSafeProperties {
         return "publisher/feedback";
     }
 
+    public static boolean getDefaultFeedback() {
+        return false;
+    }
+
     public static String getDefaultCertDir() {
         return "config/certificates";
     }
@@ -344,6 +348,10 @@ public class ArrowheadProperties extends TypeSafeProperties {
         return getProperty(Keys.FEEDBACK_URI, getDefaultFeedbackUri());
     }
 
+    public boolean getFeedback() {
+        return getBooleanProperty(Keys.FEEDBACK_URI, getDefaultFeedback());
+    }
+
     public String getCertDir() {
         return getProperty(Keys.CERT_DIR, getDefaultCertDir());
     }
@@ -510,6 +518,7 @@ public class ArrowheadProperties extends TypeSafeProperties {
         EVENT_TYPE("event_type"),
         NOTIFY_URI("notify_uri"),
         FEEDBACK_URI("feedback_uri"),
+        FEEDBACK("feedback"),
         CERT_DIR("cert_dir"),
         BOOTSTRAP("bootstrap"),
         ;

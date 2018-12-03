@@ -26,6 +26,7 @@ public class EventHandlerClient extends HttpClient {
     private static final UriBuilder PUBLISH_URI = UriBuilder.fromPath("publish");
     private static final UriBuilder SUBSCRIPTION_URI = UriBuilder.fromPath("subscription");
     private String feedbackUri;
+    private boolean feedback;
 
     /**
      * Create a new client from the settings in the default properties files.
@@ -44,7 +45,7 @@ public class EventHandlerClient extends HttpClient {
     public static EventHandlerClient createFromProperties(ArrowheadProperties props, ArrowheadSecurityContext securityContext) {
         final boolean secure = props.isSecure();
         return new EventHandlerClient(secure, securityContext, props.getEhAddress(),props.getEhPort(),
-                props.getFeedbackUri());
+                props.getFeedbackUri(), props.getFeedback());
     }
 
     /**
@@ -55,7 +56,8 @@ public class EventHandlerClient extends HttpClient {
     public static EventHandlerClient createDefault(ArrowheadSecurityContext securityContext) {
         final boolean isSecure = ArrowheadProperties.getDefaultIsSecure();
         return new EventHandlerClient(isSecure, securityContext, ArrowheadProperties.getDefaultEhAddress(),
-                ArrowheadProperties.getDefaultEhPort(isSecure), ArrowheadProperties.getDefaultFeedbackUri());
+                ArrowheadProperties.getDefaultEhPort(isSecure), ArrowheadProperties.getDefaultFeedbackUri(),
+                ArrowheadProperties.getDefaultFeedback());
     }
 
     /**
@@ -65,10 +67,12 @@ public class EventHandlerClient extends HttpClient {
      * @param host the host.
      * @param port the port.
      */
-    private EventHandlerClient(boolean secure, ArrowheadSecurityContext securityContext, String host, int port, String feedbackUri) {
+    private EventHandlerClient(boolean secure, ArrowheadSecurityContext securityContext, String host, int port,
+                               String feedbackUri, boolean feedback) {
         super(new OrchestrationStrategy.Never(secure, host, port, "eventhandler",
                 ArrowheadConverter.JSON), securityContext);
         this.feedbackUri = feedbackUri;
+        this.feedback = feedback;
     }
 
     /**
@@ -173,6 +177,15 @@ public class EventHandlerClient extends HttpClient {
 
     public EventHandlerClient setFeedbackUri(String feedbackUri) {
         this.feedbackUri = feedbackUri;
+        return this;
+    }
+
+    public boolean isFeedback() {
+        return feedback;
+    }
+
+    public EventHandlerClient setFeedback(boolean feedback) {
+        this.feedback = feedback;
         return this;
     }
 }
