@@ -25,6 +25,7 @@ public class EventHandlerClient extends HttpClient {
     private static final Map<EventHandlerClient, Map<ArrowheadSystem, Set<String>>> subscriptions = new HashMap<>();
     private static final UriBuilder PUBLISH_URI = UriBuilder.fromPath("publish");
     private static final UriBuilder SUBSCRIPTION_URI = UriBuilder.fromPath("subscription");
+    private String feedbackUri;
 
     /**
      * Create a new client from the settings in the default properties files.
@@ -42,7 +43,8 @@ public class EventHandlerClient extends HttpClient {
      */
     public static EventHandlerClient createFromProperties(ArrowheadProperties props, ArrowheadSecurityContext securityContext) {
         final boolean secure = props.isSecure();
-        return new EventHandlerClient(secure, securityContext, props.getEhAddress(),props.getEhPort());
+        return new EventHandlerClient(secure, securityContext, props.getEhAddress(),props.getEhPort(),
+                props.getFeedbackUri());
     }
 
     /**
@@ -53,7 +55,7 @@ public class EventHandlerClient extends HttpClient {
     public static EventHandlerClient createDefault(ArrowheadSecurityContext securityContext) {
         final boolean isSecure = ArrowheadProperties.getDefaultIsSecure();
         return new EventHandlerClient(isSecure, securityContext, ArrowheadProperties.getDefaultEhAddress(),
-                ArrowheadProperties.getDefaultEhPort(isSecure));
+                ArrowheadProperties.getDefaultEhPort(isSecure), ArrowheadProperties.getDefaultFeedbackUri());
     }
 
     public static void setDefaultProperties(ArrowheadProperties props) {
@@ -70,9 +72,10 @@ public class EventHandlerClient extends HttpClient {
      * @param host the host.
      * @param port the port.
      */
-    public EventHandlerClient(boolean secure, ArrowheadSecurityContext securityContext, String host, int port) {
+    private EventHandlerClient(boolean secure, ArrowheadSecurityContext securityContext, String host, int port, String feedbackUri) {
         super(new OrchestrationStrategy.Never(secure, host, port, "eventhandler",
                 ArrowheadConverter.JSON), securityContext);
+        this.feedbackUri = feedbackUri;
     }
 
     /**
@@ -81,7 +84,7 @@ public class EventHandlerClient extends HttpClient {
      * @param eventSource the source of the event.
      */
     public void publish(Event event, ArrowheadSystem eventSource) {
-        PublishEvent eventPublishing = new PublishEvent(eventSource, event, "publisher/feedback");
+        PublishEvent eventPublishing = new PublishEvent(eventSource, event, feedbackUri);
         request(Method.POST, PUBLISH_URI, eventPublishing);
         log.info("Event published to EH.");
     }
@@ -169,5 +172,14 @@ public class EventHandlerClient extends HttpClient {
      */
     public static void unsubscribeAll() {
         subscriptions.forEach(EventHandlerClient::unsubscribe);
+    }
+
+    public String getFeedbackUri() {
+        return feedbackUri;
+    }
+
+    public EventHandlerClient setFeedbackUri(String feedbackUri) {
+        this.feedbackUri = feedbackUri;
+        return this;
     }
 }
