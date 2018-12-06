@@ -1,6 +1,5 @@
-package eu.arrowhead.common.api.resources;
+package eu.arrowhead.common.api.server;
 
-import eu.arrowhead.common.api.server.ArrowheadHttpServer;
 import eu.arrowhead.common.misc.SecurityVerifier;
 import org.apache.log4j.Logger;
 
@@ -11,9 +10,6 @@ import org.apache.log4j.Logger;
  *
  * See {@link eu.arrowhead.common.api.server.ArrowheadGrizzlyHttpServer#addResources}() on how to add resources to the
  * Grizzly implementation of {@link ArrowheadHttpServer}.
- *
- * See {@link ArrowheadPublisherResource} and {@link ArrowheadSubscriberResource} for helper interfaces for creating
- * publisher and subscriber resources.
  */
 public abstract class ArrowheadResource {
     protected final Logger log = Logger.getLogger(getClass());

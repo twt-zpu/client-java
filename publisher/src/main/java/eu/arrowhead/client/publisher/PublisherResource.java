@@ -9,14 +9,10 @@
 
 package eu.arrowhead.client.publisher;
 
-import eu.arrowhead.common.api.resources.ArrowheadPublisherResource;
-import eu.arrowhead.common.api.resources.ArrowheadResource;
 import eu.arrowhead.common.api.server.ArrowheadHttpServer;
+import eu.arrowhead.common.api.server.ArrowheadResource;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Map;
@@ -24,7 +20,7 @@ import java.util.Map;
 @Path("publisher")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class PublisherResource extends ArrowheadResource implements ArrowheadPublisherResource {
+public class PublisherResource extends ArrowheadResource {
 
   public PublisherResource(ArrowheadHttpServer server) {
     super(server);
@@ -35,7 +31,8 @@ public class PublisherResource extends ArrowheadResource implements ArrowheadPub
     return Response.ok().build();
   }
 
-  @Override
+  @POST
+  @Path("feedback")
   public Response receiveEvent(Map<String, Boolean> results) {
     log.info("Event publishing results: " + results.toString());
     return Response.ok().build();

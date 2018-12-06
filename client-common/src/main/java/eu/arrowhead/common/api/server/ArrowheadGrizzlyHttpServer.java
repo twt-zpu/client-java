@@ -1,23 +1,18 @@
 package eu.arrowhead.common.api.server;
 
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
-import eu.arrowhead.common.api.resources.ArrowheadResource;
 import eu.arrowhead.common.exception.ArrowheadRuntimeException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
-import eu.arrowhead.common.misc.SecurityVerifier;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.ServiceConfigurationError;
-import java.util.Set;
-import javax.ws.rs.ProcessingException;
-import javax.ws.rs.core.UriBuilder;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
+
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.core.UriBuilder;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
 
 /**
  * An implementation of {@link ArrowheadHttpServer} using Grizzly

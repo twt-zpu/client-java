@@ -1,7 +1,7 @@
 package eu.arrowhead.demo.provider;
 
 import eu.arrowhead.common.api.server.ArrowheadHttpServer;
-import eu.arrowhead.common.api.resources.ArrowheadResource;
+import eu.arrowhead.common.api.server.ArrowheadResource;
 import eu.arrowhead.demo.model.Car;
 
 import javax.ws.rs.*;
