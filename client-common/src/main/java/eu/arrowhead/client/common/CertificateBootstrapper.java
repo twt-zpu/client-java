@@ -59,7 +59,7 @@ public final class CertificateBootstrapper {
     throw new AssertionError("CertificateBootstrapper is a non-instantiable class");
   }
 
-  public static SSLContextConfigurator bootstrap(ClientType clientType, String systemName) throws IOException {
+  public static SSLContextConfigurator bootstrap(ClientType clientType, String systemName) {
     //Check if the CA is available at the provided URL (with socket opening)
     URL url;
     try {
@@ -101,7 +101,11 @@ public final class CertificateBootstrapper {
       secureParameters.put("authorization_public_key", certPathPrefix + File.separator + "authorization.pub");
     }
     if(!Files.exists(Paths.get(CONFIG_FILE_PATH))){
-      Files.createFile(Paths.get(CONFIG_FILE_PATH));
+      try {
+        Files.createFile(Paths.get(CONFIG_FILE_PATH));
+      } catch (IOException e) {
+        throw new ArrowheadException("Could not create app.conf file during certificate bootstrapping.", e);
+      }
     }
     CertificateBootstrapper.updateConfigurationFiles(secureParameters);
 
