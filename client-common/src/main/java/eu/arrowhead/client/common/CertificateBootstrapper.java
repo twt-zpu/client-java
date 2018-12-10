@@ -104,7 +104,7 @@ public final class CertificateBootstrapper {
       try {
         Files.createFile(Paths.get(CONFIG_FILE_PATH));
       } catch (IOException e) {
-        throw new ArrowheadException("Could not create app.conf file during certificate bootstrapping.", e);
+        throw new ArrowheadException("Could not create file at " + CONFIG_FILE_PATH + " during certificate bootstrapping.", e);
       }
     }
     CertificateBootstrapper.updateConfigurationFiles(secureParameters);
