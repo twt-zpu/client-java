@@ -11,6 +11,7 @@ package eu.arrowhead.demo.provider;
 
 import eu.arrowhead.common.api.server.ArrowheadHttpServer;
 import eu.arrowhead.common.api.server.ArrowheadResource;
+import eu.arrowhead.common.exception.ArrowheadException;
 import eu.arrowhead.demo.model.MeasurementEntry;
 import eu.arrowhead.demo.model.TemperatureReadout;
 
@@ -27,7 +28,7 @@ import javax.ws.rs.core.SecurityContext;
 @Produces(MediaType.APPLICATION_JSON)
 public class TemperatureResource extends ArrowheadResource {
 
-  public TemperatureResource(ArrowheadHttpServer server) {
+  public TemperatureResource(ArrowheadHttpServer server) throws ArrowheadException {
     super(server);
   }
 

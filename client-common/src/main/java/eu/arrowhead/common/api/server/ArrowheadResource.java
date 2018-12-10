@@ -1,5 +1,6 @@
 package eu.arrowhead.common.api.server;
 
+import eu.arrowhead.common.exception.ArrowheadException;
 import eu.arrowhead.common.misc.SecurityVerifier;
 import org.apache.log4j.Logger;
 
@@ -20,7 +21,7 @@ public abstract class ArrowheadResource {
      * Constructor.
      * @param server the {@link ArrowheadHttpServer} that this resource belongs to.
      */
-    public ArrowheadResource(ArrowheadHttpServer server) {
+    public ArrowheadResource(ArrowheadHttpServer server) throws ArrowheadException {
         this.server = server;
     }
 }

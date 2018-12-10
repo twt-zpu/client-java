@@ -11,6 +11,7 @@ package eu.arrowhead.client.publisher;
 
 import eu.arrowhead.common.api.server.ArrowheadHttpServer;
 import eu.arrowhead.common.api.server.ArrowheadResource;
+import eu.arrowhead.common.exception.ArrowheadException;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -22,7 +23,7 @@ import java.util.Map;
 @Produces(MediaType.APPLICATION_JSON)
 public class PublisherResource extends ArrowheadResource {
 
-  public PublisherResource(ArrowheadHttpServer server) {
+  public PublisherResource(ArrowheadHttpServer server) throws ArrowheadException {
     super(server);
   }
 

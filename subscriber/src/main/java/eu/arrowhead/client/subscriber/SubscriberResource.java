@@ -11,6 +11,7 @@ package eu.arrowhead.client.subscriber;
 
 import eu.arrowhead.common.api.server.ArrowheadHttpServer;
 import eu.arrowhead.common.api.server.ArrowheadResource;
+import eu.arrowhead.common.exception.ArrowheadException;
 import eu.arrowhead.common.model.Event;
 
 import javax.ws.rs.*;
@@ -22,7 +23,7 @@ import javax.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 public class SubscriberResource extends ArrowheadResource {
 
-  public SubscriberResource(ArrowheadHttpServer server) {
+  public SubscriberResource(ArrowheadHttpServer server) throws ArrowheadException {
     super(server);
   }
 

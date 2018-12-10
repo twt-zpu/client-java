@@ -2,6 +2,7 @@ package eu.arrowhead.demo.provider;
 
 import eu.arrowhead.common.api.server.ArrowheadHttpServer;
 import eu.arrowhead.common.api.server.ArrowheadResource;
+import eu.arrowhead.common.exception.ArrowheadException;
 import eu.arrowhead.demo.model.Car;
 
 import javax.ws.rs.*;
@@ -16,7 +17,7 @@ import javax.ws.rs.core.SecurityContext;
 @Produces(MediaType.APPLICATION_JSON)
 public class RestResource extends ArrowheadResource {
 
-  public RestResource(ArrowheadHttpServer server) {
+  public RestResource(ArrowheadHttpServer server) throws ArrowheadException {
     super(server);
   }
 
