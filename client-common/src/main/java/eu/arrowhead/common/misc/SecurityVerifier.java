@@ -16,9 +16,12 @@ import java.security.PublicKey;
 import java.security.Signature;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
-import java.util.function.Supplier;
 
 public class SecurityVerifier {
+    public interface ThrowingSupplier<T, E extends Exception> {
+        T get() throws E;
+    }
+
     protected final Logger log = Logger.getLogger(getClass());
     private PrivateKey privateKey;
     private PublicKey authKey;
@@ -74,13 +77,19 @@ public class SecurityVerifier {
                 Response.status(200).entity(readout).build();
     }
 
-    public <T> Response verifiedResponse(SecurityContext context, String token, String signature, Supplier<T> onOk) {
+    public <T, E extends Exception> Response verifiedResponse(SecurityContext context, String token, String signature, ThrowingSupplier<T, E> onOk) {
         return context.isSecure() ?
                 verifyRequester(context, token, signature, onOk) :
                 Response.status(200).entity(onOk).build();
     }
 
-    private <T> Response verifyRequester(SecurityContext context, String token, String signature, Supplier<T> onOk) {
+    public <T, E extends Exception> Response verifiedResponse(SecurityContext context, String token, String signature) {
+        return context.isSecure() ?
+                verifyRequester(context, token, signature, null) :
+                Response.status(200).build();
+    }
+
+    private <T, E extends Exception> Response verifyRequester(SecurityContext context, String token, String signature, ThrowingSupplier<T, E> onOk) {
         try {
             String commonName = SecurityUtils.getCertCNFromSubject(context.getUserPrincipal().getName());
             String[] commonNameParts = commonName.split("\\.");
@@ -122,7 +131,9 @@ public class SecurityVerifier {
 
             if (consumerName.equalsIgnoreCase(consumerTokenName)) {
                 if (endTime == 0L || (endTime > currentTime)) {
-                    return Response.status(200).entity(onOk.get()).build();
+                    final Response.ResponseBuilder responseBuilder = Response.status(200);
+                    if (onOk != null) responseBuilder.entity(onOk.get());
+                    return responseBuilder.build();
                 }
                 ErrorMessage error = new ErrorMessage("Authorization token has expired", 401, ExceptionType.AUTH, Utility.class.toString());
                 return Response.status(401).entity(error).build();
