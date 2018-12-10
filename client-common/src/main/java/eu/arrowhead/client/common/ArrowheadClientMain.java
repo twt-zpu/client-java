@@ -9,7 +9,6 @@
 
 package eu.arrowhead.client.common;
 
-import eu.arrowhead.client.common.exception.ArrowheadException;
 import eu.arrowhead.client.common.exception.AuthException;
 import eu.arrowhead.client.common.misc.ClientType;
 import eu.arrowhead.client.common.misc.SecurityUtils;
@@ -149,7 +148,7 @@ public abstract class ArrowheadClientMain {
       System.out.println("Provided SSLContext is not valid, moving to certificate bootstrapping.");
       try {
         sslCon = CertificateBootstrapper.bootstrap(clientType, props.getProperty("secure_system_name"));
-      } catch (ArrowheadException e1) {
+      } catch (Exception e1) {
         throw new AuthException("Certificate bootstrapping failed with: " + e.getMessage(), e);
       }
       sslContext = sslCon.createSSLContext(true);

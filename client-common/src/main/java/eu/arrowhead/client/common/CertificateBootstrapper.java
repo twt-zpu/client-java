@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
@@ -47,6 +49,7 @@ public final class CertificateBootstrapper {
 
   private static TypeSafeProperties props = Utility.getProp();
   private static String CA_URL = props.getProperty("cert_authority_url");
+  private static final String CONFIG_FILE_PATH = "config" + File.separator + "app.conf";
 
   static {
     Security.addProvider(new BouncyCastleProvider());
@@ -56,7 +59,7 @@ public final class CertificateBootstrapper {
     throw new AssertionError("CertificateBootstrapper is a non-instantiable class");
   }
 
-  public static SSLContextConfigurator bootstrap(ClientType clientType, String systemName) {
+  public static SSLContextConfigurator bootstrap(ClientType clientType, String systemName) throws IOException {
     //Check if the CA is available at the provided URL (with socket opening)
     URL url;
     try {
@@ -97,7 +100,10 @@ public final class CertificateBootstrapper {
       getAuthorizationPublicKey(certPathPrefix + File.separator + "authorization.pub");
       secureParameters.put("authorization_public_key", certPathPrefix + File.separator + "authorization.pub");
     }
-    CertificateBootstrapper.updateConfigurationFiles("config" + File.separator + "app.conf", secureParameters);
+    if(!Files.exists(Paths.get(CONFIG_FILE_PATH))){
+      Files.createFile(Paths.get(CONFIG_FILE_PATH));
+    }
+    CertificateBootstrapper.updateConfigurationFiles(secureParameters);
 
     //Return a new, valid SSLContextConfigurator
     SSLContextConfigurator sslCon = new SSLContextConfigurator();
@@ -232,14 +238,14 @@ public final class CertificateBootstrapper {
   /*
      Updates the given properties file with the given key-value pairs.
    */
-  private static void updateConfigurationFiles(String configLocation, Map<String, String> configValues) {
+  private static void updateConfigurationFiles(Map<String, String> configValues) {
     try {
-      FileInputStream in = new FileInputStream(configLocation);
+      FileInputStream in = new FileInputStream(CertificateBootstrapper.CONFIG_FILE_PATH);
       TypeSafeProperties props = new TypeSafeProperties();
       props.load(in);
       in.close();
 
-      FileOutputStream out = new FileOutputStream(configLocation);
+      FileOutputStream out = new FileOutputStream(CertificateBootstrapper.CONFIG_FILE_PATH);
       for (Entry<String, String> entry : configValues.entrySet()) {
         props.setProperty(entry.getKey(), entry.getValue());
       }
