@@ -23,7 +23,6 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
-import java.security.Security;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -36,7 +35,6 @@ import java.util.ServiceConfigurationError;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import org.bouncycastle.asn1.x500.X500Name;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
@@ -50,10 +48,6 @@ public final class CertificateBootstrapper {
   private static TypeSafeProperties props = Utility.getProp();
   private static String CA_URL = props.getProperty("cert_authority_url");
   private static final String CONFIG_FILE_PATH = "config" + File.separator + "app.conf";
-
-  static {
-    Security.addProvider(new BouncyCastleProvider());
-  }
 
   private CertificateBootstrapper() {
     throw new AssertionError("CertificateBootstrapper is a non-instantiable class");
@@ -293,6 +287,7 @@ public final class CertificateBootstrapper {
   }
 
   private static CertificateSigningResponse getSignedCertFromCA(String commonName) {
+    SecurityUtils.addSecurityProvider();
     //Get a new locally generated public/private key pair
     KeyPair keyPair = generateRSAKeyPair();
 

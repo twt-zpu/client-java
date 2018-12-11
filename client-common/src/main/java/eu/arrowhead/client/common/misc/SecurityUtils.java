@@ -23,7 +23,9 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.Provider;
 import java.security.PublicKey;
+import java.security.Security;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
@@ -42,9 +44,22 @@ import javax.naming.ldap.Rdn;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 @SuppressWarnings("unused")
 public final class SecurityUtils {
+
+  private static Provider securityProvider;
+
+  public static synchronized void addSecurityProvider() {
+    // Late creation of BouncyCastleProvider since it can be slow to load on a Raspberry Pi
+    if (securityProvider == null) {
+      securityProvider = new BouncyCastleProvider();
+    }
+    if (Security.getProvider(securityProvider.getName()) == null) {
+      Security.addProvider(securityProvider);
+    }
+  }
 
   public static KeyStore loadKeyStore(String filePath, String pass) {
     try {
