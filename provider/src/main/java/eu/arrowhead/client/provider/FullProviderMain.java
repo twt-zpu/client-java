@@ -65,7 +65,7 @@ public class FullProviderMain extends ArrowheadClientMain {
   }
 
   private FullProviderMain(String[] args) {
-    Set<Class<?>> classes = new HashSet<>(Arrays.asList(TemperatureResource.class, RestResource.class));
+    Set<Class<?>> classes = new HashSet<>(Arrays.asList(TemperatureResource.class, RestResource.class, RequestVerificationFilter.class));
     String[] packages = {"eu.arrowhead.client.common"};
     init(ClientType.PROVIDER, args, classes, packages);
 

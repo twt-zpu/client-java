@@ -6,10 +6,17 @@ import eu.arrowhead.client.common.exception.AuthException;
 import eu.arrowhead.client.common.misc.SecurityUtils;
 import eu.arrowhead.client.common.model.RawTokenInfo;
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.Signature;
+import java.security.SignatureException;
 import java.util.Base64;
 import javax.annotation.Priority;
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -21,8 +28,6 @@ import javax.ws.rs.ext.Provider;
 @Priority(Priorities.AUTHORIZATION)
 public class RequestVerificationFilter implements ContainerRequestFilter {
 
-  private enum TokenVerificationResult {OK, SIGNATURE, EXPIRED, MISMATCH, SERVER_ERROR}
-
   @Override
   public void filter(ContainerRequestContext requestContext) {
     SecurityContext sc = requestContext.getSecurityContext();
@@ -31,19 +36,8 @@ public class RequestVerificationFilter implements ContainerRequestFilter {
       String token = queryParams.getFirst("token");
       String signature = queryParams.getFirst("signature");
 
-      TokenVerificationResult result = verifyRequester(sc, token, signature);
-      switch (result) {
-        case OK:
-          break;
-        case SIGNATURE:
-          throw new AuthException("Authorization core system signature verification failed!");
-        case EXPIRED:
-          throw new AuthException("Given token has expired!");
-        case MISMATCH:
-          throw new AuthException("Cert common name and token information are mismatched!");
-        case SERVER_ERROR:
-          throw new ArrowheadException("Internal Server Error during token validation!", 500);
-      }
+      //The method will throw a runtime exception if the verification fails, which the exception mapper will catch
+      verifyRequester(sc, token, signature);
     }
   }
 
@@ -52,7 +46,7 @@ public class RequestVerificationFilter implements ContainerRequestFilter {
     was created by the Authorization Core System with the provider public key. It also checks if the token expired or not, plus the token
     has to contain the same consumer name as the common name field of the client certificate.
    */
-  private TokenVerificationResult verifyRequester(SecurityContext context, String token, String signature) {
+  private void verifyRequester(SecurityContext context, String token, String signature) {
     try {
       String commonName = SecurityUtils.getCertCNFromSubject(context.getUserPrincipal().getName());
       String[] commonNameParts = commonName.split("\\.");
@@ -77,8 +71,7 @@ public class RequestVerificationFilter implements ContainerRequestFilter {
 
       boolean verifies = signatureInstance.verify(signaturebytes);
       if (!verifies) {
-        return TokenVerificationResult.SIGNATURE;
-        //throw new AuthException("Authorization core system signature verification failed!");
+        throw new AuthException("Authorization core system signature verification failed!");
       }
 
       Cipher cipher = Cipher.getInstance("RSA/NONE/PKCS1Padding", "BC");
@@ -96,19 +89,15 @@ public class RequestVerificationFilter implements ContainerRequestFilter {
 
       if (consumerName.equalsIgnoreCase(consumerTokenName)) {
         if (endTime == 0L || (endTime > currentTime)) {
-          return TokenVerificationResult.OK;
+          return;
         }
-        return TokenVerificationResult.EXPIRED;
-        //throw new AuthException("Given token has expired!");
+        throw new AuthException("Given token has expired!");
 
       } else {
-        return TokenVerificationResult.MISMATCH;
-        //throw new AuthException("Cert common name and token information are mismatched!");
+        throw new AuthException("Cert common name and token information are mismatched!");
       }
-
-    } catch (Exception ex) {
-      ex.printStackTrace();
-      return TokenVerificationResult.SERVER_ERROR;
+    } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | NoSuchPaddingException | BadPaddingException | NoSuchProviderException | IllegalBlockSizeException e) {
+      throw new ArrowheadException("Internal Server Error during token validation!", 500, e);
     }
   }
 }
