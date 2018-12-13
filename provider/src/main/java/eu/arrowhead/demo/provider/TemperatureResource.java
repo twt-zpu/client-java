@@ -36,14 +36,14 @@ public class TemperatureResource extends ArrowheadResource {
   public Response getIt(@Context SecurityContext context,
                         @QueryParam("token") String token,
                         @QueryParam("signature") String signature) {
-    return verifier.verifiedResponse(context, token, signature, () -> {
+    return getVerifier().verifiedResponse(context, token, signature, () -> {
       if (ProviderMain.customResponsePayload != null) {
-        return Response.status(200).entity(ProviderMain.customResponsePayload).build();
+        return Response.status(200).entity(ProviderMain.customResponsePayload);
       } else {
         MeasurementEntry entry = new MeasurementEntry("Temperature_IndoorTemperature", 21.0, System.currentTimeMillis());
         TemperatureReadout readout = new TemperatureReadout("TemperatureSensor", System.currentTimeMillis(), "celsius", 1);
         readout.getE().add(entry);
-        return Response.status(200).entity(readout).build();
+        return Response.status(200).entity(readout);
       }
     });
   }

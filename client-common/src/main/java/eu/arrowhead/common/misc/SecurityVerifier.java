@@ -14,12 +14,15 @@ import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
-import java.security.cert.X509Certificate;
 import java.util.Base64;
 
 public class SecurityVerifier {
     public interface ThrowingSupplier<T, E extends Exception> {
         T get() throws E;
+    }
+
+    public interface ThrowingResponseSupplier<E extends Exception> {
+        Response.ResponseBuilder get() throws E;
     }
 
     protected final Logger log = Logger.getLogger(getClass());
@@ -31,17 +34,19 @@ public class SecurityVerifier {
     }
 
     public static SecurityVerifier createFromProperties(ArrowheadProperties props) {
-        return create(props.getKeystore(), props.getKeystorePass(), props.getKeyPass(), props.getAuthKey());
+        return create(props.getKeystore(), props.getKeystorePass(), props.getKeyPass(), props.getAuthKey(),
+                props.isSecure());
     }
 
-    public static SecurityVerifier create(String keystore, String keystorepass, String keypass) {
-        return create(keystore, keystorepass, keypass, ArrowheadProperties.getDefaultAuthKey());
-    }
-
-    private static SecurityVerifier create(String keystore, String keystorepass, String keypass, String authKeyPath) {
-        return new SecurityVerifier()
-                .loadProviderPrivateKey(keystore, keystorepass, keypass)
-                .loadAuthorizationPublicKey(authKeyPath);
+    private static SecurityVerifier create(String keystore, String keystorepass, String keypass, String authKeyPath,
+                                           boolean secure) {
+        if (secure) {
+            return new SecurityVerifier()
+                    .loadProviderPrivateKey(keystore, keystorepass, keypass)
+                    .loadAuthorizationPublicKey(authKeyPath);
+        } else {
+            return new SecurityVerifier();
+        }
     }
 
     private SecurityVerifier() {
@@ -66,23 +71,42 @@ public class SecurityVerifier {
 
     public  <T> Response verifiedResponse(SecurityContext context, String token, String signature, T readout) {
         return context.isSecure() ?
-                verifyRequester(context, token, signature, () -> readout) :
+                verifyRequester(context, token, signature, () -> Response.status(200).entity(readout)) :
                 Response.status(200).entity(readout).build();
     }
 
     public <T, E extends Exception> Response verifiedResponse(SecurityContext context, String token, String signature, ThrowingSupplier<T, E> onOk) {
-        return context.isSecure() ?
-                verifyRequester(context, token, signature, onOk) :
-                Response.status(200).entity(onOk).build();
+        final ThrowingResponseSupplier<RuntimeException> throwingResponseSupplier = () -> {
+            try {
+                return Response.status(200).entity(onOk.get());
+            } catch (Exception ex) {
+                log.warn("Replying with error message", ex);
+                ErrorMessage error = new ErrorMessage("Internal Server Error: " + ex.getMessage(), 500, null, Utility.class.toString());
+                return Response.status(500).entity(error);
+            }
+        };
+        return verifiedResponse(context, token, signature, throwingResponseSupplier);
     }
 
-    public <T, E extends Exception> Response verifiedResponse(SecurityContext context, String token, String signature) {
+    public Response verifiedResponse(SecurityContext context, String token, String signature) {
         return context.isSecure() ?
                 verifyRequester(context, token, signature, null) :
                 Response.status(200).build();
     }
 
-    private <T, E extends Exception> Response verifyRequester(SecurityContext context, String token, String signature, ThrowingSupplier<T, E> onOk) {
+    public <E extends Exception> Response verifiedResponse(SecurityContext context, String token, String signature, ThrowingResponseSupplier<E> onOk) {
+        try {
+            return context.isSecure() ?
+                    verifyRequester(context, token, signature, onOk) :
+                    onOk != null ? onOk.get().build() : Response.status(200).build();
+        } catch (Exception ex) {
+            log.warn("Replying with error message", ex);
+            ErrorMessage error = new ErrorMessage("Internal Server Error: " + ex.getMessage(), 500, null, Utility.class.toString());
+            return Response.status(500).entity(error).build();
+        }
+    }
+
+    private <E extends Exception> Response verifyRequester(SecurityContext context, String token, String signature, ThrowingResponseSupplier<E> onOk) {
         try {
             String commonName = SecurityUtils.getCertCNFromSubject(context.getUserPrincipal().getName());
             String[] commonNameParts = commonName.split("\\.");
@@ -124,9 +148,8 @@ public class SecurityVerifier {
 
             if (consumerName.equalsIgnoreCase(consumerTokenName)) {
                 if (endTime == 0L || (endTime > currentTime)) {
-                    final Response.ResponseBuilder responseBuilder = Response.status(200);
-                    if (onOk != null) responseBuilder.entity(onOk.get());
-                    return responseBuilder.build();
+                    if (onOk != null) return onOk.get().build();
+                    else return Response.status(200).build();
                 }
                 ErrorMessage error = new ErrorMessage("Authorization token has expired", 401, ExceptionType.AUTH, Utility.class.toString());
                 return Response.status(401).entity(error).build();

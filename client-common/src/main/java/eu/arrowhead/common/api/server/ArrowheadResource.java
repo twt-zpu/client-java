@@ -14,7 +14,7 @@ import org.apache.log4j.Logger;
  */
 public abstract class ArrowheadResource {
     protected final Logger log = Logger.getLogger(getClass());
-    protected final SecurityVerifier verifier = SecurityVerifier.createFromProperties();
+    private SecurityVerifier verifier;
     protected final ArrowheadHttpServer server;
 
     /**
@@ -23,5 +23,10 @@ public abstract class ArrowheadResource {
      */
     public ArrowheadResource(ArrowheadHttpServer server) throws ArrowheadException {
         this.server = server;
+    }
+
+    public SecurityVerifier getVerifier() {
+        if (verifier == null) verifier = SecurityVerifier.createFromProperties();
+        return verifier;
     }
 }

@@ -54,12 +54,12 @@ public class RestResource extends ArrowheadResource {
                                  @QueryParam("token") String token,
                                  @QueryParam("signature") String signature,
                                  @PathParam("id") Integer id) {
-    return verifier.verifiedResponse(context, token, signature, () -> {
+    return getVerifier().verifiedResponse(context, token, signature, () -> {
       Car retrievedCar = cars.get(id);
       if (retrievedCar != null) {
-        return Response.status(Status.OK).entity(retrievedCar).build();
+        return Response.status(Status.OK).entity(retrievedCar);
       } else {
-        return Response.status(Status.OK).build();
+        return Response.status(Status.OK);
       }
     });
   }
@@ -82,7 +82,7 @@ public class RestResource extends ArrowheadResource {
                           @QueryParam("signature") String signature,
                           @QueryParam("brand") String brand,
                           @QueryParam("color") String color) {
-    return verifier.verifiedResponse(context, token, signature, () -> {
+    return getVerifier().verifiedResponse(context, token, signature, () -> {
       List<Car> returnedCars = new ArrayList<>();
       for (Map.Entry<Integer, Car> mapEntry : cars.entrySet()) {
         returnedCars.add(mapEntry.getValue());
@@ -96,7 +96,7 @@ public class RestResource extends ArrowheadResource {
         returnedCars.removeIf(car -> !color.equals(car.getColor()));
       }
 
-      return Response.status(Status.OK).entity(returnedCars).build();
+      return Response.status(Status.OK).entity(returnedCars);
     });
   }
 
@@ -112,7 +112,7 @@ public class RestResource extends ArrowheadResource {
   public Response getAll(@Context SecurityContext context,
                          @QueryParam("token") String token,
                          @QueryParam("signature") String signature) {
-    return verifier.verifiedResponse(context, token, signature, () -> Response.status(Status.OK).entity(cars).build());
+    return getVerifier().verifiedResponse(context, token, signature, () -> Response.status(Status.OK).entity(cars));
   }
 
   /**
@@ -130,10 +130,10 @@ public class RestResource extends ArrowheadResource {
                             @QueryParam("token") String token,
                             @QueryParam("signature") String signature,
                             Car car) {
-    return verifier.verifiedResponse(context, token, signature, () -> {
+    return getVerifier().verifiedResponse(context, token, signature, () -> {
       cars.put(idCounter, car);
       idCounter++;
-      return Response.status(Status.CREATED).entity(car).build();
+      return Response.status(Status.CREATED).entity(car);
     });
   }
 
@@ -155,13 +155,13 @@ public class RestResource extends ArrowheadResource {
                             @QueryParam("signature") String signature,
                             @PathParam("id") Integer id,
                             Car updatedCar) {
-    return verifier.verifiedResponse(context, token, signature, () -> {
+    return getVerifier().verifiedResponse(context, token, signature, () -> {
       Car carFromTheDatabase = cars.get(id);
       if (carFromTheDatabase != null) {
         throw new DataNotFoundException("Car with id " + id + " not found in the database!");
       }
       cars.put(id, updatedCar);
-      return Response.status(Status.ACCEPTED).entity(updatedCar).build();
+      return Response.status(Status.ACCEPTED).entity(updatedCar);
     });
   }
 
@@ -179,9 +179,9 @@ public class RestResource extends ArrowheadResource {
                             @QueryParam("token") String token,
                             @QueryParam("signature") String signature,
                             @PathParam("id") Integer id) {
-    return verifier.verifiedResponse(context, token, signature, () -> {
+    return getVerifier().verifiedResponse(context, token, signature, () -> {
       cars.remove(id);
-      return Response.ok().build();
+      return Response.ok();
     });
   }
 
