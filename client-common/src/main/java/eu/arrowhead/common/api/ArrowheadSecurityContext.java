@@ -62,7 +62,7 @@ public class ArrowheadSecurityContext {
      */
     public static ArrowheadSecurityContext createFromProperties(ArrowheadProperties props, boolean bootstrap) {
         final boolean secure = props.isSecure();
-        if (!secure) LOG.warn("Trying to create a Security Context, but secure=false in config file");
+        if (!secure) return null;
 
         try {
             return new ArrowheadSecurityContext()
@@ -73,7 +73,7 @@ public class ArrowheadSecurityContext {
                     .setTruststorePass(props.getTruststorePass())
                     .load();
         } catch (KeystoreException e) {
-            if (secure && bootstrap) {
+            if (bootstrap) {
                 LOG.info("Bootstrapping certificates...", e);
                 return CertificateAuthorityClient.createFromProperties(props).bootstrap();
             } else {

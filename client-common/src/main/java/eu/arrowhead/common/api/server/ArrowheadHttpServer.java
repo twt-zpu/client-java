@@ -122,13 +122,15 @@ public abstract class ArrowheadHttpServer extends ArrowheadServer {
         if (port == 0) port = nextFreePort(9803, 9874);
         baseUri = Utility.getUri(address, port, null, isSecure, true);
 
-        X509Certificate serverCert = SecurityUtils.getFirstCertFromKeyStore(securityContext.getKeyStore());
-        base64PublicKey = Base64.getEncoder().encodeToString(serverCert.getPublicKey().getEncoded());
+        if (isSecure) {
+            X509Certificate serverCert = SecurityUtils.getFirstCertFromKeyStore(securityContext.getKeyStore());
+            base64PublicKey = Base64.getEncoder().encodeToString(serverCert.getPublicKey().getEncoded());
 
-        cn = SecurityUtils.getCertCNFromSubject(serverCert.getSubjectDN().getName());
-        if (!SecurityUtils.isKeyStoreCNArrowheadValid(cn)) {
-            throw new AuthException("Server CN ( " + cn + ") is not compliant with the Arrowhead cert" +
-                    " structure, since it does not have 5 parts, or does not end with \"arrowhead.eu\".");
+            cn = SecurityUtils.getCertCNFromSubject(serverCert.getSubjectDN().getName());
+            if (!SecurityUtils.isKeyStoreCNArrowheadValid(cn)) {
+                throw new AuthException("Server CN ( " + cn + ") is not compliant with the Arrowhead cert" +
+                        " structure, since it does not have 5 parts, or does not end with \"arrowhead.eu\".");
+            }
         }
 
         super.start();
