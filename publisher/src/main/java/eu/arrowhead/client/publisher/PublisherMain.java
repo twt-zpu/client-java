@@ -15,6 +15,7 @@ import eu.arrowhead.common.api.clients.core.EventHandlerClient;
 import eu.arrowhead.common.api.server.ArrowheadGrizzlyHttpServer;
 import eu.arrowhead.common.api.server.ArrowheadHttpServer;
 import eu.arrowhead.common.exception.ArrowheadException;
+import eu.arrowhead.common.misc.ArrowheadProperties;
 import eu.arrowhead.common.model.ArrowheadSystem;
 import eu.arrowhead.common.model.Event;
 
@@ -41,13 +42,15 @@ class PublisherMain extends ArrowheadApplication {
 
     final ArrowheadSystem me = ArrowheadSystem.createFromProperties(server);
     final EventHandlerClient eventHandler = EventHandlerClient.createFromProperties(securityContext);
-    final String eventType = getProps().getEventType();
+    final ArrowheadProperties props = getProps();
+    final String eventType = props.getEventType();
+    final boolean secure = props.isSecure();
 
     Timer timer = new Timer();
     TimerTask authTask = new TimerTask() {
       @Override
       public void run() {
-        eventHandler.publish(new Event(eventType, "Hello World"), me);
+        eventHandler.publish(new Event(eventType, String.format("Hello %s World", secure ? "secure" : "insecure")), me);
       }
     };
     timer.schedule(authTask, 2L * 1000L, 8L * 1000L);
