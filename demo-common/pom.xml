@@ -11,5 +11,11 @@
 
     <artifactId>demo-common</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>eu.arrowhead</groupId>
+            <artifactId>client-common</artifactId>
+        </dependency>
+    </dependencies>
 
 </project>

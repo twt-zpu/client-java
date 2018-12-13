@@ -19,7 +19,6 @@
 
   <modules>
     <module>client-common</module>
-    <module>cert_request</module>
     <module>consumer</module>
     <module>provider</module>
     <module>publisher</module>

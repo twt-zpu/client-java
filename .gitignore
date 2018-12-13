@@ -28,3 +28,4 @@
 *app.conf
 *.p12
 *.pub
+*.mvn

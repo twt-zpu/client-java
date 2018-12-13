@@ -59,14 +59,7 @@ public class SecurityVerifier {
 
 
     private SecurityVerifier loadAuthorizationPublicKey(String keyPath) {
-        if (keyPath.endsWith("crt")) {
-            KeyStore authKeyStore = SecurityUtils.createKeyStoreFromCert(keyPath);
-            X509Certificate authCert = SecurityUtils.getFirstCertFromKeyStore(authKeyStore);
-            authKey = authCert.getPublicKey();
-        } else { // This is just a PEM encoded public key
-            authKey = SecurityUtils.getPublicKey(keyPath, true);
-        }
-
+        authKey = SecurityUtils.getPublicKey(keyPath);
         log.info("Authorization System PublicKey Base64: " + Base64.getEncoder().encodeToString(authKey.getEncoded()));
         return this;
     }
