@@ -16,6 +16,7 @@ import eu.arrowhead.common.api.clients.HttpClient;
 import eu.arrowhead.common.api.clients.OrchestrationStrategy;
 import eu.arrowhead.common.api.clients.core.OrchestrationClient;
 import eu.arrowhead.common.exception.ArrowheadException;
+import eu.arrowhead.common.exception.DataNotFoundException;
 import eu.arrowhead.common.model.ArrowheadSystem;
 import eu.arrowhead.common.model.OrchestrationFlags;
 import eu.arrowhead.common.model.ServiceMetadata;
@@ -23,6 +24,8 @@ import eu.arrowhead.common.model.ServiceRequestForm;
 import eu.arrowhead.demo.model.TemperatureReadout;
 
 import javax.ws.rs.core.Response;
+import java.util.Timer;
+import java.util.TimerTask;
 
 class ConsumerMain extends ArrowheadApplication {
 
@@ -51,21 +54,32 @@ class ConsumerMain extends ArrowheadApplication {
                 .build();
         log.info("Service Request payload: " + ArrowheadConverter.json().toString(srf));
 
-        final HttpClient client = new HttpClient(new OrchestrationStrategy.Once(orchestration, srf), securityContext);
-        final Response getResponse = client.request(HttpClient.Method.GET);
+        final HttpClient client = new HttpClient(new OrchestrationStrategy.Always(orchestration, srf), securityContext);
 
-        TemperatureReadout readout = new TemperatureReadout();
-        try {
-            readout = getResponse.readEntity(TemperatureReadout.class);
-            log.info("Provider Response payload: " + ArrowheadConverter.json().toString(readout));
-        } catch (RuntimeException e) {
-            log.error("Provider did not send the temperature readout in SenML format.", e);
-        }
-        if (readout.getE().get(0) == null) {
-            log.error("Provider did not send any MeasurementEntry.");
-        } else {
-            log.info("The indoor temperature is " + readout.getE().get(0).getV() + " degrees celsius.");
-        }
+        Timer timer = new Timer();
+        TimerTask authTask = new TimerTask() {
+            @Override
+            public void run() {
+                try {
+                    final Response getResponse = client.request(HttpClient.Method.GET);
+                    TemperatureReadout readout = new TemperatureReadout();
+                    try {
+                        readout = getResponse.readEntity(TemperatureReadout.class);
+                        log.info("Provider Response payload: " + ArrowheadConverter.json().toString(readout));
+                    } catch (RuntimeException e) {
+                        log.error("Provider did not send the temperature readout in SenML format.", e);
+                    }
+                    if (readout.getE().get(0) == null) {
+                        log.error("Provider did not send any MeasurementEntry.");
+                    } else {
+                        log.info("The indoor temperature is " + readout.getE().get(0).getV() + " degrees celsius.");
+                    }
+                } catch (DataNotFoundException e) {
+                    log.warn(e.getMessage());
+                }
+            }
+        };
+        timer.schedule(authTask, 2L * 1000L, 8L * 1000L);
     }
 
     @Override
