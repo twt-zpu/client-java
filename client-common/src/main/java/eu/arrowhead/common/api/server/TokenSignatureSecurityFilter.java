@@ -44,11 +44,19 @@ public class TokenSignatureSecurityFilter implements ContainerRequestFilter {
   }
 
   /*
-    Based on the local Authorization public key and provider private key, this method verifies that the provided token/signature pair
-    was created by the Authorization Core System with the provider public key. It also checks if the token expired or not, plus the token
-    has to contain the same consumer name as the common name field of the client certificate.
+
    */
-  private void verifyRequester(SecurityContext context, String token, String signature) {
+
+  /**
+   * Based on the local Authorization public key and provider private key, this method verifies that the provided
+   * token/signature pair was created by the Authorization Core System with the provider public key. It also checks if
+   * the token expired or not, plus the token has to contain the same consumer name as the common name field of the
+   * client certificate.
+   * @param context
+   * @param token
+   * @param signature
+   */
+  public void verifyRequester(SecurityContext context, String token, String signature) {
     if (context == null || token == null || signature == null)
       throw new AuthException("Authorization core system signature verification failed (no token/signature)!");
 
@@ -98,6 +106,7 @@ public class TokenSignatureSecurityFilter implements ContainerRequestFilter {
         }
 
       } else {
+        log.warn("Token and provider name mismatch: " + consumerName + " " + consumerTokenName);
         throw new AuthException("Cert common name and token information are mismatched!");
       }
 

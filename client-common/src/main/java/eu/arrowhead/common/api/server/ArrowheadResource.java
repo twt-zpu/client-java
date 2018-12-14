@@ -1,12 +1,10 @@
 package eu.arrowhead.common.api.server;
 
 import eu.arrowhead.common.exception.ArrowheadException;
-import eu.arrowhead.common.misc.SecurityVerifier;
 import org.apache.log4j.Logger;
 
 /**
- * Helper class for creating resources for {@link ArrowheadHttpServer}. The verifier object should be used to verify
- * each request before any action is taken, see {@link SecurityVerifier}, and the server object can be used to consume
+ * Helper class for creating resources for {@link ArrowheadHttpServer}. The server object can be used to consume
  * services as part of responding to a request.
  *
  * See {@link eu.arrowhead.common.api.server.ArrowheadGrizzlyHttpServer#addResources}() on how to add resources to the
@@ -14,7 +12,6 @@ import org.apache.log4j.Logger;
  */
 public abstract class ArrowheadResource {
     protected final Logger log = Logger.getLogger(getClass());
-    private SecurityVerifier verifier;
     protected final ArrowheadHttpServer server;
 
     /**
@@ -25,8 +22,4 @@ public abstract class ArrowheadResource {
         this.server = server;
     }
 
-    public SecurityVerifier getVerifier() {
-        if (verifier == null) verifier = SecurityVerifier.createFromProperties();
-        return verifier;
-    }
 }
