@@ -7,18 +7,11 @@ import eu.arrowhead.common.api.server.ArrowheadGrizzlyHttpServer;
 import eu.arrowhead.common.api.server.ArrowheadHttpServer;
 import eu.arrowhead.common.exception.ArrowheadException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
-import eu.arrowhead.common.misc.SecurityUtils;
 import eu.arrowhead.common.model.ServiceRegistryEntry;
-
-import java.security.KeyStore;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 
 public class ProviderMain extends ArrowheadApplication {
 
   static String customResponsePayload;
-  public static PublicKey authKey;
-  public static PrivateKey privateKey;
 
   public static void main(String[] args) throws ArrowheadException {
     new ProviderMain(args).start();
@@ -33,11 +26,6 @@ public class ProviderMain extends ArrowheadApplication {
     final ArrowheadProperties props = getProps();
     if (props.getBooleanProperty("payload_from_file", false)) {
       customResponsePayload = props.getProperty("custom_payload");
-    }
-    if (props.isSecure()) {
-      authKey = SecurityUtils.getPublicKey(props.getAuthKey());
-      KeyStore keyStore = SecurityUtils.loadKeyStore(props.getKeystore(), props.getKeystorePass());
-      privateKey = SecurityUtils.getPrivateKey(keyStore, props.getKeyPass());
     }
 
     final ArrowheadSecurityContext securityContext = ArrowheadSecurityContext.createFromProperties(true);

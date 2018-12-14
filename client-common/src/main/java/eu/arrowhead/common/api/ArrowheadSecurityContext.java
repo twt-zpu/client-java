@@ -9,7 +9,11 @@ import org.apache.log4j.Logger;
 import org.glassfish.grizzly.ssl.SSLContextConfigurator;
 
 import javax.net.ssl.SSLContext;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
 
@@ -22,7 +26,7 @@ import java.util.Base64;
 public class ArrowheadSecurityContext {
     private static final Logger LOG = Logger.getLogger(ArrowheadSecurityContext.class);
     protected final Logger log = Logger.getLogger(getClass());
-    private String keystoreFile, keystorePass, keyPass, truststoreFile, truststorePass;
+    private String keystoreFile, keystorePass, keyPass, truststoreFile, truststorePass, authKey;
     private SSLContext sslContext;
     private SSLContextConfigurator sslContextConfigurator;
     private KeyStore keyStore;
@@ -65,13 +69,8 @@ public class ArrowheadSecurityContext {
         if (!secure) return null;
 
         try {
-            return new ArrowheadSecurityContext()
-                    .setKeystoreFile(props.getKeystore())
-                    .setKeystorePass(props.getKeystorePass())
-                    .setKeyPass(props.getKeyPass())
-                    .setTruststoreFile(props.getTruststore())
-                    .setTruststorePass(props.getTruststorePass())
-                    .load();
+            return create(props.getKeystore(), props.getKeystorePass(), props.getKeyPass(), props.getTruststore(),
+                    props.getTruststorePass(), props.getAuthKey());
         } catch (KeystoreException e) {
             if (bootstrap) {
                 LOG.info("Bootstrapping certificates...", e);
@@ -89,18 +88,21 @@ public class ArrowheadSecurityContext {
      * @param keyPass The password to the key.
      * @param truststore The trust store.
      * @param truststorePass The password to the trust store.
+     * @param authKey
      * @return your shiny new security context.
      * @throws KeystoreException If loading the stores failed. You will have to interact manually with the
      * CertificateAuthorityClient, if you want to perform bootstrapping as this stage.
      */
     public static ArrowheadSecurityContext create(String keystore, String keystorePass, String keyPass,
-                                                  String truststore, String truststorePass) throws KeystoreException {
+                                                  String truststore, String truststorePass, String authKey)
+            throws KeystoreException {
         return new ArrowheadSecurityContext()
                 .setKeystoreFile(keystore)
                 .setKeystorePass(keystorePass)
                 .setKeyPass(keyPass)
                 .setTruststoreFile(truststore)
                 .setTruststorePass(truststorePass)
+                .setAuthKey(authKey)
                 .load();
     }
 
@@ -206,5 +208,23 @@ public class ArrowheadSecurityContext {
 
     public KeyStore getKeyStore() {
         return keyStore;
+    }
+
+    public PrivateKey getPrivateKey() {
+        return SecurityUtils.getPrivateKey(keyStore, keyPass);
+    }
+
+    public String getAuthKey() {
+        return authKey;
+    }
+
+    public ArrowheadSecurityContext setAuthKey(String authKey) {
+        this.authKey = authKey;
+        return this;
+    }
+
+    public PublicKey getPublicAuthKey() {
+        return authKey != null && Files.exists(Paths.get(authKey)) ? SecurityUtils.getPublicKey(authKey) : null;
+
     }
 }

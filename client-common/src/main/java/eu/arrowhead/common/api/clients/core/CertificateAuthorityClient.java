@@ -82,11 +82,11 @@ public final class CertificateAuthorityClient extends HttpClient {
     private static ArrowheadSecurityContext createSecurityContext(String keyPass, String truststore, String truststorePass) {
         // Setting temporary truststore if given (for the secure CA)
         try {
-            return ArrowheadSecurityContext.create(null, null, keyPass, truststore, truststorePass);
+            return ArrowheadSecurityContext.create(null, null, keyPass, truststore, truststorePass, null);
         } catch (KeystoreException e) {
             LOG.error("Failed loading temporary SSL context, are truststore set correctly in your config file?", e);
             try {
-                return ArrowheadSecurityContext.create(null, null, null, null, null);
+                return ArrowheadSecurityContext.create(null, null, null, null, null, null);
             } catch (KeystoreException e1) {
                 throw new AuthException("Failed to create temporary SSL context", e1);
             }
@@ -232,7 +232,7 @@ public final class CertificateAuthorityClient extends HttpClient {
             return ArrowheadSecurityContext.create(
                     certPath + newKeystore, keyStorePassword,
                     keyStorePassword,
-                    certPath + newTruststore, truststorePass);
+                    certPath + newTruststore, truststorePass, certPath + authFile);
         } catch (KeystoreException e) {
             throw new AuthException("Failed to create security context, based on the new key-/truststores.");
         }

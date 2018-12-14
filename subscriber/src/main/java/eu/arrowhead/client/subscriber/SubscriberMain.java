@@ -33,6 +33,7 @@ class SubscriberMain extends ArrowheadApplication {
     final ArrowheadHttpServer server = ArrowheadGrizzlyHttpServer
             .createFromProperties(securityContext)
             .addResources(SubscriberResource.class)
+            .setSecurityFilter(null)
             .start();
 
     final ArrowheadSystem me = ArrowheadSystem.createFromProperties(server);

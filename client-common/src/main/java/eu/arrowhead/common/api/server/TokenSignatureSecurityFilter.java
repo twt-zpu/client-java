@@ -1,32 +1,34 @@
-package eu.arrowhead.demo.provider.filter;
+package eu.arrowhead.common.api.server;
 
 import eu.arrowhead.common.api.ArrowheadConverter;
+import eu.arrowhead.common.api.ArrowheadSecurityContext;
 import eu.arrowhead.common.exception.ArrowheadRuntimeException;
 import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.common.misc.SecurityUtils;
 import eu.arrowhead.common.model.RawTokenInfo;
-import eu.arrowhead.demo.provider.ProviderMain;
 import org.apache.log4j.Logger;
 
-import javax.annotation.Priority;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.ext.Provider;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.util.Base64;
 
-@Provider
-@Priority(Priorities.AUTHORIZATION)
-public class RequestVerificationFilter implements ContainerRequestFilter {
+public class TokenSignatureSecurityFilter implements ContainerRequestFilter {
   protected final Logger log = Logger.getLogger(getClass());
+  private final PrivateKey privateKey;
+  private final PublicKey publicAuthKey;
+
+  public TokenSignatureSecurityFilter(ArrowheadSecurityContext securityContext) {
+    this.privateKey = securityContext.getPrivateKey();
+    this.publicAuthKey = securityContext.getPublicAuthKey();
+  }
 
   @Override
   public void filter(ContainerRequestContext requestContext) {
@@ -69,7 +71,7 @@ public class RequestVerificationFilter implements ContainerRequestFilter {
 
       SecurityUtils.addSecurityProvider();
       Signature signatureInstance = Signature.getInstance("SHA256withRSA", "BC");
-      signatureInstance.initVerify(ProviderMain.authKey);
+      signatureInstance.initVerify(publicAuthKey);
       signatureInstance.update(tokenbytes);
 
       boolean verifies = signatureInstance.verify(signaturebytes);
@@ -78,7 +80,7 @@ public class RequestVerificationFilter implements ContainerRequestFilter {
       }
 
       Cipher cipher = Cipher.getInstance("RSA/NONE/PKCS1Padding", "BC");
-      cipher.init(Cipher.DECRYPT_MODE, ProviderMain.privateKey);
+      cipher.init(Cipher.DECRYPT_MODE, privateKey);
       //Check if the provider public key registered in the database is the same as the one used by the provider at the moment
       byte[] byteToken = cipher.doFinal(tokenbytes);
 

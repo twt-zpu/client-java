@@ -9,6 +9,7 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -18,9 +19,11 @@ import java.util.*;
  * An implementation of {@link ArrowheadHttpServer} using Grizzly
  */
 public class ArrowheadGrizzlyHttpServer extends ArrowheadHttpServer {
+    private ContainerRequestFilter securityFilter;
     private HttpServer server;
     private Set<Class<? extends ArrowheadResource>> resources = new HashSet<>();
     private Set<String> packages = new HashSet<>();
+    private Set<Object> instances = new HashSet<>();
 
     /**
      * Create an instance using the default properties files.
@@ -67,6 +70,7 @@ public class ArrowheadGrizzlyHttpServer extends ArrowheadHttpServer {
     private ArrowheadGrizzlyHttpServer(boolean isSecure, String address, int port,
                                        ArrowheadSecurityContext securityContext) {
         super(isSecure, address, port, securityContext);
+        securityFilter = new TokenSignatureSecurityFilter(securityContext);
         packages.add("eu.arrowhead.common");
     }
 
@@ -82,16 +86,6 @@ public class ArrowheadGrizzlyHttpServer extends ArrowheadHttpServer {
     }
 
     /**
-     * Add packages to the server. The package "eu.arrowhead.common" is added by default, see replacePackages() on how
-     * to change that.
-     * @param packages packages to add.
-     * @return this.
-     */
-    public ArrowheadGrizzlyHttpServer addPackages(String ... packages) {
-        return addPackages(Arrays.asList(packages));
-    }
-
-    /**
      * Add resource classes to the server. Resources are currently treated as singleton classes and only initialised
      * once before the server is started and added to the server as pure objects.
      * @param resources resource classes to add.
@@ -100,6 +94,16 @@ public class ArrowheadGrizzlyHttpServer extends ArrowheadHttpServer {
     public ArrowheadGrizzlyHttpServer addResources(Collection<? extends Class<? extends ArrowheadResource>> resources) {
         this.resources.addAll(resources);
         return this;
+    }
+
+    /**
+     * Add packages to the server. The package "eu.arrowhead.common" is added by default, see replacePackages() on how
+     * to change that.
+     * @param packages packages to add.
+     * @return this.
+     */
+    public ArrowheadGrizzlyHttpServer addPackages(String ... packages) {
+        return addPackages(Arrays.asList(packages));
     }
 
     /**
@@ -124,12 +128,77 @@ public class ArrowheadGrizzlyHttpServer extends ArrowheadHttpServer {
     }
 
     /**
+     * Replace packages in the server.
+     * @param packages packages to replace with.
+     * @return this.
+     */
+    public ArrowheadGrizzlyHttpServer replacePackages(String ... packages) {
+        this.packages.clear();
+        addPackages(Arrays.asList(packages));
+        return this;
+    }
+
+    /**
+     * Add instances to the server. The package "eu.arrowhead.common" is added by default, see replaceInstances() on how
+     * to change that.
+     * @param instances instances to add.
+     * @return this.
+     */
+    public ArrowheadGrizzlyHttpServer addInstances(Object ... instances) {
+        return addInstances(Arrays.asList(instances));
+    }
+
+    /**
+     * Add instances to the server. The package "eu.arrowhead.common" is added by default, see replaceInstances() on how
+     * to change that.
+     * @param instances instances to add.
+     * @return this.
+     */
+    public ArrowheadGrizzlyHttpServer addInstances(Collection<Object> instances) {
+        this.instances.addAll(instances);
+        return this;
+    }
+
+    /**
+     * Replace instances in the server.
+     * @param instances instances to replace with.
+     * @return this.
+     */
+    public ArrowheadGrizzlyHttpServer replaceInstances(Set<Object> instances) {
+        this.instances = instances;
+        return this;
+    }
+
+    /**
+     * Replace instances in the server.
+     * @param instances instances to replace with.
+     * @return this.
+     */
+    public ArrowheadGrizzlyHttpServer replaceInstances(Object ... instances) {
+        this.instances.clear();
+        addInstances(Arrays.asList(instances));
+        return this;
+    }
+
+    public ContainerRequestFilter getSecurityFilter() {
+        return securityFilter;
+    }
+
+    public ArrowheadGrizzlyHttpServer setSecurityFilter(ContainerRequestFilter securityFilter) {
+        this.securityFilter = securityFilter;
+        return this;
+    }
+
+    /**
      * Implemented start routine
      */
     @Override
     protected void onStart() {
         final ResourceConfig config = new ResourceConfig();
         config.packages(packages.toArray(new String[]{}));
+
+        if (securityFilter != null) instances.add(securityFilter);
+        config.registerInstances(instances);
 
         for (Class<? extends ArrowheadResource> resource : resources) {
             try {
