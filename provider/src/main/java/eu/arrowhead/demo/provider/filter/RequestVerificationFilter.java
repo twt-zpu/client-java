@@ -6,6 +6,7 @@ import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.common.misc.SecurityUtils;
 import eu.arrowhead.common.model.RawTokenInfo;
 import eu.arrowhead.demo.provider.ProviderMain;
+import org.apache.log4j.Logger;
 
 import javax.annotation.Priority;
 import javax.crypto.BadPaddingException;
@@ -25,6 +26,7 @@ import java.util.Base64;
 @Provider
 @Priority(Priorities.AUTHORIZATION)
 public class RequestVerificationFilter implements ContainerRequestFilter {
+  protected final Logger log = Logger.getLogger(getClass());
 
   @Override
   public void filter(ContainerRequestContext requestContext) {
@@ -45,6 +47,9 @@ public class RequestVerificationFilter implements ContainerRequestFilter {
     has to contain the same consumer name as the common name field of the client certificate.
    */
   private void verifyRequester(SecurityContext context, String token, String signature) {
+    if (context == null || token == null || signature == null)
+      throw new AuthException("Authorization core system signature verification failed (no token/signature)!");
+
     try {
       String commonName = SecurityUtils.getCertCNFromSubject(context.getUserPrincipal().getName());
       String[] commonNameParts = commonName.split("\\.");
@@ -86,14 +91,15 @@ public class RequestVerificationFilter implements ContainerRequestFilter {
       long currentTime = System.currentTimeMillis();
 
       if (consumerName.equalsIgnoreCase(consumerTokenName)) {
-        if (endTime == 0L || (endTime > currentTime)) {
-          return;
+        if (!(endTime == 0L || (endTime > currentTime))) {
+          throw new AuthException("Given token has expired!");
         }
-        throw new AuthException("Given token has expired!");
 
       } else {
         throw new AuthException("Cert common name and token information are mismatched!");
       }
+
+      log.info("Token and signature from " + commonName + " are ok!");
     } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | NoSuchPaddingException | BadPaddingException | NoSuchProviderException | IllegalBlockSizeException e) {
       throw new ArrowheadRuntimeException("Internal Server Error during token validation!", 500, e);
     }

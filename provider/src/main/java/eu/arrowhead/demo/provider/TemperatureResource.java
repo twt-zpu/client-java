@@ -18,11 +18,8 @@ import eu.arrowhead.demo.model.TemperatureReadout;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 
 @Path("temperature")
 @Produces(MediaType.APPLICATION_JSON)
@@ -33,19 +30,16 @@ public class TemperatureResource extends ArrowheadResource {
   }
 
   @GET
-  public Response getIt(@Context SecurityContext context,
-                        @QueryParam("token") String token,
-                        @QueryParam("signature") String signature) {
-    return getVerifier().verifiedResponse(context, token, signature, () -> {
-      if (ProviderMain.customResponsePayload != null) {
-        return Response.status(200).entity(ProviderMain.customResponsePayload);
-      } else {
-        MeasurementEntry entry = new MeasurementEntry("Temperature_IndoorTemperature", 21.0, System.currentTimeMillis());
-        TemperatureReadout readout = new TemperatureReadout("TemperatureSensor", System.currentTimeMillis(), "celsius", 1);
-        readout.getE().add(entry);
-        return Response.status(200).entity(readout);
-      }
-    });
+  public Response getIt() {
+    if (ProviderMain.customResponsePayload != null) {
+      return Response.status(200).entity(ProviderMain.customResponsePayload).build();
+    } else {
+      MeasurementEntry entry = new MeasurementEntry("Temperature_IndoorTemperature", 21.0, System.currentTimeMillis());
+      TemperatureReadout readout = new TemperatureReadout("TemperatureSensor", System.currentTimeMillis(), "celsius", 1);
+      readout.getE().add(entry);
+      return Response.status(200).entity(readout).build();
+    }
+
   }
 
 }
