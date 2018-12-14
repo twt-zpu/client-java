@@ -26,6 +26,6 @@
 *.properties
 */target
 *app.conf
-*.p12
-*.pub
+*/config*/*.p12
+*/config*/*.pub
 *.mvn
