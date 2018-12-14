@@ -8,7 +8,8 @@
 *.sts4-cache
 
 ### IntelliJ IDEA ###
-.idea
+.idea/*.xml
+.idea/libraries
 *.iws
 *.iml
 *.ipr
