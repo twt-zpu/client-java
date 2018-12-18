@@ -1,13 +1,17 @@
 package eu.arrowhead.common.misc;
 
 import eu.arrowhead.common.model.ServiceMetadata;
-import org.apache.log4j.Logger;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.ServiceConfigurationError;
+import java.util.Set;
+import org.apache.log4j.Logger;
 
 public class ArrowheadProperties extends TypeSafeProperties {
     private static final Logger LOG = Logger.getLogger(ArrowheadProperties.class);
@@ -69,7 +73,7 @@ public class ArrowheadProperties extends TypeSafeProperties {
     }
 
     public static String getDefaultAuthKey() {
-        return "authorization.crt";
+        return "authorization.pub";
     }
 
     public static String createDefaultSystemName() {
