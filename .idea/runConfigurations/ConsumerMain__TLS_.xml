@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="ConsumerMain (TLS)" type="Application" factoryName="Application">
+  <configuration default="false" name="Consumer (TLS)" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="eu.arrowhead.demo.consumer.ConsumerMain" />
     <module name="consumer" />
     <option name="VM_PARAMETERS" value="-DconfDir=config-secure" />

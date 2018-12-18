@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="ProviderMain (TLS)" type="Application" factoryName="Application">
+  <configuration default="false" name="Provider (TLS)" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="eu.arrowhead.demo.provider.ProviderMain" />
     <module name="provider" />
     <option name="PROGRAM_PARAMETERS" value="-daemon" />

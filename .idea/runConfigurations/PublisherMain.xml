@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="PublisherMain" type="Application" factoryName="Application" singleton="true" nameIsGenerated="true">
+  <configuration default="false" name="Publisher" type="Application" factoryName="Application" singleton="true">
     <option name="MAIN_CLASS_NAME" value="eu.arrowhead.client.publisher.PublisherMain" />
     <module name="publisher" />
     <option name="PROGRAM_PARAMETERS" value="-daemon" />

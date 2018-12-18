@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="PublisherMain (TLS)" type="Application" factoryName="Application">
+  <configuration default="false" name="Publisher (TLS)" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="eu.arrowhead.client.publisher.PublisherMain" />
     <module name="publisher" />
     <option name="PROGRAM_PARAMETERS" value="-daemon" />

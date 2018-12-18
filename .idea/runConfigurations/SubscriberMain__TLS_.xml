@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="SubscriberMain (TLS)" type="Application" factoryName="Application">
+  <configuration default="false" name="Subscriber (TLS)" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="eu.arrowhead.client.subscriber.SubscriberMain" />
     <module name="subscriber" />
     <option name="PROGRAM_PARAMETERS" value="-daemon" />

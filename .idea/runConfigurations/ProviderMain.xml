@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="ProviderMain" type="Application" factoryName="Application" singleton="true" nameIsGenerated="true">
+  <configuration default="false" name="Provider" type="Application" factoryName="Application" singleton="true">
     <option name="MAIN_CLASS_NAME" value="eu.arrowhead.demo.provider.ProviderMain" />
     <module name="provider" />
     <option name="PROGRAM_PARAMETERS" value="-daemon" />
