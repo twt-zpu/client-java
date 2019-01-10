@@ -14,7 +14,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>eu.arrowhead</groupId>
   <artifactId>client</artifactId>
-  <version>${revision}</version>
+  <version>4.1.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <url>https://github.com/arrowhead-f/client-java</url>
@@ -27,16 +27,14 @@
 
   <modules>
     <module>client-common</module>
+    <module>demo-common</module>
     <module>consumer</module>
     <module>provider</module>
     <module>publisher</module>
     <module>subscriber</module>
-    <module>demo-common</module>
   </modules>
 
   <properties>
-    <base.version>4.1.1</base.version>
-    <revision>${base.version}-SNAPSHOT</revision>
     <mvn.compiler.version>3.8.0</mvn.compiler.version>
     <mvn.compile.target>1.8</mvn.compile.target>
     <bouncy.version>1.59</bouncy.version>
@@ -56,7 +54,7 @@
 
       <dependency>
         <groupId>eu.arrowhead</groupId>
-        <artifactId>client-common</artifactId>
+        <artifactId>arrowhead-client-common</artifactId>
         <version>${project.version}</version>
       </dependency>
 

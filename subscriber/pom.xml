@@ -16,7 +16,7 @@
   <parent>
     <artifactId>client</artifactId>
     <groupId>eu.arrowhead</groupId>
-    <version>4.0</version>
+    <version>4.1.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>subscriber</artifactId>
@@ -25,7 +25,7 @@
 
     <dependency>
       <groupId>eu.arrowhead</groupId>
-      <artifactId>client-common</artifactId>
+      <artifactId>arrowhead-client-common</artifactId>
     </dependency>
 
   </dependencies>

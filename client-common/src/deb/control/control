@@ -7,4 +7,4 @@ Maintainer: Thomas Pedersen <tp@cs.aau.dk>
 Homepage: http://www.arrowhead.eu
 Description: Arrowhead Client Common
 Distribution: development
-Depends: java-runtime-headless, arrowhead-common
+Depends: java-runtime-headless, arrowhead-core-common

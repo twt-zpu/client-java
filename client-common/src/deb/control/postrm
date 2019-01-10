@@ -1,5 +1,5 @@
 #!/bin/sh
-# postrm script for arrowhead-common
+# postrm script for arrowhead-core-common
 #
 # see: dh_installdeb(1)
 
