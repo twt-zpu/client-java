@@ -22,15 +22,6 @@ set -e
 
 case "$1" in
     configure)
-      adduser --system --no-create-home --group arrowhead
-
-      # Create directories
-      mkdir -p ${AH_CLOUDS_DIR}/
-      if [ ! -d /var/log/arrowhead ]; then
-          mkdir -p /var/log/arrowhead
-          chown arrowhead:adm /var/log/arrowhead
-          chmod 750 /var/log/arrowhead
-      fi
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
