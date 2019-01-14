@@ -26,6 +26,7 @@
   </licenses>
 
   <modules>
+    <module>common</module>
     <module>client-common</module>
     <module>demo-common</module>
     <module>consumer</module>
@@ -47,6 +48,7 @@
     <grizzly.version>2.4.0</grizzly.version>
     <log4j.version>1.2.17</log4j.version>
     <istack.version>3.0.7</istack.version>
+    <jaxb.version>2.3.1</jaxb.version>
   </properties>
 
   <dependencyManagement>
@@ -136,6 +138,18 @@
         <groupId>com.sun.istack</groupId>
         <artifactId>istack-commons-runtime</artifactId>
         <version>${istack.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>javax.xml.bind</groupId>
+        <artifactId>jaxb-api</artifactId>
+        <version>${jaxb.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcprov-jdk15on</artifactId>
+        <version>${bouncy.version}</version>
       </dependency>
 
     </dependencies>
