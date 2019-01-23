@@ -96,6 +96,7 @@
                                     <src>${project.build.directory}/lib</src>
                                     <type>directory</type>
                                     <includes>*.jar</includes>
+                                    <!-- TODO Get versions from properties -->
                                     <excludes>
                                         arrowhead-common-4.1.1-SNAPSHOT.jar,
                                         aopalliance-repackaged-2.5.0-b42.jar,
@@ -127,7 +128,9 @@
                                         jersey-media-jaxb-2.27.jar,
                                         jersey-server-2.27.jar,
                                         log4j-1.2.17.jar,
+                                        mysql-connector-java-8.0.13.jar,
                                         osgi-resource-locator-1.0.1.jar,
+                                        protobuf-java-3.6.1.jar,
                                         validation-api-1.1.0.Final.jar,
                                     </excludes>
                                     <mapper>

@@ -66,6 +66,11 @@
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcprov-jdk15on</artifactId>
     </dependency>
+    <dependency>
+      <!-- JDBC Type 4 driver for MySQL. -->
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+    </dependency>
   </dependencies>
 
   <build>
