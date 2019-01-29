@@ -41,8 +41,9 @@ public class TemperatureResource {
     if (FullProviderMain.customResponsePayload != null) {
       return Response.status(200).entity(FullProviderMain.customResponsePayload).build();
     } else {
-      MeasurementEntry entry = new MeasurementEntry("Temperature_IndoorTemperature", 21.0, System.currentTimeMillis());
-      TemperatureReadout readout = new TemperatureReadout(providerName, System.currentTimeMillis(), "celsius", 1);
+      double temperature = 21.0;
+      MeasurementEntry entry = new MeasurementEntry("Temperature_IndoorTemperature", temperature, 0);
+      TemperatureReadout readout = new TemperatureReadout(providerName, System.currentTimeMillis()/1000, "Cel", 1);
       readout.getE().add(entry);
       return Response.status(200).entity(readout).build();
     }
