@@ -11,6 +11,7 @@ package eu.arrowhead.client.provider;
 
 import eu.arrowhead.client.common.model.MeasurementEntry;
 import eu.arrowhead.client.common.model.TemperatureReadout;
+import java.time.Instant;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -30,8 +31,10 @@ public class TemperatureResource {
     if (FullProviderMain.customResponsePayload != null) {
       return Response.status(200).entity(FullProviderMain.customResponsePayload).build();
     } else {
-      MeasurementEntry entry = new MeasurementEntry("Temperature_IndoorTemperature", 21.0, System.currentTimeMillis());
-      TemperatureReadout readout = new TemperatureReadout("TemperatureSensor", System.currentTimeMillis(), "celsius", 1);
+      double temperature = 21.0;
+      MeasurementEntry entry = new MeasurementEntry("Temperature_IndoorTemperature", temperature, 0);
+      TemperatureReadout readout = new TemperatureReadout("TemperatureSensor", Instant.now().getEpochSecond(), "Cel",
+                                                          1);
       readout.getE().add(entry);
       return Response.status(200).entity(readout).build();
     }
