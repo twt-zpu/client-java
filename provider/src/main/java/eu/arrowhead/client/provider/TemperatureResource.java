@@ -33,8 +33,7 @@ public class TemperatureResource {
     } else {
       double temperature = 21.0;
       MeasurementEntry entry = new MeasurementEntry("Temperature_IndoorTemperature", temperature, 0);
-      TemperatureReadout readout = new TemperatureReadout("TemperatureSensor", Instant.now().getEpochSecond(), "Cel",
-                                                          1);
+      TemperatureReadout readout = new TemperatureReadout("TemperatureSensor", Instant.now().getEpochSecond(), "Cel", 1);
       readout.getE().add(entry);
       return Response.status(200).entity(readout).build();
     }
