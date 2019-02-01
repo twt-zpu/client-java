@@ -31,7 +31,7 @@ public class TemperatureResource {
     if (FullProviderMain.customResponsePayload != null) {
       return Response.status(200).entity(FullProviderMain.customResponsePayload).build();
     } else {
-      double temperature = 21.5;
+      double temperature = 21.0;
       MeasurementEntry entry = new MeasurementEntry("Temperature_IndoorTemperature", temperature, 0);
       TemperatureReadout readout = new TemperatureReadout("TemperatureSensor", Instant.now().getEpochSecond(), "Cel", 1);
       readout.getE().add(entry);
