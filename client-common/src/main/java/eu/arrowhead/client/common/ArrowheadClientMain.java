@@ -54,6 +54,12 @@ public abstract class ArrowheadClientMain {
   private boolean daemon;
   private ClientType clientType;
 
+  {
+    if (props.containsKey("db_address") && props.containsKey("db_user") && props.containsKey("db_password")) {
+      DatabaseManager.init();
+    }
+  }
+
   protected void init(ClientType client, String[] args, Set<Class<?>> classes, String[] packages) {
     System.out.println("Working directory: " + System.getProperty("user.dir"));
     clientType = client;
@@ -126,8 +132,8 @@ public abstract class ArrowheadClientMain {
       server.start();
       System.out.println("Started insecure server at: " + baseUri);
     } catch (IOException | ProcessingException e) {
-      throw new ServiceConfigurationError("Make sure you gave a valid address in the config file! (Assignable to this JVM and not in use already)",
-                                          e);
+      throw new ServiceConfigurationError(
+          "Make sure you gave a valid address in the config file! (Assignable to this JVM and not in use already)", e);
     }
   }
 
@@ -164,21 +170,23 @@ public abstract class ArrowheadClientMain {
     String serverCN = SecurityUtils.getCertCNFromSubject(serverCert.getSubjectDN().getName());
     if (!SecurityUtils.isKeyStoreCNArrowheadValid(serverCN)) {
       throw new AuthException(
-          "Server CN ( " + serverCN + ") is not compliant with the Arrowhead cert structure, since it does not have 5 parts, or does not end with"
-              + " \"arrowhead.eu\".");
+          "Server CN ( " + serverCN + ") is not compliant with the Arrowhead cert structure, since it does not have 5 "
+              + "parts, or does not end with" + " \"arrowhead.eu\".");
     }
     config.property("server_common_name", serverCN);
 
     URI uri = UriBuilder.fromUri(baseUri).build();
     try {
-      server = GrizzlyHttpServerFactory
-          .createHttpServer(uri, config, true, new SSLEngineConfigurator(sslCon).setClientMode(false).setNeedClientAuth(true), false);
+      server = GrizzlyHttpServerFactory.createHttpServer(uri, config, true,
+                                                         new SSLEngineConfigurator(sslCon).setClientMode(false)
+                                                                                          .setNeedClientAuth(true),
+                                                         false);
       server.getServerConfiguration().setAllowPayloadForUndefinedHttpMethods(true);
       server.start();
       System.out.println("Started secure server at: " + baseUri);
     } catch (IOException | ProcessingException e) {
-      throw new ServiceConfigurationError("Make sure you gave a valid address in the config file! (Assignable to this JVM and not in use already)",
-                                          e);
+      throw new ServiceConfigurationError(
+          "Make sure you gave a valid address in the config file! (Assignable to this JVM and not in use already)", e);
     }
   }
 
