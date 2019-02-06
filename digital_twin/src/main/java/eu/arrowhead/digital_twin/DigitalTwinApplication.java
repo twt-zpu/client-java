@@ -1,5 +1,6 @@
 package eu.arrowhead.digital_twin;
 
+import de.codecentric.boot.admin.server.config.EnableAdminServer;
 import eu.arrowhead.digital_twin.mock_provider.ProviderService;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.PostConstruct;
@@ -9,6 +10,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+@EnableAdminServer
 @EnableScheduling
 @SpringBootApplication
 public class DigitalTwinApplication {
