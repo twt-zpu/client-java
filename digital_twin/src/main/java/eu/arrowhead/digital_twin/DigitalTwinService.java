@@ -90,6 +90,7 @@ public class DigitalTwinService {
     String registerUrl = UriBuilder.fromPath(serviceRegistryUrl).path("register").toString();
     try {
       Utility.sendRequest(registerUrl, "POST", srEntry);
+      log.info("PuchaseSmartProduct service registered with the Service Registry");
     } catch (DuplicateEntryException e) {
       unregisterPurchaseService();
       if (firstTry.get()) {
@@ -99,7 +100,6 @@ public class DigitalTwinService {
         throw e;
       }
     }
-    log.info("PuchaseSmartProduct service registered with the Service Registry");
   }
 
   void unregisterPurchaseService() {
@@ -201,6 +201,7 @@ public class DigitalTwinService {
           smartProductId = rfidKey;
         }
       }
+      //NOTE WHAT IF THIS IS A PURCHASED PRODUCT?
       if (productWithStateChange == null) {
         productWithStateChange = new SmartProduct(new ArrayList<>(Arrays.asList(rfidTags)));
         smartProductId = rfidTags[0];

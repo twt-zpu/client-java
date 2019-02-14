@@ -30,7 +30,7 @@ public class DigitalTwinController {
 
   @PostMapping(RECEIVE_EVENT_SUBPATH)
   public ResponseEntity<?> receiveEvent(@Valid @RequestBody Event event) {
-    log.info("Received new event: " + event.toString());
+    log.debug("Received new event: " + event.toString());
 
     CompletableFuture.runAsync(() -> digitalTwinService.handleArrowheadEvent(event));
     return ResponseEntity.ok().build();
