@@ -1,10 +1,13 @@
 package eu.arrowhead.common.api.server;
 
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
-import eu.arrowhead.common.exception.*;
+import eu.arrowhead.common.exception.ArrowheadException;
+import eu.arrowhead.common.exception.ArrowheadRuntimeException;
+import eu.arrowhead.common.exception.AuthException;
+import eu.arrowhead.common.exception.InvalidStateException;
+import eu.arrowhead.common.exception.NotFoundException;
 import eu.arrowhead.common.misc.SecurityUtils;
 import eu.arrowhead.common.misc.Utility;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.security.cert.X509Certificate;
@@ -54,6 +57,21 @@ public abstract class ArrowheadHttpServer extends ArrowheadServer {
 
     public ArrowheadSecurityContext getSecurityContext() {
         return securityContext;
+    }
+
+    public ArrowheadHttpServer setSecure(boolean secure) {
+        isSecure = secure;
+        return this;
+    }
+
+    public ArrowheadHttpServer setAddress(String address) {
+        this.address = address;
+        return this;
+    }
+
+    public ArrowheadHttpServer setPort(int port) {
+        this.port = port;
+        return this;
     }
 
     /**
