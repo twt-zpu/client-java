@@ -47,6 +47,7 @@ public class DigitalTwinController {
   @GetMapping("push_the_red_button")
   public ResponseEntity<?> deleteInternalState() {
     digitalTwinService.deleteInternalState();
+    log.debug("Internal state deleted.");
     return ResponseEntity.ok().build();
   }
 }
