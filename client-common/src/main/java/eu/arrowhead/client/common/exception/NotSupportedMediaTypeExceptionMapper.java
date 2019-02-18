@@ -29,7 +29,8 @@ public class NotSupportedMediaTypeExceptionMapper implements ExceptionMapper<Not
           ExceptionType.BAD_MEDIA_TYPE, requestContext.get().getBaseUri().toString());
     }
 
-    return Response.status(Status.METHOD_NOT_ALLOWED).entity(errorMessage).header("Content-type", "application/json")
+    return Response.status(Status.UNSUPPORTED_MEDIA_TYPE).entity(errorMessage)
+                   .header("Content-type", "application/json")
                    .build();
   }
 }
