@@ -253,6 +253,7 @@ public class DigitalTwinService {
           providerURL.ifPresent(url -> consumeArrowheadService(serviceDefinition, url));
 
           //Update RFID and lifecycle information on the product
+          productWithStateChange = smartProducts.get(smartProductId);
           List<String> newRfidTags = Utility.difference(productWithStateChange.getRfidParts(), Arrays.asList(rfidTags));
           productWithStateChange.getRfidParts().addAll(newRfidTags);
           productWithStateChange.setLifeCycle(productWithStateChange.getLifeCycle().next());
