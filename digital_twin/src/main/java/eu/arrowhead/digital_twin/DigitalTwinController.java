@@ -43,4 +43,10 @@ public class DigitalTwinController {
     log.info("Smart product purchased: " + purchasedProduct.toString());
     return purchasedProduct;
   }
+
+  @GetMapping("push_the_red_button")
+  public ResponseEntity<?> deleteInternalState() {
+    digitalTwinService.deleteInternalState();
+    return ResponseEntity.ok().build();
+  }
 }
