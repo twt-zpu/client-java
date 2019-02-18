@@ -213,7 +213,6 @@ public class DigitalTwinService {
           smartProductId = rfidKey;
         }
       }
-      //NOTE WHAT IF THIS IS A PURCHASED PRODUCT?
       if (productWithStateChange == null) {
         productWithStateChange = new SmartProduct(new ArrayList<>(Arrays.asList(rfidTags)));
         smartProductId = rfidTags[0];
@@ -331,7 +330,11 @@ public class DigitalTwinService {
       boolean exists = false;
       for (String rfidKey : purchasedSmartProduct.getRfidParts()) {
         if (smartProducts.containsKey(rfidKey)) {
-          exists = true;
+          SmartProduct product = smartProducts.get(rfidKey);
+          //If the product is in the Created lifecycle, then it was (probably) only just added by our code)
+          if (!product.getLifeCycle().equals(SmartProductLifeCycle.CREATED)) {
+            exists = true;
+          }
           break;
         }
       }
