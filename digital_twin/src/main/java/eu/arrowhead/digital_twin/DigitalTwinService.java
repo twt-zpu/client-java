@@ -63,8 +63,10 @@ public class DigitalTwinService {
   private enum EventsToListenFor {area_entered, area_left}
 
   @Autowired
-  public DigitalTwinService(@Value("${service_registry_url}") String serviceRegistryUrl, @Value("${event_handler_url}") String eventHandlerUrl,
-                            @Value("${orchestrator_url}") String orchestratorUrl, @Value("${internal_state_save_location}") String stateSaveLocation,
+  public DigitalTwinService(@Value("${service_registry_url}") String serviceRegistryUrl,
+                            @Value("${event_handler_url}") String eventHandlerUrl,
+                            @Value("${orchestrator_url}") String orchestratorUrl,
+                            @Value("${internal_state_save_location}") String stateSaveLocation,
                             @Value("${server.address}") String myHost, @Value("${server.port}") int myPort) {
     this.serviceRegistryUrl = serviceRegistryUrl;
     //TODO make the digital twin acquire these URLs from the SR?
@@ -85,7 +87,8 @@ public class DigitalTwinService {
   }
 
   void registerPurchaseService() {
-    ArrowheadService purchaseProduct = new ArrowheadService("PurchaseSmartProduct", Collections.singleton("JSON"), null);
+    ArrowheadService purchaseProduct = new ArrowheadService("PurchaseSmartProduct", Collections.singleton("JSON"),
+                                                            null);
     ServiceRegistryEntry srEntry = new ServiceRegistryEntry(purchaseProduct, digitalTwin, "purchase");
     String registerUrl = UriBuilder.fromPath(serviceRegistryUrl).path("register").toString();
     try {
@@ -103,7 +106,8 @@ public class DigitalTwinService {
   }
 
   void unregisterPurchaseService() {
-    ArrowheadService purchaseProduct = new ArrowheadService("PurchaseSmartProduct", Collections.singleton("JSON"), null);
+    ArrowheadService purchaseProduct = new ArrowheadService("PurchaseSmartProduct", Collections.singleton("JSON"),
+                                                            null);
     ServiceRegistryEntry srEntry = new ServiceRegistryEntry(purchaseProduct, digitalTwin, "purchase");
     String unregisterUrl = UriBuilder.fromPath(serviceRegistryUrl).path("remove").toString();
     try {
@@ -118,7 +122,8 @@ public class DigitalTwinService {
   void subscribeToSmartProductEvents() {
     //Create the EventFilter request payload, send the subscribe request to the Event Handler
     for (EventsToListenFor eventType : EventsToListenFor.values()) {
-      EventFilter filter = new EventFilter(eventType.toString(), digitalTwin, DigitalTwinController.RECEIVE_EVENT_SUBPATH);
+      EventFilter filter = new EventFilter(eventType.toString(), digitalTwin,
+                                           DigitalTwinController.RECEIVE_EVENT_SUBPATH);
       Utility.sendRequest(eventHandlerUrl, "POST", filter);
       log.info("Subscribed to " + eventType.name() + " events");
     }
@@ -126,7 +131,8 @@ public class DigitalTwinService {
 
   void unsubscribeFromEvents() {
     for (EventsToListenFor eventType : EventsToListenFor.values()) {
-      String url = UriBuilder.fromPath(eventHandlerUrl).path("type").path(eventType.name()).path("consumer").path(CONSUMER_NAME).toString();
+      String url = UriBuilder.fromPath(eventHandlerUrl).path("type").path(eventType.name()).path("consumer")
+                             .path(CONSUMER_NAME).toString();
       try {
         Utility.sendRequest(url, "DELETE", null);
       } catch (Exception e) {
@@ -142,13 +148,15 @@ public class DigitalTwinService {
   void saveSmartProductStatesToFile() {
     List<SmartProductCSV> stringifiedProducts = new ArrayList<>();
     for (Entry<String, SmartProduct> mapEntry : smartProducts.entrySet()) {
-      SmartProductCSV productCSV = new SmartProductCSV(mapEntry.getValue().getRfidParts().toString(), mapEntry.getValue().getLifeCycle().name(),
+      SmartProductCSV productCSV = new SmartProductCSV(mapEntry.getValue().getRfidParts().toString(),
+                                                       mapEntry.getValue().getLifeCycle().name(),
                                                        mapEntry.getValue().getLastKnownPosition().name());
       stringifiedProducts.add(productCSV);
     }
 
     final CellProcessor[] cellProcessors = new CellProcessor[]{new NotNull(), new NotNull(), new NotNull()};
-    try (ICsvBeanWriter beanWriter = new CsvBeanWriter(new FileWriter(stateSaveLocation), CsvPreference.STANDARD_PREFERENCE)) {
+    try (ICsvBeanWriter beanWriter = new CsvBeanWriter(new FileWriter(stateSaveLocation),
+                                                       CsvPreference.STANDARD_PREFERENCE)) {
 
       // the header elements are used to map the bean values to each column (names must match)
       final String[] headers = new String[]{"rfidParts", "lifeCycle", "lastKnownPosition"};
@@ -168,16 +176,20 @@ public class DigitalTwinService {
   void loadSmartProductStatesFromFile() {
     if (Files.isReadable(Paths.get(stateSaveLocation))) {
       final CellProcessor[] cellProcessors = new CellProcessor[]{new NotNull(), new NotNull(), new NotNull()};
-      try (ICsvBeanReader beanReader = new CsvBeanReader(new FileReader(stateSaveLocation), CsvPreference.STANDARD_PREFERENCE)) {
+      try (ICsvBeanReader beanReader = new CsvBeanReader(new FileReader(stateSaveLocation),
+                                                         CsvPreference.STANDARD_PREFERENCE)) {
 
         final String[] header = beanReader.getHeader(true);
 
         SmartProductCSV smartProductCSV;
         while ((smartProductCSV = beanReader.read(SmartProductCSV.class, header, cellProcessors)) != null) {
           String rfidParts = smartProductCSV.getRfidParts();
-          List<String> rfidList = new ArrayList<>(Arrays.asList(rfidParts.substring(1, rfidParts.length() - 1).split(", ")));
-          SmartProduct smartProduct = new SmartProduct(rfidList, SmartProductLifeCycle.valueOf(smartProductCSV.getLifeCycle()),
-                                                       SmartProductPosition.valueOf(smartProductCSV.getLastKnownPosition()));
+          List<String> rfidList = new ArrayList<>(
+              Arrays.asList(rfidParts.substring(1, rfidParts.length() - 1).split(", ")));
+          SmartProduct smartProduct = new SmartProduct(rfidList,
+                                                       SmartProductLifeCycle.valueOf(smartProductCSV.getLifeCycle()),
+                                                       SmartProductPosition
+                                                           .valueOf(smartProductCSV.getLastKnownPosition()));
           smartProducts.put(rfidList.get(0), smartProduct);
         }
       } catch (IOException e) {
@@ -217,17 +229,25 @@ public class DigitalTwinService {
         if (SmartProductLifeCycle.FINISHED.equals(productWithStateChange.getLifeCycle())) {
           return;
         }
-        //2) If the product is not finished, check if its reported position matches the expected position for the next production step
+        //2) If the product is not finished, check if its reported position matches the expected position for the
+        // next production step
         SmartProductPosition nextProductionStep = nextStepForProduct.get(productWithStateChange.getLifeCycle());
         //3) If it matches, ask for the service through the Orchestrator Core System
-        if (nextProductionStep.equals(SmartProductPosition.valueOf(event.getPayload().toUpperCase()))) {
+
+        boolean purchased = false;
+        if (productWithStateChange.getLifeCycle().equals(SmartProductLifeCycle.CREATED) && rfidTags.length > 1) {
+          purchased = true;
+        }
+        if (nextProductionStep.equals(SmartProductPosition.valueOf(event.getPayload().toUpperCase())) || purchased) {
           String serviceDefinition = event.getEventMetadata().get("extra");
-          ArrowheadService nextServiceToConsume = new ArrowheadService(serviceDefinition, Collections.singleton("JSON"), null);
+          ArrowheadService nextServiceToConsume = new ArrowheadService(serviceDefinition, Collections.singleton("JSON"),
+                                                                       null);
           Map<String, Boolean> orchestrationFlags = new HashMap<>();
           orchestrationFlags.put("enableInterCloud", true);
           orchestrationFlags.put("overrideStore", true);
           ServiceRequestForm srf = new ServiceRequestForm.Builder(digitalTwin).requestedService(nextServiceToConsume)
-                                                                              .orchestrationFlags(orchestrationFlags).build();
+                                                                              .orchestrationFlags(orchestrationFlags)
+                                                                              .build();
 
           Optional<String> providerURL = requestOrchestration(srf, smartProductId);
           providerURL.ifPresent(url -> consumeArrowheadService(serviceDefinition, url));
@@ -236,10 +256,11 @@ public class DigitalTwinService {
           List<String> newRfidTags = Utility.difference(productWithStateChange.getRfidParts(), Arrays.asList(rfidTags));
           productWithStateChange.getRfidParts().addAll(newRfidTags);
           productWithStateChange.setLifeCycle(productWithStateChange.getLifeCycle().next());
-          log.debug("Production lifecycle for product " + smartProductId + " updated to " + productWithStateChange.getLifeCycle());
+          log.debug("Production lifecycle for product " + smartProductId + " updated to " + productWithStateChange
+              .getLifeCycle());
         } else {
-          log.debug("The next production step for product " + smartProductId + " is at " + nextProductionStep + ", but it entered into " + event
-              .getPayload().toUpperCase());
+          log.debug("The next production step for product " + smartProductId + " is at " + nextProductionStep
+                        + ", but it entered into " + event.getPayload().toUpperCase());
         }
 
         productWithStateChange.setLastKnownPosition(SmartProductPosition.valueOf(event.getPayload().toUpperCase()));
