@@ -3,27 +3,32 @@ package eu.arrowhead.common.api.server;
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
 import eu.arrowhead.common.exception.ArrowheadRuntimeException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.ServiceConfigurationError;
+import java.util.Set;
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.core.UriBuilder;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
-import javax.ws.rs.ProcessingException;
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.core.UriBuilder;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.*;
-
 /**
  * An implementation of {@link ArrowheadHttpServer} using Grizzly
  */
 public class ArrowheadGrizzlyHttpServer extends ArrowheadHttpServer {
+
     private ContainerRequestFilter securityFilter;
     private HttpServer server;
     private Set<Class<? extends ArrowheadResource>> resources = new HashSet<>();
     private Set<String> packages = new HashSet<>();
     private Set<Object> instances = new HashSet<>();
+    private boolean needClientAuth = true;
 
     /**
      * Create an instance using the default properties files.
@@ -70,7 +75,7 @@ public class ArrowheadGrizzlyHttpServer extends ArrowheadHttpServer {
     private ArrowheadGrizzlyHttpServer(boolean isSecure, String address, int port,
                                        ArrowheadSecurityContext securityContext) {
         super(isSecure, address, port, securityContext);
-        securityFilter = new TokenSignatureSecurityFilter(securityContext);
+        securityFilter = new ArrowheadTokenSignatureSecurityFilter(securityContext);
         packages.add("eu.arrowhead.common");
     }
 
@@ -189,6 +194,15 @@ public class ArrowheadGrizzlyHttpServer extends ArrowheadHttpServer {
         return this;
     }
 
+    public boolean isNeedClientAuth() {
+        return needClientAuth;
+    }
+
+    public ArrowheadGrizzlyHttpServer setNeedClientAuth(boolean needClientAuth) {
+        this.needClientAuth = needClientAuth;
+        return this;
+    }
+
     /**
      * Implemented start routine
      */
@@ -216,7 +230,7 @@ public class ArrowheadGrizzlyHttpServer extends ArrowheadHttpServer {
 
             sslEC = new SSLEngineConfigurator(getSecurityContext().getSSLContextConfigurator())
                     .setClientMode(false)
-                    .setNeedClientAuth(true);
+                    .setNeedClientAuth(needClientAuth);
         }
 
         config.property("arrowhead_server", this);

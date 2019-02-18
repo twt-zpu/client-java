@@ -6,46 +6,48 @@ import eu.arrowhead.common.exception.ArrowheadRuntimeException;
 import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.common.misc.SecurityUtils;
 import eu.arrowhead.common.model.RawTokenInfo;
-import org.apache.log4j.Logger;
-
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.util.Base64;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.SecurityContext;
-import java.nio.charset.StandardCharsets;
-import java.security.*;
-import java.util.Base64;
+import org.apache.log4j.Logger;
 
-public class TokenSignatureSecurityFilter implements ContainerRequestFilter {
+public class ArrowheadTokenSignatureSecurityFilter extends ArrowheadSecurityFilter {
   protected final Logger log = Logger.getLogger(getClass());
   private final PrivateKey privateKey;
   private final PublicKey publicAuthKey;
 
-  public TokenSignatureSecurityFilter(ArrowheadSecurityContext securityContext) {
+  public ArrowheadTokenSignatureSecurityFilter(ArrowheadSecurityContext securityContext) {
     this.privateKey = securityContext.getPrivateKey();
     this.publicAuthKey = securityContext.getPublicAuthKey();
   }
 
   @Override
   public void filter(ContainerRequestContext requestContext) {
+    super.filter(requestContext);
     SecurityContext sc = requestContext.getSecurityContext();
     if (sc.isSecure()) {
+      String path = requestContext.getUriInfo().getPath();
       MultivaluedMap<String, String> queryParams = requestContext.getUriInfo().getQueryParameters();
       String token = queryParams.getFirst("token");
       String signature = queryParams.getFirst("signature");
 
       //The method will throw a runtime exception if the verification fails, which the exception mapper will catch
-      verifyRequester(sc, token, signature);
+      verifyRequester(sc, path, token, signature);
     }
   }
-
-  /*
-
-   */
 
   /**
    * Based on the local Authorization public key and provider private key, this method verifies that the provided
@@ -53,10 +55,11 @@ public class TokenSignatureSecurityFilter implements ContainerRequestFilter {
    * the token expired or not, plus the token has to contain the same consumer name as the common name field of the
    * client certificate.
    * @param context
+   * @param path  Allows subclasses to filter on path
    * @param token
    * @param signature
    */
-  public void verifyRequester(SecurityContext context, String token, String signature) {
+  public void verifyRequester(SecurityContext context, String path, String token, String signature) {
     if (context == null || token == null || signature == null)
       throw new AuthException("Authorization core system signature verification failed (no token/signature)!");
 

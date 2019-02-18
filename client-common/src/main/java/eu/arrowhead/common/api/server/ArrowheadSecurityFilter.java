@@ -7,13 +7,11 @@
  *  national funding authorities from involved countries.
  */
 
-package eu.arrowhead.common.filter;
+package eu.arrowhead.common.api.server;
 
 import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.common.misc.SecurityUtils;
 import eu.arrowhead.common.misc.Utility;
-import org.apache.log4j.Logger;
-
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -21,12 +19,11 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.ext.Provider;
+import org.apache.log4j.Logger;
 
-@Provider
 @Priority(Priorities.AUTHORIZATION) //2nd highest priority constant, this filter gets executed after the SecurityFilter
 //This class is meant to block incoming requests that are not authorized, based on the client certificate
-public class AccessControlFilter implements ContainerRequestFilter {
+public class ArrowheadSecurityFilter implements ContainerRequestFilter {
   protected final Logger log = Logger.getLogger(getClass());
 
   @Context
