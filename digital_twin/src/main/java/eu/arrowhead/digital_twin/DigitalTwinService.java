@@ -201,80 +201,87 @@ public class DigitalTwinService {
   void handleArrowheadEvent(Event event) {
     String rfidData = event.getEventMetadata().get("rfid");
     if (rfidData != null) {
-      //NOTE hardcoded business logic specific to the demo
-      String[] rfidTags = rfidData.split("_");
-      String smartProductId = null;
-
-      //Check if this a new product, or it existed before (RFID orders are not guaranteed)
-      SmartProduct productWithStateChange = null;
-      for (String rfidKey : rfidTags) {
-        if (smartProducts.containsKey(rfidKey)) {
-          productWithStateChange = smartProducts.get(rfidKey);
-          smartProductId = rfidKey;
-        }
-      }
-      if (productWithStateChange == null) {
-        productWithStateChange = new SmartProduct(new ArrayList<>(Arrays.asList(rfidTags)));
-        smartProductId = rfidTags[0];
-        smartProducts.put(smartProductId, productWithStateChange);
-        log.info("Smart product with id " + smartProductId + " created");
-      }
-
-      if (EventsToListenFor.area_entered.name().equals(event.getType())) {
-        log.info("Smart product " + smartProductId + " entered into area: " + event.getPayload());
-
-        //Check if the product reached the next production step in the line
-        //1) If the product is already in a finished state, then there is nothing more to do
-        if (SmartProductLifeCycle.FINISHED.equals(productWithStateChange.getLifeCycle())) {
-          return;
-        }
-        //2) If the product is not finished, check if its reported position matches the expected position for the
-        // next production step
-        SmartProductPosition nextProductionStep = nextStepForProduct.get(productWithStateChange.getLifeCycle());
-        //3) If it matches, ask for the service through the Orchestrator Core System
-
-        boolean purchased = false;
-        if (productWithStateChange.getLifeCycle().equals(SmartProductLifeCycle.CREATED) && rfidTags.length > 1) {
-          purchased = true;
-        }
-        if (nextProductionStep.equals(SmartProductPosition.valueOf(event.getPayload().toUpperCase())) || purchased) {
-          String serviceDefinition = event.getEventMetadata().get("extra");
-          ArrowheadService nextServiceToConsume = new ArrowheadService(serviceDefinition, Collections.singleton("JSON"),
-                                                                       null);
-          Map<String, Boolean> orchestrationFlags = new HashMap<>();
-          orchestrationFlags.put("enableInterCloud", true);
-          orchestrationFlags.put("overrideStore", true);
-          ServiceRequestForm srf = new ServiceRequestForm.Builder(digitalTwin).requestedService(nextServiceToConsume)
-                                                                              .orchestrationFlags(orchestrationFlags)
-                                                                              .build();
-
-          Optional<String> providerURL = requestOrchestration(srf, smartProductId);
-          providerURL.ifPresent(url -> consumeArrowheadService(serviceDefinition, url));
-
-          //Update RFID and lifecycle information on the product
-          productWithStateChange = smartProducts.get(smartProductId);
-          List<String> newRfidTags = Utility.difference(productWithStateChange.getRfidParts(), Arrays.asList(rfidTags));
-          productWithStateChange.getRfidParts().addAll(newRfidTags);
-          productWithStateChange.setLifeCycle(productWithStateChange.getLifeCycle().next());
-          log.debug("Production lifecycle for product " + smartProductId + " updated to " + productWithStateChange
-              .getLifeCycle());
-        } else {
-          log.debug("The next production step for product " + smartProductId + " is at " + nextProductionStep
-                        + ", but it entered into " + event.getPayload().toUpperCase());
-        }
-
-        productWithStateChange.setLastKnownPosition(SmartProductPosition.valueOf(event.getPayload().toUpperCase()));
-        smartProducts.put(smartProductId, productWithStateChange);
-
-      } else if (EventsToListenFor.area_left.name().equals(event.getType())) {
-        productWithStateChange.setLastKnownPosition(SmartProductPosition.OUTSIDE_OF_GEOFENCED_AREA);
-        smartProducts.put(smartProductId, productWithStateChange);
-        log.info("Smart product " + smartProductId + " left the " + event.getPayload() + " area");
-      } else {
-        log.error("Received unknown event type from Event Handler. Type: " + event.getType());
+      rfidData = rfidData.trim();
+      if (rfidData.isEmpty()) {
+        log.error("Received event with no RFID information. The event will not be further processed.");
+        return;
       }
     } else {
       log.error("Received event with no RFID information. The event will not be further processed.");
+      return;
+    }
+
+    //NOTE hardcoded business logic specific to the demo
+    String[] rfidTags = rfidData.split("_");
+    String smartProductId = null;
+
+    //Check if this a new product, or it existed before (RFID orders are not guaranteed)
+    SmartProduct productWithStateChange = null;
+    for (String rfidKey : rfidTags) {
+      if (smartProducts.containsKey(rfidKey)) {
+        productWithStateChange = smartProducts.get(rfidKey);
+        smartProductId = rfidKey;
+      }
+    }
+    if (productWithStateChange == null) {
+      productWithStateChange = new SmartProduct(new ArrayList<>(Arrays.asList(rfidTags)));
+      smartProductId = rfidTags[0];
+      smartProducts.put(smartProductId, productWithStateChange);
+      log.info("Smart product with id " + smartProductId + " created");
+    }
+
+    if (EventsToListenFor.area_entered.name().equals(event.getType())) {
+      log.info("Smart product " + smartProductId + " entered into area: " + event.getPayload());
+
+      //Check if the product reached the next production step in the line
+      //1) If the product is already in a finished state, then there is nothing more to do
+      if (SmartProductLifeCycle.FINISHED.equals(productWithStateChange.getLifeCycle())) {
+        return;
+      }
+      //2) If the product is not finished, check if its reported position matches the expected position for the
+      // next production step
+      SmartProductPosition nextProductionStep = nextStepForProduct.get(productWithStateChange.getLifeCycle());
+      //3) If it matches, ask for the service through the Orchestrator Core System
+
+      boolean purchased = false;
+      if (productWithStateChange.getLifeCycle().equals(SmartProductLifeCycle.CREATED) && rfidTags.length > 1) {
+        purchased = true;
+      }
+      if (nextProductionStep.equals(SmartProductPosition.valueOf(event.getPayload().toUpperCase())) || purchased) {
+        String serviceDefinition = event.getEventMetadata().get("extra");
+        ArrowheadService nextServiceToConsume = new ArrowheadService(serviceDefinition, Collections.singleton("JSON"),
+                                                                     null);
+        Map<String, Boolean> orchestrationFlags = new HashMap<>();
+        orchestrationFlags.put("enableInterCloud", true);
+        orchestrationFlags.put("overrideStore", true);
+        ServiceRequestForm srf = new ServiceRequestForm.Builder(digitalTwin).requestedService(nextServiceToConsume)
+                                                                            .orchestrationFlags(orchestrationFlags)
+                                                                            .build();
+
+        Optional<String> providerURL = requestOrchestration(srf, smartProductId);
+        providerURL.ifPresent(url -> consumeArrowheadService(serviceDefinition, url));
+
+        //Update RFID and lifecycle information on the product
+        productWithStateChange = smartProducts.get(smartProductId);
+        List<String> newRfidTags = Utility.difference(productWithStateChange.getRfidParts(), Arrays.asList(rfidTags));
+        productWithStateChange.getRfidParts().addAll(newRfidTags);
+        productWithStateChange.setLifeCycle(productWithStateChange.getLifeCycle().next());
+        log.debug("Production lifecycle for product " + smartProductId + " updated to " + productWithStateChange
+            .getLifeCycle());
+      } else {
+        log.debug("The next production step for product " + smartProductId + " is at " + nextProductionStep
+                      + ", but it entered into " + event.getPayload().toUpperCase());
+      }
+
+      productWithStateChange.setLastKnownPosition(SmartProductPosition.valueOf(event.getPayload().toUpperCase()));
+      smartProducts.put(smartProductId, productWithStateChange);
+
+    } else if (EventsToListenFor.area_left.name().equals(event.getType())) {
+      productWithStateChange.setLastKnownPosition(SmartProductPosition.OUTSIDE_OF_GEOFENCED_AREA);
+      smartProducts.put(smartProductId, productWithStateChange);
+      log.info("Smart product " + smartProductId + " left the " + event.getPayload() + " area");
+    } else {
+      log.error("Received unknown event type from Event Handler. Type: " + event.getType());
     }
   }
 
