@@ -44,10 +44,17 @@ public class DigitalTwinController {
     return purchasedProduct;
   }
 
-  @GetMapping("push_the_red_button")
+  @GetMapping("reset")
   public ResponseEntity<?> deleteInternalState() {
     digitalTwinService.deleteInternalState();
     log.debug("Internal state deleted.");
+    return ResponseEntity.ok().build();
+  }
+
+  @GetMapping("save")
+  public ResponseEntity<?> saveInternalStateToFile() {
+    digitalTwinService.saveSmartProductStatesToFile();
+    log.debug("Internal state saved to file");
     return ResponseEntity.ok().build();
   }
 }
