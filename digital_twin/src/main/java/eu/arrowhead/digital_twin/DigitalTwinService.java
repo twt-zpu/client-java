@@ -13,9 +13,11 @@ import eu.arrowhead.digital_twin.model.SmartProduct;
 import eu.arrowhead.digital_twin.model.SmartProductCSV;
 import eu.arrowhead.digital_twin.model.SmartProductLifeCycle;
 import eu.arrowhead.digital_twin.model.SmartProductPosition;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -59,6 +61,7 @@ public class DigitalTwinService {
   private final String stateSaveLocation;
   private final Logger log = LoggerFactory.getLogger(DigitalTwinService.class);
   private final ArrowheadSystem digitalTwin;
+  private final String logFileLocation;
 
   private enum EventsToListenFor {area_entered, area_left}
 
@@ -67,7 +70,8 @@ public class DigitalTwinService {
                             @Value("${event_handler_url}") String eventHandlerUrl,
                             @Value("${orchestrator_url}") String orchestratorUrl,
                             @Value("${internal_state_save_location}") String stateSaveLocation,
-                            @Value("${server.address}") String myHost, @Value("${server.port}") int myPort) {
+                            @Value("${server.address}") String myHost, @Value("${server.port}") int myPort,
+                            @Value("${logging.file}") String logFileLocation) {
     this.serviceRegistryUrl = serviceRegistryUrl;
     //TODO make the digital twin acquire these URLs from the SR?
     this.eventHandlerUrl = eventHandlerUrl;
@@ -76,6 +80,7 @@ public class DigitalTwinService {
       stateSaveLocation = stateSaveLocation.concat(".csv");
     }
     this.stateSaveLocation = stateSaveLocation;
+    this.logFileLocation = logFileLocation;
 
     digitalTwin = new ArrowheadSystem(CONSUMER_NAME, myHost, myPort, null);
 
@@ -360,5 +365,14 @@ public class DigitalTwinService {
 
   void deleteInternalState() {
     smartProducts.clear();
+  }
+
+  void deleteLogFileContent() {
+    try {
+      new PrintWriter(logFileLocation).close();
+    } catch (FileNotFoundException e) {
+      log.debug("LogFile location at " + logFileLocation + " not found");
+      e.printStackTrace();
+    }
   }
 }

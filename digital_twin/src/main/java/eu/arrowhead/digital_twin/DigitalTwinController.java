@@ -47,7 +47,8 @@ public class DigitalTwinController {
   @GetMapping("reset")
   public ResponseEntity<?> deleteInternalState() {
     digitalTwinService.deleteInternalState();
-    log.debug("Internal state deleted.");
+    digitalTwinService.deleteLogFileContent();
+    log.debug("Internal state and log file deleted.");
     return ResponseEntity.ok().build();
   }
 
