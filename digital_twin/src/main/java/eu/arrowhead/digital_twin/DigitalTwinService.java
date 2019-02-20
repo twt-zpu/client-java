@@ -259,6 +259,9 @@ public class DigitalTwinService {
         Map<String, Boolean> orchestrationFlags = new HashMap<>();
         orchestrationFlags.put("enableInterCloud", true);
         orchestrationFlags.put("overrideStore", true);
+        if (serviceDefinition.equals("PurchaseSmartProduct")) {
+          orchestrationFlags.put("triggerInterCloud", true);
+        }
         ServiceRequestForm srf = new ServiceRequestForm.Builder(digitalTwin).requestedService(nextServiceToConsume)
                                                                             .orchestrationFlags(orchestrationFlags)
                                                                             .build();
