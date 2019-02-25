@@ -32,7 +32,7 @@ public class ProviderMain extends ArrowheadApplication {
     final ArrowheadHttpServer server = ArrowheadGrizzlyHttpServer
             .createFromProperties(securityContext)
             .addResources(TemperatureResource.class, RestResource.class)
-            .addPackages("eu.arrowhead.demo", "eu.arrowhead.demo.provider.filter")
+            .addPackages("eu.arrowhead.demo")
             .start();
 
     final ServiceRegistryClient registry = ServiceRegistryClient.createFromProperties(securityContext);
