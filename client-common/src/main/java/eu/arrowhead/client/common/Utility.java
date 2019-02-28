@@ -385,4 +385,15 @@ public final class Utility {
   public static boolean isBlank(final String str) {
     return (str == null || "".equals(str.trim()));
   }
+
+  @SuppressWarnings("WeakerAccess")
+  public static Throwable getExceptionRootCause(Throwable e) {
+    Throwable cause = null;
+    Throwable result = e;
+
+    while (null != (cause = result.getCause()) && (result != cause)) {
+      result = cause;
+    }
+    return result;
+  }
 }
