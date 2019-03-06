@@ -14,6 +14,7 @@ import eu.arrowhead.common.api.ArrowheadSecurityContext;
 import eu.arrowhead.common.api.clients.core.EventHandlerClient;
 import eu.arrowhead.common.api.server.ArrowheadGrizzlyHttpServer;
 import eu.arrowhead.common.api.server.ArrowheadHttpServer;
+import eu.arrowhead.common.api.server.ArrowheadSecurityFilter;
 import eu.arrowhead.common.exception.ArrowheadException;
 import eu.arrowhead.common.model.ArrowheadSystem;
 
@@ -33,7 +34,7 @@ class SubscriberMain extends ArrowheadApplication {
     final ArrowheadHttpServer server = ArrowheadGrizzlyHttpServer
             .createFromProperties(securityContext)
             .addResources(SubscriberResource.class)
-            .setSecurityFilter(null)
+            .setSecurityFilter(new ArrowheadSecurityFilter())
             .start();
 
     final ArrowheadSystem me = ArrowheadSystem.createFromProperties(server);

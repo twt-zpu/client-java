@@ -14,11 +14,11 @@ import eu.arrowhead.common.api.ArrowheadSecurityContext;
 import eu.arrowhead.common.api.clients.core.EventHandlerClient;
 import eu.arrowhead.common.api.server.ArrowheadGrizzlyHttpServer;
 import eu.arrowhead.common.api.server.ArrowheadHttpServer;
+import eu.arrowhead.common.api.server.ArrowheadSecurityFilter;
 import eu.arrowhead.common.exception.ArrowheadException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
 import eu.arrowhead.common.model.ArrowheadSystem;
 import eu.arrowhead.common.model.Event;
-
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -38,7 +38,7 @@ class PublisherMain extends ArrowheadApplication {
     final ArrowheadHttpServer server = ArrowheadGrizzlyHttpServer
             .createFromProperties(securityContext)
             .addResources(PublisherResource.class)
-            .setSecurityFilter(null)
+            .setSecurityFilter(new ArrowheadSecurityFilter())
             .start();
 
     final ArrowheadSystem me = ArrowheadSystem.createFromProperties(server);
