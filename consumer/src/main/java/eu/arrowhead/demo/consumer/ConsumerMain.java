@@ -19,13 +19,11 @@ import eu.arrowhead.common.exception.ArrowheadException;
 import eu.arrowhead.common.exception.DataNotFoundException;
 import eu.arrowhead.common.model.ArrowheadSystem;
 import eu.arrowhead.common.model.OrchestrationFlags;
-import eu.arrowhead.common.model.ServiceMetadata;
 import eu.arrowhead.common.model.ServiceRequestForm;
 import eu.arrowhead.demo.model.TemperatureReadout;
-
-import javax.ws.rs.core.Response;
 import java.util.Timer;
 import java.util.TimerTask;
+import javax.ws.rs.core.Response;
 
 class ConsumerMain extends ArrowheadApplication {
 
@@ -45,11 +43,10 @@ class ConsumerMain extends ArrowheadApplication {
         final OrchestrationClient orchestration = OrchestrationClient.createFromProperties(securityContext);
 
         final ServiceRequestForm srf = new ServiceRequestForm.Builder(me)
-                .requestedService("temperature", "json", getProps().isSecure())
-                .metadata(ServiceMetadata.Keys.UNIT, "celsius")
+                .requestedService("temperature", "JSON", getProps().isSecure())
                 .flag(OrchestrationFlags.Flags.OVERRIDE_STORE, true)
                 .flag(OrchestrationFlags.Flags.PING_PROVIDERS, false)
-                .flag(OrchestrationFlags.Flags.METADATA_SEARCH, true)
+                .flag(OrchestrationFlags.Flags.METADATA_SEARCH, false)
                 .flag(OrchestrationFlags.Flags.ENABLE_INTER_CLOUD, true)
                 .build();
         log.info("Service Request payload: " + ArrowheadConverter.json().toString(srf));
