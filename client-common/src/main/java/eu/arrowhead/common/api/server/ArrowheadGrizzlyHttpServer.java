@@ -75,7 +75,8 @@ public class ArrowheadGrizzlyHttpServer extends ArrowheadHttpServer {
     private ArrowheadGrizzlyHttpServer(boolean isSecure, String address, int port,
                                        ArrowheadSecurityContext securityContext) {
         super(isSecure, address, port, securityContext);
-        securityFilter = new ArrowheadTokenSignatureSecurityFilter(securityContext);
+        if (isSecure)
+            securityFilter = new ArrowheadTokenSignatureSecurityFilter(securityContext);
         packages.add("eu.arrowhead.common");
     }
 
