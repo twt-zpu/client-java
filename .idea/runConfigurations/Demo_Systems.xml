@@ -1,9 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Demo Systems" type="CompoundRunConfigurationType">
-    <toRun name="Consumer" type="Application" />
-    <toRun name="Provider" type="Application" />
-    <toRun name="Publisher" type="Application" />
-    <toRun name="Subscriber" type="Application" />
-    <method v="2" />
-  </configuration>
-</component>

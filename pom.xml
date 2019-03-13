@@ -28,11 +28,6 @@
   <modules>
     <module>common</module>
     <module>client-common</module>
-    <module>demo-common</module>
-    <module>consumer</module>
-    <module>provider</module>
-    <module>publisher</module>
-    <module>subscriber</module>
   </modules>
 
   <properties>
