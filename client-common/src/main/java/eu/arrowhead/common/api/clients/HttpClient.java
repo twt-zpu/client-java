@@ -2,17 +2,23 @@ package eu.arrowhead.common.api.clients;
 
 import eu.arrowhead.common.api.ArrowheadConverter;
 import eu.arrowhead.common.api.ArrowheadSecurityContext;
-import eu.arrowhead.common.exception.*;
+import eu.arrowhead.common.exception.ArrowheadRuntimeException;
+import eu.arrowhead.common.exception.AuthException;
+import eu.arrowhead.common.exception.BadPayloadException;
+import eu.arrowhead.common.exception.DataNotFoundException;
+import eu.arrowhead.common.exception.DnsException;
+import eu.arrowhead.common.exception.DuplicateEntryException;
+import eu.arrowhead.common.exception.ErrorMessage;
+import eu.arrowhead.common.exception.UnavailableServerException;
 import eu.arrowhead.common.misc.SecurityUtils;
-import org.apache.log4j.Logger;
-
+import java.net.URI;
+import java.util.Set;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-import java.net.URI;
-import java.util.Set;
+import org.apache.log4j.Logger;
 
 /**
  * Use instances of this to interact with HTTP based Arrowhead services.
@@ -149,7 +155,7 @@ public class HttpClient {
                 return check(client.method(method.toString(), converter.toEntity(payload)), uri.toString());
             }
         } catch (ProcessingException e) {
-            if (e.getCause().getMessage().contains("PKIX path")) {
+            if (e.getCause() != null && e.getCause().getMessage().contains("PKIX path")) {
                 throw new AuthException("The system at " + uri + " is not part of the same certificate chain of trust!",
                         Response.Status.UNAUTHORIZED.getStatusCode(), e);
             } else {
