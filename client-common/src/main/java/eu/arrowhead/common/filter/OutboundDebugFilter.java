@@ -10,19 +10,19 @@
 package eu.arrowhead.common.filter;
 
 import eu.arrowhead.common.api.ArrowheadConverter;
-import org.apache.log4j.Logger;
-
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.ext.Provider;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @Provider
 @Priority(Priorities.USER)
 public class OutboundDebugFilter implements ContainerResponseFilter {
-  protected final Logger log = Logger.getLogger(getClass());
+  protected final Logger log = LogManager.getLogger(getClass());
 
   @Override
   public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {

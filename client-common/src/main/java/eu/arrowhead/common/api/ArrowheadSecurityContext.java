@@ -5,10 +5,6 @@ import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.common.exception.KeystoreException;
 import eu.arrowhead.common.misc.ArrowheadProperties;
 import eu.arrowhead.common.misc.SecurityUtils;
-import org.apache.log4j.Logger;
-import org.glassfish.grizzly.ssl.SSLContextConfigurator;
-
-import javax.net.ssl.SSLContext;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyStore;
@@ -16,6 +12,10 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
+import javax.net.ssl.SSLContext;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.glassfish.grizzly.ssl.SSLContextConfigurator;
 
 /**
  * Arrowhead security context. You will probably need one of these if you plan to support secure TLS mode in your
@@ -24,8 +24,8 @@ import java.util.Base64;
  * To create one, just call one of the static create*() methods in this class.
  */
 public class ArrowheadSecurityContext {
-    private static final Logger LOG = Logger.getLogger(ArrowheadSecurityContext.class);
-    protected final Logger log = Logger.getLogger(getClass());
+    private static final Logger LOG = LogManager.getLogger(ArrowheadSecurityContext.class);
+    protected final Logger log = LogManager.getLogger(getClass());
     private String keystoreFile, keystorePass, keyPass, truststoreFile, truststorePass, authKey;
     private SSLContext sslContext;
     private SSLContextConfigurator sslContextConfigurator;

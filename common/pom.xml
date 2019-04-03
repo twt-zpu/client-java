@@ -55,9 +55,12 @@
     </dependency>
     <dependency>
       <!-- Log4j Core -->
-      <!-- TODO This is very old, should probably be replaced -->
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-jul</artifactId>
     </dependency>
     <dependency>
       <!-- The Bouncy Castle Crypto package is a Java implementation of cryptographic algorithms. This jar

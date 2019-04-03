@@ -41,10 +41,11 @@
     <javax.activation.version>1.1.1</javax.activation.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <grizzly.version>2.4.0</grizzly.version>
-    <log4j.version>1.2.17</log4j.version>
+    <log4j.version>2.11.2</log4j.version>
     <istack.version>3.0.7</istack.version>
     <jaxb.version>2.3.1</jaxb.version>
     <mysql.jdbc.driver>8.0.13</mysql.jdbc.driver>
+    <maven-enforcer-plugin.version>3.0.0-M2</maven-enforcer-plugin.version>
   </properties>
 
   <dependencyManagement>
@@ -125,8 +126,14 @@
       </dependency>
 
       <dependency>
-        <groupId>log4j</groupId>
-        <artifactId>log4j</artifactId>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-core</artifactId>
+        <version>${log4j.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-jul</artifactId>
         <version>${log4j.version}</version>
       </dependency>
 
@@ -160,6 +167,28 @@
   <build>
     <defaultGoal>clean install</defaultGoal>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>${maven-enforcer-plugin.version}</version>
+        <executions>
+          <execution>
+            <id>enforce-maven</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireMavenVersion>
+                  <!-- Compilation may fail on lower versions, been an issue with IntelliJ's inbuilt version (3.3.9) -->
+                  <version>3.5.2</version>
+                  <message>Maven version 3.5.2 or higher required</message>
+                </requireMavenVersion>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>${mvn.compiler.version}</version>

@@ -11,7 +11,8 @@ import java.net.URI;
 import java.util.Set;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Orchestration strategies define how and when orchestration happens when using {@link HttpClient}.
@@ -20,7 +21,7 @@ import org.apache.log4j.Logger;
  * class to create your own.
  */
 public abstract class OrchestrationStrategy {
-    protected final Logger log = Logger.getLogger(getClass());
+    protected final Logger log = LogManager.getLogger(getClass());
 
     /**
      * Send a HTTP request to a server. See the other methods in this class for helpers to perform the intermediate

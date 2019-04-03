@@ -11,10 +11,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ServiceConfigurationError;
 import java.util.Set;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ArrowheadProperties extends TypeSafeProperties {
-    private static final Logger LOG = Logger.getLogger(ArrowheadProperties.class);
+    private static final Logger LOG = LogManager.getLogger(ArrowheadProperties.class);
 
     public static String getConfDir() {
         return System.getProperty("confDir");

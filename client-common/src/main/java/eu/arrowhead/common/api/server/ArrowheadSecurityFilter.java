@@ -19,12 +19,13 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.SecurityContext;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @Priority(Priorities.AUTHORIZATION) //2nd highest priority constant, this filter gets executed after the SecurityFilter
 //This class is meant to block incoming requests that are not authorized, based on the client certificate
 public class ArrowheadSecurityFilter implements ContainerRequestFilter {
-  protected final Logger log = Logger.getLogger(getClass());
+  protected final Logger log = LogManager.getLogger(getClass());
 
   @Context
   Configuration configuration;

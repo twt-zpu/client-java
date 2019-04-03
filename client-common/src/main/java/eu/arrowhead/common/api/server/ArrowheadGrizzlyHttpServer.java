@@ -16,6 +16,7 @@ import javax.ws.rs.core.UriBuilder;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
 /**
@@ -211,6 +212,10 @@ public class ArrowheadGrizzlyHttpServer extends ArrowheadHttpServer {
     protected void onStart() {
         final ResourceConfig config = new ResourceConfig();
         config.packages(packages.toArray(new String[]{}));
+        config.register(new LoggingFeature(
+            org.apache.logging.log4j.jul.LogManager.getLogManager().getLogger(this.getClass().getName()),
+            LoggingFeature.Verbosity.PAYLOAD_ANY
+        ));
 
         if (securityFilter != null) instances.add(securityFilter);
         config.registerInstances(instances);

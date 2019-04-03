@@ -25,6 +25,7 @@
 ### General ###
 /config/
 *.properties
+!log4j2.properties
 */target
 *app.conf
 */config*/*.p12

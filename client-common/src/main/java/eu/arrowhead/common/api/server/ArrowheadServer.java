@@ -3,10 +3,10 @@ package eu.arrowhead.common.api.server;
 import eu.arrowhead.common.api.ArrowheadApplication;
 import eu.arrowhead.common.exception.ArrowheadException;
 import eu.arrowhead.common.exception.ArrowheadRuntimeException;
-import org.apache.log4j.Logger;
-
 import java.util.HashSet;
 import java.util.Set;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Simple server instance that can be started and stopped, all started servers are kept in a collection and can thus
@@ -19,9 +19,9 @@ import java.util.Set;
  * See also {@link ArrowheadHttpServer} and {@link ArrowheadGrizzlyHttpServer}.
  */
 public abstract class ArrowheadServer {
-    private static final Logger LOG = Logger.getLogger(ArrowheadServer.class);
+    private static final Logger LOG = LogManager.getLogger(ArrowheadServer.class);
     private static final Set<ArrowheadServer> servers = new HashSet<>();
-    protected final Logger log = Logger.getLogger(getClass());
+    protected final Logger log = LogManager.getLogger(getClass());
 
     /**
      * Stop all servers that was ever started. Note this will be called automatically by

@@ -9,19 +9,19 @@
 
 package eu.arrowhead.common.exception;
 
-import org.apache.log4j.Logger;
-import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.ContainerResponse;
-
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status.Family;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
 
 @Provider
 public class GenericExceptionMapper implements ExceptionMapper<Exception> {
-  protected final Logger log = Logger.getLogger(getClass());
+  protected final Logger log = LogManager.getLogger(getClass());
 
   @Inject
   private javax.inject.Provider<ContainerRequest> requestContext;

@@ -10,21 +10,21 @@
 package eu.arrowhead.common.exception;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
-import org.apache.log4j.Logger;
-import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.ContainerResponse;
-
 import javax.annotation.Priority;
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status.Family;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
 
 @Provider
 @Priority(1) //This is needed in order to give this Mapper higher priority over Jackson's own implementation
 public class JsonMappingExceptionMapper implements ExceptionMapper<JsonMappingException> {
-  protected final Logger log = Logger.getLogger(getClass());
+  protected final Logger log = LogManager.getLogger(getClass());
 
   @Inject
   private javax.inject.Provider<ContainerRequest> requestContext;

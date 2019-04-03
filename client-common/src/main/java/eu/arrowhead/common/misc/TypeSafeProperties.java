@@ -30,10 +30,11 @@ import java.util.Properties;
 import java.util.ServiceConfigurationError;
 import java.util.Set;
 import java.util.TreeSet;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class TypeSafeProperties extends Properties {
-  protected final Logger log = Logger.getLogger(getClass());
+  protected final Logger log = LogManager.getLogger(getClass());
 
   public void loadFromFile(String fileName) {
     try {

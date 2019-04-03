@@ -12,14 +12,14 @@ package eu.arrowhead.common.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import eu.arrowhead.common.api.server.ArrowheadHttpServer;
 import eu.arrowhead.common.misc.ArrowheadProperties;
-import org.apache.log4j.Logger;
-
 import java.net.URI;
 import java.net.URISyntaxException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ArrowheadSystem {
     @JsonIgnore
-    protected final Logger log = Logger.getLogger(getClass());
+    protected final Logger log = LogManager.getLogger(getClass());
     private Long id;
     private String systemName;
     private String address;

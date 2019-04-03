@@ -9,18 +9,18 @@
 
 package eu.arrowhead.common.exception;
 
-import org.apache.log4j.Logger;
-import org.glassfish.jersey.server.ContainerRequest;
-
 import javax.inject.Inject;
 import javax.validation.ConstraintViolationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.glassfish.jersey.server.ContainerRequest;
 
 @Provider
 public class ConstraintViolationExceptionMapper implements ExceptionMapper<ConstraintViolationException> {
-  protected final Logger log = Logger.getLogger(getClass());
+  protected final Logger log = LogManager.getLogger(getClass());
 
   @Inject
   private javax.inject.Provider<ContainerRequest> requestContext;

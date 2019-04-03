@@ -22,10 +22,11 @@ import javax.crypto.NoSuchPaddingException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.SecurityContext;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ArrowheadTokenSignatureSecurityFilter extends ArrowheadSecurityFilter {
-  protected final Logger log = Logger.getLogger(getClass());
+  protected final Logger log = LogManager.getLogger(getClass());
   private final PrivateKey privateKey;
   private final PublicKey publicAuthKey;
 

@@ -1,7 +1,8 @@
 package eu.arrowhead.common.api.server;
 
 import eu.arrowhead.common.exception.ArrowheadException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Helper class for creating resources for {@link ArrowheadHttpServer}. The server object can be used to consume
@@ -11,7 +12,7 @@ import org.apache.log4j.Logger;
  * Grizzly implementation of {@link ArrowheadHttpServer}.
  */
 public abstract class ArrowheadResource {
-    protected final Logger log = Logger.getLogger(getClass());
+    protected final Logger log = LogManager.getLogger(getClass());
     protected final ArrowheadHttpServer server;
 
     /**

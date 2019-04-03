@@ -8,8 +8,8 @@ import eu.arrowhead.common.misc.ArrowheadProperties;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Main class for Arrowhead applications. In most cases, your main class should inherit from this and your main function
@@ -25,7 +25,7 @@ import org.apache.log4j.PropertyConfigurator;
  *   and all ArrowheadServer instances stopped.
  */
 public abstract class ArrowheadApplication {
-    protected final Logger log = Logger.getLogger(getClass());
+    protected final Logger log = LogManager.getLogger(getClass());
     private boolean isDaemon;
     private ArrowheadProperties props;
 
@@ -34,14 +34,11 @@ public abstract class ArrowheadApplication {
      */
     public ArrowheadApplication(String[] args) throws ArrowheadException {
         try {
-            defaultLogger(new ArrowheadProperties());
-
             if (!ArrowheadProperties.defaultExists()) {
                 onMissingConf();
             }
 
             setProperties(ArrowheadProperties.loadDefault());
-            defaultLogger(props);
 
             log.info("Working directory: " + System.getProperty("user.dir"));
 
@@ -66,19 +63,6 @@ public abstract class ArrowheadApplication {
             log.error("Failed to create application", t);
             throw t;
         }
-    }
-
-    private static void defaultLogger(ArrowheadProperties props) {
-        if (!props.contains("log4j.rootLogger")) {
-            props.putIfAbsent("log4j.rootLogger", "INFO, CONSOLE");
-            props.putIfAbsent("log4j.appender.CONSOLE", "org.apache.log4j.ConsoleAppender");
-            props.putIfAbsent("log4j.appender.CONSOLE.target", "System.err");
-            props.putIfAbsent("log4j.appender.CONSOLE.ImmediateFlush", "true");
-            props.putIfAbsent("log4j.appender.CONSOLE.Threshold", "debug");
-            props.putIfAbsent("log4j.appender.CONSOLE.layout", "org.apache.log4j.PatternLayout");
-            props.putIfAbsent("log4j.appender.CONSOLE.layout.conversionPattern", "%d{yyyy-MM-dd HH:mm:ss}  %p  %-160m  %c{1}.%M(%F:%L)%n");
-        }
-        PropertyConfigurator.configure(props);
     }
 
     /**

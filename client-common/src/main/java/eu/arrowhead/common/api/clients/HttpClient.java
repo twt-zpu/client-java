@@ -18,7 +18,8 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Use instances of this to interact with HTTP based Arrowhead services.
@@ -28,7 +29,7 @@ import org.apache.log4j.Logger;
 public class HttpClient {
     private static Client insecureClient;
 
-    protected final Logger log = Logger.getLogger(getClass());
+    protected final Logger log = LogManager.getLogger(getClass());
     private final OrchestrationStrategy strategy;
     private final ArrowheadSecurityContext securityContext;
     private final Client client;

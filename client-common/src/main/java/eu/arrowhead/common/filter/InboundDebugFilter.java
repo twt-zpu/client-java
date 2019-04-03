@@ -10,8 +10,6 @@
 package eu.arrowhead.common.filter;
 
 import eu.arrowhead.common.misc.Utility;
-import org.apache.log4j.Logger;
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -20,11 +18,13 @@ import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.ext.Provider;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @Provider
 @Priority(Priorities.USER)
 public class InboundDebugFilter implements ContainerRequestFilter {
-  protected final Logger log = Logger.getLogger(getClass());
+  protected final Logger log = LogManager.getLogger(getClass());
 
   @Override
   public void filter(ContainerRequestContext requestContext) {

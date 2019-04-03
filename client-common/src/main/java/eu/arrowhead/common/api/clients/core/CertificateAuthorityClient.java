@@ -12,21 +12,21 @@ import eu.arrowhead.common.misc.SecurityUtils;
 import eu.arrowhead.common.misc.Utility;
 import eu.arrowhead.common.model.CertificateSigningRequest;
 import eu.arrowhead.common.model.CertificateSigningResponse;
-import org.apache.log4j.Logger;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
 import java.io.File;
 import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.PublicKey;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * A client for interacting with the Certificate Authority system. See the static create* methods for how to get an
  * instance of one of these.
  */
 public final class CertificateAuthorityClient extends HttpClient {
-    private static final Logger LOG = Logger.getLogger(CertificateAuthorityClient.class);
+    private static final Logger LOG = LogManager.getLogger(CertificateAuthorityClient.class);
     private static final UriBuilder AUTH_URI = UriBuilder.fromPath("auth");
     private String keyPass;
     private String truststore;
