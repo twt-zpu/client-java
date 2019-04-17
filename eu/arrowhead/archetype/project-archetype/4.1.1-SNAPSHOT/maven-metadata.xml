@@ -1,23 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <metadata modelVersion="1.1.0">
-  <groupId>eu.arrowhead</groupId>
-  <artifactId>arrowhead-client-common</artifactId>
+  <groupId>eu.arrowhead.archetype</groupId>
+  <artifactId>project-archetype</artifactId>
   <version>4.1.1-SNAPSHOT</version>
   <versioning>
     <snapshot>
-      <localCopy>true</localCopy>
+      <timestamp>20190417.132530</timestamp>
+      <buildNumber>2</buildNumber>
     </snapshot>
-    <lastUpdated>20190417132528</lastUpdated>
+    <lastUpdated>20190417132530</lastUpdated>
     <snapshotVersions>
       <snapshotVersion>
         <extension>jar</extension>
-        <value>4.1.1-SNAPSHOT</value>
-        <updated>20190417132528</updated>
+        <value>4.1.1-20190417.132530-2</value>
+        <updated>20190417132530</updated>
       </snapshotVersion>
       <snapshotVersion>
         <extension>pom</extension>
-        <value>4.1.1-SNAPSHOT</value>
-        <updated>20190417132528</updated>
+        <value>4.1.1-20190417.132530-2</value>
+        <updated>20190417132530</updated>
       </snapshotVersion>
     </snapshotVersions>
   </versioning>
