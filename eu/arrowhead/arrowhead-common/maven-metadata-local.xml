@@ -4,8 +4,8 @@
   <artifactId>arrowhead-common</artifactId>
   <versioning>
     <versions>
-      <version>4.1.1-SNAPSHOT</version>
+      <version>4.1.2-SNAPSHOT</version>
     </versions>
-    <lastUpdated>20190417102355</lastUpdated>
+    <lastUpdated>20190417140448</lastUpdated>
   </versioning>
 </metadata>

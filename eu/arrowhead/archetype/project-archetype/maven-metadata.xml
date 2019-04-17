@@ -4,8 +4,8 @@
   <artifactId>project-archetype</artifactId>
   <versioning>
     <versions>
-      <version>4.1.1-SNAPSHOT</version>
+      <version>4.1.2-SNAPSHOT</version>
     </versions>
-    <lastUpdated>20190417132530</lastUpdated>
+    <lastUpdated>20190417140457</lastUpdated>
   </versioning>
 </metadata>
