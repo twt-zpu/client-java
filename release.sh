@@ -14,3 +14,12 @@ do
   cd ${DIR}/archetype/${d}
   mvn deploy -DaltDeploymentRepository=snapshot-repo::default::file:${REPO}
 done
+
+cd ${REPO}
+mvn archetype:crawl -Drepository=.
+
+echo
+echo "-------------------------------------------------------"
+echo " REMEMBER TO ADD DEPENDENCIES TO POM FILE MANUALLY !!! "
+echo "-------------------------------------------------------"
+echo
