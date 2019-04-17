@@ -5,7 +5,7 @@
     <parent>
         <artifactId>client</artifactId>
         <groupId>eu.arrowhead</groupId>
-        <version>4.1.2-SNAPSHOT</version>
+        <version>4.1.3-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -98,7 +98,7 @@
                                     <includes>*.jar</includes>
                                     <!-- TODO Get versions from properties -->
                                     <excludes>
-                                        arrowhead-common-4.1.2-SNAPSHOT.jar,
+                                        arrowhead-common-4.1.3-SNAPSHOT.jar,
                                         aopalliance-repackaged-2.5.0-b42.jar,
                                         bcprov-jdk15on-1.59.jar,
                                         grizzly-framework-2.4.0.jar,
