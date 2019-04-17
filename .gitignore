@@ -26,6 +26,7 @@
 /config/
 *.properties
 !log4j2.properties
+!archetype.properties
 */target
 *app.conf
 */config*/*.p12
