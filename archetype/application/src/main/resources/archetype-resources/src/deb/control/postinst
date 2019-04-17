@@ -1,0 +1,130 @@
+#!/bin/sh
+
+set -e
+
+. /usr/share/debconf/confmodule
+
+SYSTEM_NAME="${artifactId}"
+PKG_NAME="${artifactId}"
+
+case "$1" in
+    configure)
+        . /usr/share/arrowhead/conf/ahconf.sh
+        SYSTEM_DIR="${AH_SYSTEMS_DIR}/${SYSTEM_NAME}"
+
+        if [ ! -d "${SYSTEM_DIR}" ]; then
+          mkdir -p ${SYSTEM_DIR}
+        fi
+
+        ah_cert_signed_system ${SYSTEM_NAME}
+        ah_cert_export_pub "${AH_SYSTEMS_DIR}/authorization" "authorization" "${SYSTEM_DIR}"
+
+        if [ ! -f "${SYSTEM_DIR}/default.conf" ]; then
+          /bin/cat <<EOF >${SYSTEM_DIR}/default.conf
+# Directories
+cert_dir=.
+
+# Webserver parameters
+address=$(hostname -I | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+port=8080
+secure=true
+
+# System registry entry parameters
+system_name=${artifactId}
+service_name=archetype
+service_uri=api
+interfaces=JSON, XML
+#service_metadata=
+
+# Key and trust stores
+keystorepass=${AH_PASS_CERT}
+truststorepass=${AH_PASS_CERT}
+keypass=${AH_PASS_CERT}
+
+# Event parameters
+feedback=true
+feedback_uri=publisher/feedback
+notify_uri=subscriber/notify
+EOF
+          chown root:arrowhead ${SYSTEM_DIR}/default.conf
+          chmod 640 ${SYSTEM_DIR}/default.conf
+        fi
+
+        if [ ! -f "${SYSTEM_DIR}/log4j2.properties" ]; then
+            /bin/cat <<EOF >${SYSTEM_DIR}/log4j2.properties
+status=error
+name=PropertiesConfig
+
+filters=threshold
+
+filter.threshold.type=ThresholdFilter
+filter.threshold.level=info
+
+appenders=console,file,db
+
+appender.console.type=Console
+appender.console.name=STDOUT
+appender.console.layout.type=PatternLayout
+appender.console.layout.pattern=%d{yyyy-MM-dd HH:mm:ss}  %p  %-160m  %c{1}.%M(%F:%L)%n
+
+appender.file.type=File
+appender.file.name=LOGFILE
+appender.file.fileName=/var/log/arrowhead/service_registry_sql.log
+appender.file.layout.type=PatternLayout
+appender.file.layout.pattern=%d{yyyy-MM-dd HH:mm:ss}, %C, %p, %m%n
+appender.file.append=false
+appender.file.immediateFlush=true
+
+appender.db.type=JDBC
+appender.db.name=DB
+appender.db.connectionSource.type=DriverManager
+appender.db.connectionSource.connectionString=jdbc:mysql://127.0.0.1:3306/arrowhead
+appender.db.connectionSource.username=arrowhead
+appender.db.connectionSource.password=${AH_PASS_DB}
+appender.db.tableName=logs
+
+appender.db.columnConfigs[0].type=Column
+appender.db.columnConfigs[0].name=date
+appender.db.columnConfigs[0].pattern=%d{yyyy-MM-dd HH:mm:ss}
+appender.db.columnConfigs[0].isUnicode =false
+
+appender.db.columnConfigs[2].type=Column
+appender.db.columnConfigs[2].name=origin
+appender.db.columnConfigs[2].pattern=%C
+appender.db.columnConfigs[2].isUnicode =false
+
+appender.db.columnConfigs[3].type=Column
+appender.db.columnConfigs[3].name=level
+appender.db.columnConfigs[3].pattern=%p
+appender.db.columnConfigs[3].isUnicode =false
+
+appender.db.columnConfigs[4].type=Column
+appender.db.columnConfigs[4].name=message
+appender.db.columnConfigs[4].pattern=%m
+appender.db.columnConfigs[4].isUnicode =false
+
+rootLogger.level=info
+rootLogger.appenderRefs=stdout,file,db
+rootLogger.appenderRef.stdout.ref=STDOUT
+rootLogger.appenderRef.file.ref=LOGFILE
+rootLogger.appenderRef.db.ref=DB
+EOF
+            chown root:arrowhead ${SYSTEM_DIR}/log4j2.properties
+            chmod 640 ${SYSTEM_DIR}/log4j2.properties
+        fi
+
+        echo "Restarting ${PKG_NAME}..." >&2
+        systemctl daemon-reload
+        systemctl restart ${PKG_NAME}.service
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+exit 0

@@ -1,0 +1,17 @@
+[Unit]
+Description=${artifactId}
+After=network.target arrowhead-serviceregistry-sql.service
+Requires=arrowhead-serviceregistry-sql.service
+
+[Service]
+WorkingDirectory=/etc/arrowhead/systems/${artifactId}
+ExecStart=/usr/bin/java -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager \
+                        -Dlog4j.configurationFile=log4j2.properties \
+                        -jar /usr/share/arrowhead/${artifactId}.jar -d -daemon
+TimeoutStopSec=5
+Type=simple
+User=arrowhead
+Group=arrowhead
+
+[Install]
+WantedBy=default.target

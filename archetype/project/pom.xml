@@ -3,11 +3,11 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>eu.arrowhead.archetype</groupId>
-  <artifactId>application-archetype</artifactId>
+  <artifactId>project-archetype</artifactId>
   <version>4.1.1-SNAPSHOT</version>
   <packaging>maven-archetype</packaging>
 
-  <name>application-archetype</name>
+  <name>project-archetype</name>
 
   <build>
     <extensions>

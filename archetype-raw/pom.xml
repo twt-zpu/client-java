@@ -11,9 +11,9 @@
   <packaging>pom</packaging>
 
   <modules>
-    <module>project</module>
     <module>common</module>
     <module>application</module>
+    <module>project</module>
   </modules>
 
 </project>
