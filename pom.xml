@@ -28,6 +28,7 @@
   <modules>
     <module>common</module>
     <module>client-common</module>
+    <module>archetype</module>
   </modules>
 
   <properties>
