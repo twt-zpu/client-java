@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <metadata>
   <groupId>eu.arrowhead</groupId>
-  <artifactId>common</artifactId>
+  <artifactId>arrowhead-client-common</artifactId>
   <versioning>
     <versions>
       <version>4.1.1-SNAPSHOT</version>
     </versions>
-    <lastUpdated>20190417065550</lastUpdated>
+    <lastUpdated>20190417102351</lastUpdated>
   </versioning>
 </metadata>
