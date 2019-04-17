@@ -5,8 +5,8 @@ set -ex
 REPO=$(pwd)
 DIR="$(pwd)/$(dirname "$0")"
 
-mvn install:install-file -DgroupId=eu.arrowhead -DartifactId=arrowhead-client-common -Dversion=4.1.1-SNAPSHOT \
-    -Dfile=${DIR}/client-common/target/arrowhead-client-common-4.1.1-SNAPSHOT.jar -Dpackaging=jar \
+mvn install:install-file -DgroupId=eu.arrowhead -DartifactId=arrowhead-client-common -Dversion=4.1.2-SNAPSHOT \
+    -Dfile=${DIR}/client-common/target/arrowhead-client-common-4.1.2-SNAPSHOT.jar -Dpackaging=jar \
     -DgeneratePom=true -DlocalRepositoryPath=${REPO} -DcreateChecksum=true
 
 for d in project common application
