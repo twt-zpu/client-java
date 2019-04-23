@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -ex
+set -e
 
 REPO=$(pwd)
 DIR="$(pwd)/$(dirname "$0")"
