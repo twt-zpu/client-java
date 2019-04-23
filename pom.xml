@@ -38,7 +38,6 @@
     <jackson.version>2.9.7</jackson.version>
     <javax.servlet.version>4.0.1</javax.servlet.version>
     <jersey.version>2.27</jersey.version>
-    <jaxb.version>2.3.0</jaxb.version>
     <javax.activation.version>1.1.1</javax.activation.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <grizzly.version>2.4.0</grizzly.version>
