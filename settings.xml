@@ -7,7 +7,7 @@
       <id>arrowhead</id>
       <repositories>
         <repository>
-          <id>arrowhead</id>
+          <id>archetype</id> <!-- Do not change ID! -->
           <url>https://raw.github.com/arrowhead-f/client-java/release/maven/</url>
           <releases>
             <enabled>true</enabled>
