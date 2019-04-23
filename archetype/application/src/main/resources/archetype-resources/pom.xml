@@ -6,19 +6,16 @@
   <artifactId>${artifactId}</artifactId>
   <version>${version}</version>
 
-  <repositories>
-    <repository>
-      <id>arrowhead</id>
-      <name>Arrowhead Maven Repository</name>
-      <url>https://raw.github.com/arrowhead-f/client-java/release/maven/</url>
-    </repository>
-  </repositories>
-
   <dependencies>
     <dependency>
       <groupId>eu.arrowhead</groupId>
       <artifactId>arrowhead-client-common</artifactId>
       <version>4.1.3-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.xml.bind</groupId>
+      <artifactId>jaxb-api</artifactId>
+      <version>2.3.1</version>
     </dependency>
   </dependencies>
 
@@ -35,7 +32,7 @@
             </manifestEntries>
             <manifest>
               <addClasspath>true</addClasspath>
-              <mainClass>eu.arrowhead.archetype.Application</mainClass>
+              <mainClass>${package}.Application</mainClass>
               <classpathPrefix>lib/</classpathPrefix>
             </manifest>
           </archive>
