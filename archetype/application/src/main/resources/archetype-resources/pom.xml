@@ -28,7 +28,8 @@
         <configuration>
           <archive>
             <manifestEntries>
-              <Class-Path>lib/archetype/common-${project.version}.jar</Class-Path>
+              <!-- You should add common and third-party libraries here, as they are installed outside class-path -->
+              <!--Class-Path>lib/${parent.artifactId}/common-${project.version}.jar</Class-Path-->
             </manifestEntries>
             <manifest>
               <addClasspath>true</addClasspath>
@@ -69,6 +70,8 @@
               <deb>target/${project.artifactId}_${project.version}.deb</deb>
               <verbose>true</verbose>
               <controlDir>${basedir}/src/deb/control</controlDir>
+              <!-- If using any third party libraries they should be added to dataSet and installed into the directory
+                   /usr/share/arrowhead/lib/${parent.artifactId} -->
               <dataSet>
                 <data>
                   <type>file</type>

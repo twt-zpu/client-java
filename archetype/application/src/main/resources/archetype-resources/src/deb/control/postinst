@@ -31,7 +31,7 @@ secure=true
 
 # System registry entry parameters
 system_name=${artifactId}
-service_name=archetype
+service_name=undefined
 service_uri=api
 interfaces=JSON, XML
 #service_metadata=

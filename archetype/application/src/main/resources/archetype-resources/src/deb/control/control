@@ -5,7 +5,6 @@ Priority: optional
 Architecture: all
 Maintainer: Maintainer Unknown <user@arrowhead.eu>
 Homepage: http://www.arrowhead.eu
-Description: Maven archetype for application modules
+Description: Custom Arrowhead application
 Distribution: development
-Depends: java-runtime-headless, arrowhead-common, arrowhead-client-common,
-         arrowhead-core-common
+Depends: java-runtime-headless, arrowhead-common, arrowhead-client-common, arrowhead-core-common

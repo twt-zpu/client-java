@@ -45,7 +45,7 @@
                   <src>${project.build.directory}/${project.build.finalName}.jar</src>
                   <mapper>
                     <type>perm</type>
-                    <prefix>/usr/share/arrowhead/lib/demo</prefix>
+                    <prefix>/usr/share/arrowhead/lib/${parent.artifactId}</prefix>
                   </mapper>
                 </data>
               </dataSet>
