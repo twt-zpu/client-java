@@ -10,6 +10,7 @@
 ### IntelliJ IDEA ###
 .idea/*.xml
 .idea/libraries
+.idea/markdown-navigator
 *.iws
 *.iml
 *.ipr
