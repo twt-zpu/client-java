@@ -220,10 +220,17 @@ public class DatabaseManager {
       if (transaction != null) {
         transaction.rollback();
       }
-      //NOTE root cause of persistenceException can be other reasons too
-      throw new DuplicateEntryException(
-          "There is already an entry in the database with these parameters. Please check the unique fields of the "
-              + objects.getClass(), Status.BAD_REQUEST.getStatusCode(), e);
+
+      Throwable cause = e.getCause();
+      if (cause instanceof ConstraintViolationException && cause.getMessage().equals("could not execute statement")) {
+        throw new DuplicateEntryException(
+            "There is already an entry in the database with these parameters. Please check the unique fields of the "
+                + objects.getClass(), Status.BAD_REQUEST.getStatusCode(), e);
+      } else {
+        Throwable rootCause = getExceptionRootCause(e);
+        throw new ArrowheadRuntimeException(
+            "Unknown exception during database save: " + rootCause.getClass() + " - " + rootCause.getMessage(), e);
+      }
     } catch (Exception e) {
       if (transaction != null) {
         transaction.rollback();
@@ -249,9 +256,16 @@ public class DatabaseManager {
       if (transaction != null) {
         transaction.rollback();
       }
-      throw new DuplicateEntryException(
-          "There is already an entry in the database with these parameters. Please check the unique fields of the "
-              + objects.getClass(), Status.BAD_REQUEST.getStatusCode(), e);
+      Throwable cause = e.getCause();
+      if (cause instanceof ConstraintViolationException && cause.getMessage().equals("could not execute statement")) {
+        throw new DuplicateEntryException(
+            "There is already an entry in the database with these parameters. Please check the unique fields of the "
+                + objects.getClass(), Status.BAD_REQUEST.getStatusCode(), e);
+      } else {
+        Throwable rootCause = getExceptionRootCause(e);
+        throw new ArrowheadRuntimeException(
+            "Unknown exception during database merge: " + rootCause.getClass() + " - " + rootCause.getMessage(), e);
+      }
     } catch (Exception e) {
       if (transaction != null) {
         transaction.rollback();
@@ -272,13 +286,21 @@ public class DatabaseManager {
         session.delete(object);
       }
       transaction.commit();
-    } catch (ConstraintViolationException e) {
+    } catch (PersistenceException e) {
       if (transaction != null) {
         transaction.rollback();
       }
-      throw new ArrowheadRuntimeException(
-          "There is a reference to this object in another table, which prevents the delete operation. (" + objects
-              .getClass() + ")", Status.BAD_REQUEST.getStatusCode(), e);
+
+      Throwable cause = e.getCause();
+      if (cause instanceof ConstraintViolationException && cause.getMessage().equals("could not execute statement")) {
+        throw new ArrowheadRuntimeException(
+            "There is a reference to this object in another table, which prevents the delete operation. (" + objects
+                .getClass() + ")", Status.BAD_REQUEST.getStatusCode(), e);
+      } else {
+        Throwable rootCause = getExceptionRootCause(e);
+        throw new ArrowheadRuntimeException(
+            "Unknown exception during database delete: " + rootCause.getClass() + " - " + rootCause.getMessage(), e);
+      }
     } catch (Exception e) {
       if (transaction != null) {
         transaction.rollback();
@@ -295,5 +317,17 @@ public class DatabaseManager {
     Query query = session.createQuery(stringQuery);
     query.executeUpdate();
   }
+
+  @SuppressWarnings("WeakerAccess")
+  private Throwable getExceptionRootCause(Throwable e) {
+    Throwable cause = null;
+    Throwable result = e;
+
+    while (null != (cause = result.getCause()) && (result != cause)) {
+      result = cause;
+    }
+    return result;
+  }
+
 
 }

@@ -199,6 +199,8 @@ public class HttpClient {
                         throw new ArrowheadRuntimeException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
                     case AUTH:
                         throw new AuthException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
+                    case BAD_MEDIA_TYPE:
+                        throw new ArrowheadRuntimeException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
                     case BAD_METHOD:
                         throw new ArrowheadRuntimeException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
                     case BAD_PAYLOAD:
@@ -207,7 +209,7 @@ public class HttpClient {
                         throw new ArrowheadRuntimeException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
                     case DATA_NOT_FOUND:
                         throw new DataNotFoundException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
-                    case DNSSD:
+                    case DNS_SD:
                         throw new DnsException(errorMessage.getErrorMessage(), errorMessage.getErrorCode(), errorMessage.getOrigin());
                     case DUPLICATE_ENTRY:
                         throw new DuplicateEntryException(errorMessage.getErrorMessage(), errorMessage.getErrorCode());
