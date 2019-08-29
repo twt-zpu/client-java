@@ -25,18 +25,13 @@ public class SimpleSlaveTCP {
 	private TcpParameters tcpParameters = new TcpParameters();
 	private ModbusCoils hc = new ModbusCoils(20);
 	private MyOwnDataHolder dh = new MyOwnDataHolder();
-	private FeldbusCouplerLMeasurement measurement = new FeldbusCouplerLMeasurement();
-	
-	public SimpleSlaveTCP(){
-		
-	}
-	
+	private ModbusData measurement = new ModbusData();
 	
 	public void main(String[] argv){
 		startSlave();
 	}
 	
-
+	
 	public void startSlave(){
 		try{
 			setSlave();
@@ -86,10 +81,7 @@ public class SimpleSlaveTCP {
             @Override
             public void onWriteToMultipleCoils(int address, int quantity, boolean[] values) {
                 System.out.print("onWriteToMultipleCoils: address " + address + ", quantity " + quantity + "\n");
-                if (quantity == 9)
-                	 measurement.entry.setOutput(values);
-                // measurement.entry.setC4(values[0]);
-                // measurement.entry.setC3(values[1]);
+                measurement.getEntry().setCoilsOutput(address, values);
             }
 
             @Override
@@ -103,8 +95,8 @@ public class SimpleSlaveTCP {
             }
         });
         slave.setDataHolder(dh);
-        hc.set(0, Boolean.TRUE);
-        hc.set(1, Boolean.TRUE);
+        // hc.set(0, Boolean.TRUE);
+        // hc.set(1, Boolean.TRUE);
         slave.getDataHolder().setCoils(hc);
 	}
 	

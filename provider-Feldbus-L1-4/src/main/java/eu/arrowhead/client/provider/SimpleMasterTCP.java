@@ -2,7 +2,9 @@ package eu.arrowhead.client.provider;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.intelligt.modbus.jlibmodbus.Modbus;
 import com.intelligt.modbus.jlibmodbus.exception.ModbusIOException;
@@ -12,19 +14,18 @@ import com.intelligt.modbus.jlibmodbus.master.ModbusMaster;
 import com.intelligt.modbus.jlibmodbus.master.ModbusMasterFactory;
 import com.intelligt.modbus.jlibmodbus.tcp.TcpParameters;
 
+import eu.arrowhead.client.common.model.ModbusMeasurement;
+
 public class SimpleMasterTCP {
 	private TcpParameters tcpParameters = new TcpParameters();
 	private ModbusMaster master;
-	private FeldbusCouplerLMeasurement measurement; 
+	private ModbusData measurement; 
 	private int slaveId = 1;
 	private int offset = 0;
 	private int quantity = 1;
 	
-	public SimpleMasterTCP(){
-		
-	}
 	
- 	public List<Boolean> readMaster(int offset, int quantity){
+ 	public List<Boolean> readMasterCoils(int offset, int quantity){
 		this.offset = offset;
 		this.quantity = quantity;
 		
@@ -34,13 +35,7 @@ public class SimpleMasterTCP {
 				master.connect();
 			}
 			boolean[] coilsArray = master.readCoils(slaveId, offset, 9);
-			int index = 1;
-			for (boolean coil : coilsArray){
-				if (9 < index++){
-					break;
-				}
-				coilsList.add(coil);
-			}
+			measurement.getEntry().setCoilsInput(offset, coilsArray);
 		} catch (ModbusProtocolException e) {
             e.printStackTrace();
         } catch (ModbusNumberException e) {
@@ -58,18 +53,10 @@ public class SimpleMasterTCP {
 	}
 	
 	public List<Boolean> readMaster(){
-		List<Boolean> coilsList = new ArrayList<Boolean>();
-		coilsList = readMaster(0, 9);
-		boolean[] coilsArray = new boolean[coilsList.size()];
-		int index = 0;
-		for (Boolean coil : coilsList){
-			coilsArray[index++] = coil;
-		}
-		measurement.entry.setInput(coilsArray);
-		return coilsList;
+		return readMasterCoils(0, 9);
 	}
 	
-	public void writeMaster(int startAddress){
+	public void writeMasterCoils(){
 		if (!measurement.isExist()){
 			return ;
 		}
@@ -77,15 +64,13 @@ public class SimpleMasterTCP {
 			if (!master.isConnected()){
 				master.connect();
 			}
-			List<Boolean> coilsList = new ArrayList<>();
-			coilsList = measurement.entry.getOutput();
-			boolean[] coilsArray = new boolean[coilsList.size()];
-			int index = 0;
-			for (Boolean coil : coilsList){
-				coilsArray[index++] = coil;
+			HashMap<Integer, Boolean> coilsMap = new HashMap<Integer, Boolean>();
+			coilsMap = measurement.getEntry().getCoilsOutput();
+			for (Map.Entry<Integer, Boolean> entry : coilsMap.entrySet()){
+				int address = entry.getKey();
+				boolean value = entry.getValue();
+				master.writeSingleCoil(slaveId, address, value);
 			}
-			master.writeMultipleCoils(slaveId, startAddress, coilsArray);
-			
 		} catch (ModbusProtocolException e) {
             e.printStackTrace();
         } catch (ModbusNumberException e) {
@@ -102,7 +87,7 @@ public class SimpleMasterTCP {
 	}
 	
 	public void writeMaster(){
-		writeMaster(512);
+		writeMasterCoils();
 	}
 	
 	private void setTCPParameters(){

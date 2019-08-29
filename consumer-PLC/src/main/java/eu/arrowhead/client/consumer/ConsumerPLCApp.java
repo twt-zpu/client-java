@@ -7,7 +7,6 @@ import java.io.InputStreamReader;
 public class ConsumerPLCApp {
 	private static SimpleSlaveTCP simpleSlave = new SimpleSlaveTCP();
 	private static ConsumerMain consumer;
-	private static FeldbusCouplerLMeasurement measurement = new FeldbusCouplerLMeasurement();
 	
 	
 	public static void main(String[] args) {
@@ -38,9 +37,6 @@ public class ConsumerPLCApp {
 	
 	public static class ArrowheadThread extends Thread{
 		@Override public void run(){
-			// consumer.startConsumerGetCoils();
-			// boolean[] coils = {false, false, false, false, false, false, false, false, false, false};
-            // measurement.entry.setOutput(coils);
 			while(true){
 				long startTime = System.currentTimeMillis();
 				consumer.startConsumerGetCoils();
