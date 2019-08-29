@@ -19,8 +19,10 @@
 
   <modules>
     <module>client-common</module>
-    <module>consumer</module>
-    <module>provider</module>
+    <module>consumer-PLC</module>
+    <module>consumer-Raspberry-PI</module>
+    <module>provider-Feldbus-L1-4</module>
+    <module>provider-Feldbus-L5-6</module>
     <module>publisher</module>
     <module>subscriber</module>
   </modules>
