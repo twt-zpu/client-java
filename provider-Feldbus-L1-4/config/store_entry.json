@@ -1,0 +1,53 @@
+[
+  {
+    "service": {
+      "serviceDefinition": "GetCoils",
+      "interfaces": [
+        "JSON"
+      ],
+      "serviceMetadata": {
+        "unit": " "
+      }
+    },
+    "consumer": {
+      "systemName": "clientPLC",
+      "address": "10.12.90.10",
+      "port": 8080,
+      "authenticationInfo": "null"
+    },
+    "providerSystem": {
+      "systemName": "FeldbusCouplerL",
+      "address": "0.0.0.0",
+      "port": 8460
+    },
+    "priority": 1,
+    "defaultEntry": false,
+    "attributes": { }
+  },
+
+   {
+    "service": {
+      "serviceDefinition": "SetCoils",
+      "interfaces": [
+        "JSON"
+      ],
+      "serviceMetadata": {
+        "unit": " "
+      }
+    },
+    "consumer": {
+      "systemName": "clientPLC",
+      "address": "10.12.90.10",
+      "port": 8080,
+      "authenticationInfo": "null"
+    },
+    "providerSystem": {
+      "systemName": "FeldbusCouplerL",
+      "address": "0.0.0.0",
+      "port": 8460
+    },
+    "priority": 1,
+    "defaultEntry": false,
+    "attributes": {}
+  }
+]

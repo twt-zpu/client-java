@@ -1,0 +1,38 @@
+{
+  "consumer": {
+    "systemName": "clientPLC",
+    "address": "10.12.90.10",
+    "port": 8080,
+    "authenticationInfo": "null"
+  },
+  "providerList": [
+    {
+      "systemName": "FeldbusCouplerL",
+      "address": "0.0.0.0",
+      "port": 8460
+    },
+    {
+      "systemName": "FeldbusCouplerL",
+      "address": "0.0.0.0",
+      "port": 8460
+    }
+  ],
+  "serviceList": [
+    {
+      "serviceDefinition": "GetCoils",
+      "interfaces": [
+        "JSON"
+      ],
+      "serviceMetadata": {
+      }
+    }, 
+    {
+      "serviceDefinition": "SetCoils",
+      "interfaces": [
+        "JSON"
+      ],
+      "serviceMetadata": {
+      }
+    }
+  ]
+}
