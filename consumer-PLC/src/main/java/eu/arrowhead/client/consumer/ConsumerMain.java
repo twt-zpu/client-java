@@ -9,10 +9,8 @@
 
 package eu.arrowhead.client.consumer;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.net.ssl.SSLContext;
@@ -54,6 +52,9 @@ public class ConsumerMain {
     public ConsumerMain(String[] args) {
         System.out.println("Working directory: " + System.getProperty("user.dir"));
         getOrchestratorUrl(args);
+        measurement.getEntry().setCoilOutput(518, false);
+        measurement.getEntry().setCoilOutput(519, false);
+        measurement.getEntry().setCoilOutput(520, false);
     }
 
     public void startConsumerGetCoils(){
@@ -63,7 +64,7 @@ public class ConsumerMain {
         ModbusMeasurementEntry entry = consumeServiceGetCoils(providerUrl);
         measurement.getEntry().setCoilsInput(entry.getCoilsInput());
         long endTime = System.currentTimeMillis();
-        System.out.println("Orchestration and Service consumption response time: " + Long.toString(endTime - startTime));
+        // System.out.println("Orchestration and Service consumption response time: " + Long.toString(endTime - startTime));
     }
     
     public void startConsumerSetCoils(){
@@ -72,7 +73,7 @@ public class ConsumerMain {
         String providerUrl = sendOrchestrationRequest(srf, "SetCoils");
         consumeServiceSetCoils(providerUrl);
         long endTime = System.currentTimeMillis();
-        System.out.println("Orchestration and Service consumption response time: " + Long.toString(endTime - startTime));
+        // System.out.println("Orchestration and Service consumption response time: " + Long.toString(endTime - startTime));
     }
 
     private ServiceRequestForm compileSRF(String serviceName) {
@@ -95,7 +96,7 @@ public class ConsumerMain {
         orchestrationFlags.put("enableInterCloud", true);
 
         ServiceRequestForm srf = new ServiceRequestForm.Builder(consumer).requestedService(service).orchestrationFlags(orchestrationFlags).build();
-        System.out.println("Service Request payload: " + Utility.toPrettyJson(null, srf));
+        // System.out.println("Service Request payload: " + Utility.toPrettyJson(null, srf));
         return srf;
     }
 
@@ -115,7 +116,7 @@ public class ConsumerMain {
         ModbusMeasurement readout = new ModbusMeasurement();
         try {
             readout = getResponse.readEntity(ModbusMeasurement.class);
-            System.out.println("Provider Response payload: " + Utility.toPrettyJson(null, readout));
+            // System.out.println("Provider Response payload (get): " + Utility.toPrettyJson(null, readout));
         } catch (RuntimeException e) {
             e.printStackTrace();
             System.out.println("Provider did not send the temperature readout in SenML format.");
@@ -133,7 +134,7 @@ public class ConsumerMain {
 	    ModbusMeasurementEntry readout = new ModbusMeasurementEntry();
         try {
             readout = getResponse.readEntity(ModbusMeasurementEntry.class);
-            System.out.println("Provider Response payload: " + Utility.toPrettyJson(null, readout));
+            // System.out.println("Provider Response payload (set): " + Utility.toPrettyJson(null, readout));
         } catch (RuntimeException e) {
             e.printStackTrace();
             System.out.println("Provider did not send the temperature readout in SenML format.");
@@ -189,7 +190,7 @@ public class ConsumerMain {
     private String sendOrchestrationRequest(ServiceRequestForm srf, String method) {
         Response postResponse = Utility.sendRequest(orchestratorUrl, "POST", srf);
         OrchestrationResponse orchResponse = postResponse.readEntity(OrchestrationResponse.class);
-        System.out.println("Orchestration Response payload: " + Utility.toPrettyJson(null, orchResponse));
+        // System.out.println("Orchestration Response payload: " + Utility.toPrettyJson(null, orchResponse));
         if (orchResponse.getResponse().isEmpty()) {
             throw new ArrowheadException("Orchestrator returned with 0 Orchestration Forms!");
         }
@@ -231,7 +232,7 @@ public class ConsumerMain {
             ub.queryParam("token", orchResponse.getResponse().get(0).getAuthorizationToken());
             ub.queryParam("signature", orchResponse.getResponse().get(0).getSignature());
         }
-        System.out.println("Received provider system URL: " + ub.toString());
+        // System.out.println("Received provider system URL: " + ub.toString());
         return ub.toString();
     }
 

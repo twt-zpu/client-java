@@ -3,6 +3,7 @@ package eu.arrowhead.client.consumer;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Observer;
 
@@ -73,11 +74,23 @@ public class SimpleSlaveTCP {
 	
 	private void setDataHolder() throws IllegalDataAddressException, IllegalDataValueException{
 		dh.addEventListener(new ModbusEventListener() {
-            @Override
+			@Override
             public void onWriteToSingleCoil(int address, boolean value) {
                 System.out.print("onWriteToSingleCoil: address " + address + ", value " + value + "\n");
             }
 
+            @Override
+			public void onReadMultipleCoils(int address, int quantity) throws IllegalDataAddressException, IllegalDataValueException{
+				System.out.print("onReadMultipleCoils: address " + address + ", quantity " + quantity + "\n");
+				HashMap<Integer, Boolean> valuesMap = new HashMap<Integer, Boolean>();
+				valuesMap = measurement.getEntry().getCoilsInput();
+				for(int index = 0; index <quantity; index++){
+					int offsetIndex = address + index;
+					hc.set(offsetIndex, valuesMap.get(offsetIndex));
+				}
+				// slave.getDataHolder().setCoils(hc);
+			}
+            
             @Override
             public void onWriteToMultipleCoils(int address, int quantity, boolean[] values) {
                 System.out.print("onWriteToMultipleCoils: address " + address + ", quantity " + quantity + "\n");
@@ -132,6 +145,8 @@ public class SimpleSlaveTCP {
 	
 	public interface ModbusEventListener {
         void onWriteToSingleCoil(int address, boolean value);
+        
+        void onReadMultipleCoils(int address, int quantity) throws IllegalDataAddressException, IllegalDataValueException;
 
         void onWriteToMultipleCoils(int address, int quantity, boolean[] values);
 
@@ -186,6 +201,15 @@ public class SimpleSlaveTCP {
                 l.onWriteToMultipleCoils(offset, range.length, range);
             }
             super.writeCoilRange(offset, range);
+        }
+        
+        @Override
+        public boolean[] readCoilRange(int offset, int quantity) throws IllegalDataAddressException, IllegalDataValueException{
+        	boolean[] values = super.readCoilRange(offset, quantity);
+        	for (ModbusEventListener l : modbusEventListenerList) {
+                l.onReadMultipleCoils(offset, quantity);
+            }
+            return values;
         }
     }
 	

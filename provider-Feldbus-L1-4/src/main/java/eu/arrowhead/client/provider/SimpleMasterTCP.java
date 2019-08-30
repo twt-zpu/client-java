@@ -34,8 +34,11 @@ public class SimpleMasterTCP {
 			if (!master.isConnected()){
 				master.connect();
 			}
-			boolean[] coilsArray = master.readCoils(slaveId, offset, 9);
-			measurement.getEntry().setCoilsInput(offset, coilsArray);
+			boolean[] coilsArray = master.readCoils(slaveId, offset, quantity);
+			for (int index = 0; index < quantity; index++){
+				int offsetIndex = offset + index;
+				measurement.getEntry().setCoilInput(offsetIndex, coilsArray[index]);
+			}
 		} catch (ModbusProtocolException e) {
             e.printStackTrace();
         } catch (ModbusNumberException e) {
