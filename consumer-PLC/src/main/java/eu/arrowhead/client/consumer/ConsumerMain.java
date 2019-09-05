@@ -52,7 +52,7 @@ public class ConsumerMain {
     public ConsumerMain(String[] args) {
         System.out.println("Working directory: " + System.getProperty("user.dir"));
         getOrchestratorUrl(args);
-        measurement.getEntry().setCoilOutput(518, false);
+        measurement.getEntry().setCoilOutput(512, false);
         measurement.getEntry().setCoilOutput(519, false);
         measurement.getEntry().setCoilOutput(520, false);
     }
