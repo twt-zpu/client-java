@@ -23,21 +23,15 @@ public class FeldbusProviderMain extends ArrowheadClientMain {
 	static String customResponsePayload;
 	static PublicKey authorizationKey;
 	static PrivateKey privateKey;
-
-	private static List<String> argsList = new ArrayList<String>();
-	private static boolean NEED_AUTH = false;
-	private static boolean NEED_ORCH = false;
-	private static String SR_BASE_URI;
+	private List<String> argsList = new ArrayList<String>();
+	private boolean NEED_AUTH = false;
+	private boolean NEED_ORCH = false;
+	private String SR_BASE_URI;
 
 	//JSON payloads
-	private static List<ServiceRegistryEntry> srEntry = new ArrayList<>();
-	private static IntraCloudAuthEntry authEntry;
-	private static List<OrchestrationStore> storeEntry = new ArrayList<>();
-	
-	public static void main(String[] args) {
-		FeldbusProviderMain provider = new FeldbusProviderMain(args);
-		provider.startProvider();
-	}
+	private List<ServiceRegistryEntry> srEntries = new ArrayList<>();
+	private IntraCloudAuthEntry authEntry;
+	private List<OrchestrationStore> storeEntry = new ArrayList<>();
 	
 	public FeldbusProviderMain(String[] args){
 		for (String arg: args){
@@ -59,7 +53,6 @@ public class FeldbusProviderMain extends ArrowheadClientMain {
 		//Compile the request payload
 		loadAndCompilePayloads();
 		//Send the registration to the Service Registry
-		unregisterFromServiceRegistry();
 		registerToServiceRegistry();
 		if (NEED_AUTH) {
 			registerToAuthorization();
@@ -81,7 +74,7 @@ public class FeldbusProviderMain extends ArrowheadClientMain {
 	private void loadAndCompilePayloads() {
 		//Compile the ArrowheadService (providedService)
 		String srPath = props.getProperty("sr_entry");
-		srEntry = Arrays.asList(Utility.fromJson(Utility.loadJsonFromFile(srPath), ServiceRegistryEntry[].class));
+		srEntries = Arrays.asList(Utility.fromJson(Utility.loadJsonFromFile(srPath), ServiceRegistryEntry[].class));
 		if (NEED_AUTH) {
 			String authPath = props.getProperty("auth_entry");
 			authEntry = Utility.fromJson(Utility.loadJsonFromFile(authPath), IntraCloudAuthEntry.class);
@@ -91,22 +84,23 @@ public class FeldbusProviderMain extends ArrowheadClientMain {
 			storeEntry = Arrays.asList(Utility.fromJson(Utility.loadJsonFromFile(storePath), OrchestrationStore[].class));
 		}
 		
-		System.out.println("Service Registry Entry: " + Utility.toPrettyJson(null, srEntry));
+		System.out.println("Service Registry Entry: " + Utility.toPrettyJson(null, srEntries));
 		System.out.println("IntraCloud Auth Entry: " + Utility.toPrettyJson(null, authEntry));
 		System.out.println("Orchestration Store Entry: " + Utility.toPrettyJson(null, storeEntry));
 	}
 	
-	private static void registerToServiceRegistry() {
+	private void registerToServiceRegistry() {
 		// create the URI for the request
 		String registerUri = UriBuilder.fromPath(SR_BASE_URI).path("register").toString();
 		try {
-			Utility.sendRequest(registerUri, "POST", srEntry.get(0));
-			Utility.sendRequest(registerUri, "POST", srEntry.get(1));
+			for (ServiceRegistryEntry srEntry : srEntries)
+				Utility.sendRequest(registerUri, "POST", srEntry);
 		} catch (ArrowheadException e) {
 			if (e.getExceptionType() == ExceptionType.DUPLICATE_ENTRY) {
 				System.out.println("Received DuplicateEntryException from SR, sending delete request and then registering again.");
 				unregisterFromServiceRegistry();
-				Utility.sendRequest(registerUri, "POST", srEntry);
+				for (ServiceRegistryEntry srEntry : srEntries)
+					Utility.sendRequest(registerUri, "POST", srEntry);
 			} else {
 				throw e;
 			}
@@ -114,10 +108,10 @@ public class FeldbusProviderMain extends ArrowheadClientMain {
 		System.out.println("Registering service is successful!");
 	}
 
-	private static void unregisterFromServiceRegistry() {
+	private void unregisterFromServiceRegistry() {
 		String removeUri = UriBuilder.fromPath(SR_BASE_URI).path("remove").toString();
-		Utility.sendRequest(removeUri, "PUT", srEntry.get(0));
-		Utility.sendRequest(removeUri, "PUT", srEntry.get(1));
+		for (ServiceRegistryEntry srEntry : srEntries)
+			Utility.sendRequest(removeUri, "PUT", srEntry);
 		System.out.println("Removing service is successful!");
 	}
 
@@ -147,5 +141,4 @@ public class FeldbusProviderMain extends ArrowheadClientMain {
 			System.out.println("Store registration failed!");
 		}
 	}
-	
 }

@@ -40,6 +40,8 @@ public class ConsumerMain {
     private static final String ServiceNameGetCoils = "GetCoils";
     private static final String ServiceNameSetCoils = "SetCoils";
     private static final String consumerSystemName = props.getProperty("consumer_system_name");
+    private static final String consumerSystemAddress = props.getProperty("consumer_system_address", "0.0.0.0");
+    private static final Integer consumerSystemPort = Integer.valueOf(props.getProperty("consumer_system_port", "8080"));
     
     private static ModbusData measurement = new ModbusData(); 
 
@@ -52,38 +54,26 @@ public class ConsumerMain {
     public ConsumerMain(String[] args) {
         System.out.println("Working directory: " + System.getProperty("user.dir"));
         getOrchestratorUrl(args);
-        measurement.getEntry().setCoilOutput(512, false);
-        measurement.getEntry().setCoilOutput(519, false);
-        measurement.getEntry().setCoilOutput(520, false);
     }
 
     public void startConsumerGetCoils(){
-        long startTime = System.currentTimeMillis();
         ServiceRequestForm srf = compileSRF(ServiceNameGetCoils);
         String providerUrl = sendOrchestrationRequest(srf, "GetCoils");
         ModbusMeasurementEntry entry = consumeServiceGetCoils(providerUrl);
         measurement.getEntry().setCoilsInput(entry.getCoilsInput());
-        long endTime = System.currentTimeMillis();
-        // System.out.println("Orchestration and Service consumption response time: " + Long.toString(endTime - startTime));
     }
     
     public void startConsumerSetCoils(){
-        long startTime = System.currentTimeMillis();
+        // long startTime = System.currentTimeMillis();
         ServiceRequestForm srf = compileSRF(ServiceNameSetCoils);
         String providerUrl = sendOrchestrationRequest(srf, "SetCoils");
         consumeServiceSetCoils(providerUrl);
-        long endTime = System.currentTimeMillis();
+        // long endTime = System.currentTimeMillis();
         // System.out.println("Orchestration and Service consumption response time: " + Long.toString(endTime - startTime));
     }
 
     private ServiceRequestForm compileSRF(String serviceName) {
-        /*
-            ArrowheadSystem: systemName, (address, port, authenticationInfo)
-            Since this Consumer skeleton will not receive HTTP requests (does not provide any services on its own),
-            the address, port and authenticationInfo fields can be set to anything.
-            SystemName can be an arbitrarily chosen name, which makes sense for the use case.
-         */
-        ArrowheadSystem consumer = new ArrowheadSystem(consumerSystemName, "localhost", 8080, "null");
+        ArrowheadSystem consumer = new ArrowheadSystem(consumerSystemName, consumerSystemAddress, consumerSystemPort, "null");
         Map<String, String> metadata = new HashMap<>();
         if (isSecure) {
             metadata.put("security", "token");
@@ -101,18 +91,7 @@ public class ConsumerMain {
     }
 
     private ModbusMeasurementEntry consumeServiceGetCoils(String providerUrl) {
-        /*
-            Sending request to the provider, to the acquired URL. The method type and payload should be known beforehand.
-            If needed, compile the request payload here, before sending the request.
-            Supported method types at the moment: GET, POST, PUT, DELETE
-        */
         Response getResponse = Utility.sendRequest(providerUrl, "GET", null);
-
-        /*
-            Parsing the response from the provider here. This code prints an error message, if the answer is not in the expected JSON format, but custom
-            error handling can also be implemented here. For example the Orchestrator will send back a JSON with the structure of the eu.arrowhead.client
-            .common.exception.ErrorMessage class, and the errors from the Orchestrator are parsed this way.
-        */
         ModbusMeasurement readout = new ModbusMeasurement();
         try {
             readout = getResponse.readEntity(ModbusMeasurement.class);
@@ -131,14 +110,6 @@ public class ConsumerMain {
 
     private void consumeServiceSetCoils(String providerUrl) {
 	    Response getResponse = Utility.sendRequest(providerUrl, "GET", null);
-	    ModbusMeasurementEntry readout = new ModbusMeasurementEntry();
-        try {
-            readout = getResponse.readEntity(ModbusMeasurementEntry.class);
-            // System.out.println("Provider Response payload (set): " + Utility.toPrettyJson(null, readout));
-        } catch (RuntimeException e) {
-            e.printStackTrace();
-            System.out.println("Provider did not send the temperature readout in SenML format.");
-        }
     }
     
      /*
@@ -149,7 +120,7 @@ public class ConsumerMain {
 
     //DO NOT MODIFY - Gets the correct URL where the orchestration requests needs to be sent (from app.conf config file + command line argument)
     private void getOrchestratorUrl(String[] args) {
-        String orchAddress = props.getProperty("orch_address", "0.0.0.0");
+        String orchAddress = props.getProperty("orch_address", "10.12.90.10");
         int orchInsecurePort = props.getIntProperty("orch_insecure_port", 8440);
         int orchSecurePort = props.getIntProperty("orch_secure_port", 8441);
 
@@ -236,7 +207,7 @@ public class ConsumerMain {
         return ub.toString();
     }
 
-    public String getConsumerSystemName(){
+    public String getconsumerSystemName(){
 	    return consumerSystemName;
     }
     

@@ -13,7 +13,7 @@ public class FeldbusCouplerProviderApp {
 		
 		// start master
 		master.setModbusMaster();
-		new MasterThread().start();
+		//new MasterThread().start();
 		
 	}
 	

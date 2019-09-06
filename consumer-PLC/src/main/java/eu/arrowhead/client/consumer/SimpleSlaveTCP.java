@@ -28,11 +28,6 @@ public class SimpleSlaveTCP {
 	private MyOwnDataHolder dh = new MyOwnDataHolder();
 	private ModbusData measurement = new ModbusData();
 	
-	public void main(String[] argv){
-		startSlave();
-	}
-	
-	
 	public void startSlave(){
 		try{
 			setSlave();
@@ -53,8 +48,8 @@ public class SimpleSlaveTCP {
 	}
 	
 	private void setTCPConnection() throws UnknownHostException{
-		byte[] address = {10, 12, 90, 10};
-	    tcpParameters.setHost(InetAddress.getByAddress(address));
+		// byte[] address = {10, 12, 90, 10};
+	    tcpParameters.setHost(InetAddress.getLocalHost());
 	    tcpParameters.setKeepAlive(true);
 	    tcpParameters.setPort(502);
 	}
@@ -76,12 +71,12 @@ public class SimpleSlaveTCP {
 		dh.addEventListener(new ModbusEventListener() {
 			@Override
             public void onWriteToSingleCoil(int address, boolean value) {
-                System.out.print("onWriteToSingleCoil: address " + address + ", value " + value + "\n");
+                // System.out.print("onWriteToSingleCoil: address " + address + ", value " + value + "\n");
             }
 
             @Override
 			public void onReadMultipleCoils(int address, int quantity) throws IllegalDataAddressException, IllegalDataValueException{
-				System.out.print("onReadMultipleCoils: address " + address + ", quantity " + quantity + "\n");
+				// System.out.print("onReadMultipleCoils: address " + address + ", quantity " + quantity + "\n");
 				HashMap<Integer, Boolean> valuesMap = new HashMap<Integer, Boolean>();
 				valuesMap = measurement.getEntry().getCoilsInput();
 				for(int index = 0; index <quantity; index++){
@@ -93,23 +88,22 @@ public class SimpleSlaveTCP {
             
             @Override
             public void onWriteToMultipleCoils(int address, int quantity, boolean[] values) {
-                System.out.print("onWriteToMultipleCoils: address " + address + ", quantity " + quantity + "\n");
+                // System.out.print("onWriteToMultipleCoils: address " + address + ", quantity " + quantity + "\n");
                 measurement.getEntry().setCoilsOutput(address, values);
             }
 
             @Override
             public void onWriteToSingleHoldingRegister(int address, int value) {
-                System.out.print("onWriteToSingleHoldingRegister: address " + address + ", value " + value + "\n");
+                // System.out.print("onWriteToSingleHoldingRegister: address " + address + ", value " + value + "\n");
             }
 
             @Override
             public void onWriteToMultipleHoldingRegisters(int address, int quantity, int[] values) {
-                System.out.print("onWriteToMultipleHoldingRegisters: address " + address + ", quantity " + quantity + "\n");
+                // System.out.print("onWriteToMultipleHoldingRegisters: address " + address + ", quantity " + quantity + "\n");
             }
         });
         slave.setDataHolder(dh);
         // hc.set(0, Boolean.TRUE);
-        // hc.set(1, Boolean.TRUE);
         slave.getDataHolder().setCoils(hc);
 	}
 	
@@ -117,12 +111,12 @@ public class SimpleSlaveTCP {
 		FrameEventListener listener = new FrameEventListener() {
             @Override
             public void frameSentEvent(FrameEvent event) {
-                System.out.println("frame sent " + DataUtils.toAscii(event.getBytes()));
+                // System.out.println("frame sent " + DataUtils.toAscii(event.getBytes()));
             }
 
             @Override
             public void frameReceivedEvent(FrameEvent event) {
-                System.out.println("frame recv " + DataUtils.toAscii(event.getBytes()));
+                // System.out.println("frame recv " + DataUtils.toAscii(event.getBytes()));
             }
         };
         slave.addListener(listener);
@@ -160,7 +154,6 @@ public class SimpleSlaveTCP {
         final List<ModbusEventListener> modbusEventListenerList = new ArrayList<ModbusEventListener>();
 
         public MyOwnDataHolder() {
-            // setCoils(new ModbusCoils(1024));
         }
 
         public void addEventListener(ModbusEventListener listener) {
