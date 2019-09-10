@@ -23,6 +23,7 @@
     <module>consumer-Raspberry-PI</module>
     <module>provider-Feldbus-L1-4</module>
     <module>provider-Feldbus-L5-6</module>
+	<module>client-consumer-provider</module>
     <module>publisher</module>
     <module>subscriber</module>
   </modules>
